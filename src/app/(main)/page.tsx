@@ -1,56 +1,114 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { HomeContent } from "./home-content";
-import { getDemoEndingSoon, getDemoPopular, getDemoNewest } from "@/lib/demo-data";
+import { getDemoEndingSoon, getDemoPopular, getDemoNewest, getDemoTrending } from "@/lib/demo-data";
+import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
+import { useFeedCache } from "@/hooks/use-feed-cache";
+import type { Deal } from "@/lib/types/database";
 
-export const dynamic = "force-dynamic";
+interface FeedData {
+  endingSoon: Deal[];
+  popular: Deal[];
+  newest: Deal[];
+  trending: Deal[];
+  isDemo: boolean;
+}
 
-export default async function HomePage() {
-  let endingSoonData: any[] = [];
-  let popularData: any[] = [];
-  let newestData: any[] = [];
+function HomeSkeleton() {
+  return (
+    <div className="space-y-6 py-5">
+      <DealSectionSkeleton />
+      <DealSectionSkeleton />
+      <DealSectionSkeleton />
+    </div>
+  );
+}
 
-  try {
-    const supabase = await createClient();
+export default function HomePage() {
+  const supabase = useMemo(() => createClient(), []);
+  const cache = useFeedCache<FeedData>("home-feed");
+  const [feed, setFeed] = useState<FeedData | null>(() => cache.get());
+  const [loading, setLoading] = useState(!feed);
 
-    const [endingSoon, popular, newest] = await Promise.all([
-      supabase
-        .from("deals")
-        .select("*")
-        .eq("status", "approved")
-        .gt("end_at", new Date().toISOString())
-        .order("end_at", { ascending: true })
-        .limit(10),
-      supabase
-        .from("deals")
-        .select("*")
-        .eq("status", "approved")
-        .gt("end_at", new Date().toISOString())
-        .order("heat_score", { ascending: false })
-        .limit(10),
-      supabase
-        .from("deals")
-        .select("*")
-        .eq("status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(10),
-    ]);
+  const fetchFeed = useCallback(async () => {
+    try {
+      const [endingSoon, popular, newest, trending] = await Promise.all([
+        supabase
+          .from("deals")
+          .select("*")
+          .eq("status", "approved")
+          .gt("end_at", new Date().toISOString())
+          .order("end_at", { ascending: true })
+          .limit(10),
+        supabase
+          .from("deals")
+          .select("*")
+          .eq("status", "approved")
+          .gt("end_at", new Date().toISOString())
+          .order("heat_score", { ascending: false })
+          .limit(10),
+        supabase
+          .from("deals")
+          .select("*")
+          .eq("status", "approved")
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("deals")
+          .select("*")
+          .eq("status", "approved")
+          .gt("end_at", new Date().toISOString())
+          .gte("heat_score", 20)
+          .order("heat_score", { ascending: false })
+          .limit(8),
+      ]);
 
-    endingSoonData = endingSoon.data ?? [];
-    popularData = popular.data ?? [];
-    newestData = newest.data ?? [];
-  } catch {
-    // Supabase not available or tables don't exist
-  }
+      const es = endingSoon.data ?? [];
+      const pop = popular.data ?? [];
+      const nw = newest.data ?? [];
+      const tr = trending.data ?? [];
+      const useDemo = es.length === 0 && pop.length === 0 && nw.length === 0;
 
-  // Fall back to demo data when Supabase returns empty
-  const useDemo = endingSoonData.length === 0 && popularData.length === 0 && newestData.length === 0;
+      const data: FeedData = {
+        endingSoon: useDemo ? getDemoEndingSoon() : es,
+        popular: useDemo ? getDemoPopular() : pop,
+        newest: useDemo ? getDemoNewest() : nw,
+        trending: useDemo ? getDemoTrending() : tr,
+        isDemo: useDemo,
+      };
+
+      cache.set(data);
+      setFeed(data);
+    } catch {
+      const data: FeedData = {
+        endingSoon: getDemoEndingSoon(),
+        popular: getDemoPopular(),
+        newest: getDemoNewest(),
+        trending: getDemoTrending(),
+        isDemo: true,
+      };
+      setFeed(data);
+    }
+    setLoading(false);
+  }, [supabase, cache]);
+
+  useEffect(() => {
+    fetchFeed();
+  }, [fetchFeed]);
+
+  if (loading && !feed) return <HomeSkeleton />;
+
+  if (!feed) return <HomeSkeleton />;
 
   return (
     <HomeContent
-      endingSoon={useDemo ? getDemoEndingSoon() : endingSoonData}
-      popular={useDemo ? getDemoPopular() : popularData}
-      newest={useDemo ? getDemoNewest() : newestData}
-      isDemo={useDemo}
+      endingSoon={feed.endingSoon}
+      popular={feed.popular}
+      newest={feed.newest}
+      trending={feed.trending}
+      isDemo={feed.isDemo}
     />
   );
 }

@@ -25,3 +25,27 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * Read-only Supabase client for server components that only fetch data.
+ * Uses a no-op setAll to avoid the transformAlgorithm streaming error
+ * in Next.js 15 when cookies cannot be set in static/ISR pages.
+ */
+export async function createReadOnlyClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // No-op: read-only pages never need to set auth cookies
+        },
+      },
+    }
+  );
+}

@@ -22,7 +22,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 11.49,
     currency: "USD",
     discount_percent: 50,
-    image_url: "https://images.unsplash.com/photo-1574375927938-d5a98e8d7e28?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://netflix.com",
     created_by: "demo",
@@ -45,7 +45,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: null,
     currency: "USD",
     discount_percent: 80,
-    image_url: "https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://store.steampowered.com",
     created_by: "demo",
@@ -68,7 +68,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 55.99,
     currency: "USD",
     discount_percent: 30,
-    image_url: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1592155931584-901ac15763e3?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://playstation.com",
     created_by: "demo",
@@ -91,7 +91,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 34.79,
     currency: "TRY",
     discount_percent: 40,
-    image_url: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://amazon.com.tr",
     created_by: "demo",
@@ -114,7 +114,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 4.0,
     currency: "USD",
     discount_percent: 50,
-    image_url: "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://x.com",
     created_by: "demo",
@@ -137,7 +137,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 12.74,
     currency: "EUR",
     discount_percent: 25,
-    image_url: "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1614680376408-81e91bbe261f?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://spotify.com",
     created_by: "demo",
@@ -160,7 +160,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 35.99,
     currency: "USD",
     discount_percent: 40,
-    image_url: "https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://adobe.com",
     created_by: "demo",
@@ -183,7 +183,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 3.59,
     currency: "USD",
     discount_percent: 70,
-    image_url: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://nordvpn.com",
     created_by: "demo",
@@ -206,7 +206,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 64.99,
     currency: "USD",
     discount_percent: 35,
-    image_url: "https://images.unsplash.com/photo-1633419461186-7d40a38105ec?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://microsoft.com",
     created_by: "demo",
@@ -229,7 +229,7 @@ export const DEMO_DEALS: Deal[] = [
     deal_price: 5.49,
     currency: "USD",
     discount_percent: 50,
-    image_url: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&h=340&fit=crop",
+    image_url: "https://images.unsplash.com/photo-1614680376739-414d95ff43df?w=600&h=340&fit=crop",
     storage_path: null,
     external_url: "https://apple.com/music",
     created_by: "demo",
@@ -255,4 +255,11 @@ export function getDemoNewest(): Deal[] {
   return [...DEMO_DEALS].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
+}
+
+export function getDemoTrending(): Deal[] {
+  return [...DEMO_DEALS]
+    .filter((d) => d.heat_score >= 20)
+    .sort((a, b) => b.heat_score - a.heat_score)
+    .slice(0, 8);
 }

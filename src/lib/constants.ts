@@ -50,3 +50,18 @@ export const DEFAULT_REMINDER_SETTINGS = {
 
 export const HEAT_TRENDING_THRESHOLD = 50;
 export const TRUSTED_SUBMITTER_THRESHOLD = 20;
+
+export const LEVEL_THRESHOLDS = [
+  { level: 1, min: 0, max: 49, label: "Newcomer" },
+  { level: 2, min: 50, max: 149, label: "Explorer" },
+  { level: 3, min: 150, max: 399, label: "Hunter" },
+  { level: 4, min: 400, max: 999, label: "Expert" },
+  { level: 5, min: 1000, max: Infinity, label: "Legend" },
+] as const;
+
+export const BADGE_INFO: Record<string, { label: string; emoji: string; description: string }> = {
+  early_hunter: { label: "Early Hunter", emoji: "🎯", description: "First approved deal" },
+  trending_hunter: { label: "Trending Hunter", emoji: "🔥", description: "Deal reached trending" },
+  community_builder: { label: "Community Builder", emoji: "🏗️", description: "10+ approved deals" },
+  trusted_submitter: { label: "Trusted Submitter", emoji: "⭐", description: "Level 3+ with 3+ approved deals" },
+};

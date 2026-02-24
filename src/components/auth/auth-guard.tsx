@@ -9,9 +9,12 @@ export function useAuthGuard() {
   const [showLogin, setShowLogin] = useState(false);
 
   const requireAuth = useCallback(
-    (action: () => void) => {
+    (action: () => void | Promise<void>) => {
       if (user) {
-        action();
+        const result = action();
+        if (result instanceof Promise) {
+          result.catch(console.error);
+        }
       } else {
         setShowLogin(true);
       }

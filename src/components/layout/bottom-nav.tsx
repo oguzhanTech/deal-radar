@@ -18,7 +18,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/80 backdrop-blur-lg pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl shadow-nav pb-safe border-t border-border/50">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive =
@@ -29,27 +29,29 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch={true}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative",
-                tab.accent && !isActive && "text-primary"
+                "active:scale-90 transition-transform"
               )}
             >
               {tab.accent ? (
-                <div className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-                  <Icon className="h-6 w-6" />
+                <div className="flex items-center justify-center w-13 h-13 -mt-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30 active:scale-95 transition-transform">
+                  <Icon className="h-6 w-6" strokeWidth={2.5} />
                 </div>
               ) : (
                 <>
                   <Icon
                     className={cn(
-                      "h-5 w-5 transition-colors",
-                      isActive ? "text-primary" : "text-muted-foreground"
+                      "h-[22px] w-[22px] transition-colors",
+                      isActive ? "text-primary" : "text-stone-400"
                     )}
+                    strokeWidth={isActive ? 2.5 : 1.8}
                   />
                   <span
                     className={cn(
-                      "text-[10px] font-medium transition-colors",
-                      isActive ? "text-primary" : "text-muted-foreground"
+                      "text-[10px] font-semibold transition-colors",
+                      isActive ? "text-primary" : "text-stone-400"
                     )}
                   >
                     {tab.label}
@@ -57,7 +59,7 @@ export function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="bottomNavIndicator"
-                      className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full"
+                      className="absolute -top-px left-1/2 -translate-x-1/2 w-10 h-[3px] bg-primary rounded-full"
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
                   )}

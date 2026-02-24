@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Radar, Trash2, Bell, BellOff } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Trash2, Bell, BellOff, Share2 } from "lucide-react";
+import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { motion, AnimatePresence } from "framer-motion";
 import { DealCountdown } from "@/components/deals/deal-countdown";
 import { HeatBadge } from "@/components/deals/heat-badge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
@@ -25,7 +27,7 @@ export default function MyRadarPage() {
   const [saves, setSaves] = useState<SavedDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -52,17 +54,49 @@ export default function MyRadarPage() {
     toast({ title: "Removed from your radar" });
   };
 
+  const handleShareSaves = async () => {
+    const url = `/api/deals/share-card?mode=summary&count=${saves.length}`;
+    const shareUrl = `${window.location.origin}${url}`;
+
+    try {
+      if (navigator.share) {
+        const res = await fetch(url);
+        if (!res.ok) {
+          toast({ title: "Failed to generate share card", variant: "destructive" });
+          return;
+        }
+        const blob = await res.blob();
+        const file = new File([blob], "my-deals.png", { type: "image/png" });
+        try {
+          await navigator.share({
+            title: `I saved ${saves.length} deals on DealRadar!`,
+            text: `Check out the deals I'm tracking on DealRadar`,
+            files: [file],
+          });
+        } catch {
+          await navigator.clipboard.writeText(shareUrl);
+          toast({ title: "Link copied to clipboard" });
+        }
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "Link copied to clipboard" });
+      }
+    } catch {
+      toast({ title: "Share failed", variant: "destructive" });
+    }
+  };
+
   if (!authLoading && !user) {
     return (
       <>
         <LoginModal open={showLogin} onOpenChange={setShowLogin} />
-        <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-          <Radar className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold mb-2">My Radar</h2>
-          <p className="text-muted-foreground mb-6">Sign in to save deals and track reminders</p>
+        <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
+          <RadarBuddy size="lg" mood="happy" className="mb-5" />
+          <h2 className="text-2xl font-bold mb-2">My Radar</h2>
+          <p className="text-muted-foreground mb-8 text-sm">Sign in to save deals and track reminders</p>
           <button
             onClick={() => setShowLogin(true)}
-            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-medium cursor-pointer"
+            className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white px-8 py-3 rounded-2xl font-semibold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform cursor-pointer"
           >
             Sign in
           </button>
@@ -72,29 +106,37 @@ export default function MyRadarPage() {
   }
 
   return (
-    <div className="py-4">
-      <div className="px-4 mb-4">
-        <h2 className="text-xl font-bold">My Radar</h2>
-        <p className="text-sm text-muted-foreground">{saves.length} saved deals</p>
+    <div className="py-5">
+      <div className="px-4 mb-4 flex items-end justify-between">
+        <div>
+          <h2 className="text-xl font-extrabold">My Radar</h2>
+          <p className="text-xs text-muted-foreground font-medium">{saves.length} saved deals</p>
+        </div>
+        {saves.length > 0 && (
+          <Button variant="outline" size="sm" className="rounded-xl gap-1.5 text-xs" onClick={handleShareSaves}>
+            <Share2 className="h-3.5 w-3.5" />
+            Share My Saves
+          </Button>
+        )}
       </div>
 
       {loading ? (
         <div className="px-4 space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex gap-3 items-center">
-              <Skeleton className="w-20 h-14 rounded-lg shrink-0" />
+            <div key={i} className="flex gap-3 items-center bg-card rounded-2xl p-3 shadow-card">
+              <Skeleton className="w-20 h-14 rounded-xl shrink-0" />
               <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-4 w-3/4 rounded-lg" />
+                <Skeleton className="h-3 w-1/2 rounded-lg" />
               </div>
             </div>
           ))}
         </div>
       ) : saves.length === 0 ? (
-        <div className="text-center px-4 py-12">
-          <Radar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="font-medium">No saved deals yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Browse deals and tap &quot;Save &amp; Remind Me&quot;</p>
+        <div className="text-center px-4 py-16">
+          <RadarBuddy size="lg" mood="thinking" message="No saved deals yet!" className="mb-4" />
+          <p className="font-semibold">Start exploring</p>
+          <p className="text-sm text-muted-foreground mt-1">Browse deals and tap &quot;Save &amp; Remind&quot;</p>
         </div>
       ) : (
         <div className="px-4 space-y-2">
@@ -111,9 +153,9 @@ export default function MyRadarPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0 }}
                 >
-                  <div className="flex gap-3 items-center border rounded-xl p-3 bg-card">
+                  <div className="flex gap-3 items-center rounded-2xl p-3 bg-card shadow-card">
                     <Link href={`/deal/${d.id}`} className="shrink-0">
-                      <div className="relative w-20 h-14 rounded-lg overflow-hidden bg-muted">
+                      <div className="relative w-20 h-14 rounded-xl overflow-hidden bg-muted">
                         {d.image_url && (
                           <Image src={d.image_url} alt={d.title} fill className="object-cover" sizes="80px" />
                         )}
@@ -121,12 +163,12 @@ export default function MyRadarPage() {
                     </Link>
 
                     <Link href={`/deal/${d.id}`} className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold truncate">{d.title}</h3>
-                      <DealCountdown endAt={d.end_at} compact className="text-xs" />
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <h3 className="text-sm font-bold truncate">{d.title}</h3>
+                      <DealCountdown endAt={d.end_at} compact className="text-xs mt-0.5" />
+                      <div className="flex items-center gap-2 mt-1">
                         <HeatBadge score={d.heat_score} />
                         {hasReminders ? (
-                          <Badge variant="secondary" className="text-[10px] py-0 gap-0.5">
+                          <Badge variant="secondary" className="text-[10px] py-0 gap-0.5 font-semibold">
                             <Bell className="h-2.5 w-2.5" /> On
                           </Badge>
                         ) : (
@@ -139,7 +181,7 @@ export default function MyRadarPage() {
 
                     <button
                       onClick={() => handleRemove(d.id)}
-                      className="p-2 text-muted-foreground hover:text-destructive transition cursor-pointer"
+                      className="p-2 text-muted-foreground hover:text-destructive transition cursor-pointer rounded-xl hover:bg-destructive/5"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

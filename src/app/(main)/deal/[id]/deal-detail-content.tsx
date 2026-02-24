@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -10,6 +10,8 @@ import {
   ExternalLink,
   Flag,
   Loader2,
+  ArrowLeft,
+  Download,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCountryFlag, formatPrice } from "@/lib/utils";
 import { TRUSTED_SUBMITTER_THRESHOLD } from "@/lib/constants";
 import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
 import type { Deal, DealComment } from "@/lib/types/database";
 
 interface DealDetailContentProps {
@@ -46,7 +49,8 @@ export function DealDetailContent({
   const { user } = useAuth();
   const { requireAuth, AuthModal } = useAuthGuard();
   const { toast } = useToast();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
 
   const [comments, setComments] = useState(initialComments);
   const [voteCount, setVoteCount] = useState(initialVoteCount);
@@ -99,17 +103,21 @@ export function DealDetailContent({
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/deal/${deal.id}`;
-    if (navigator.share) {
-      await navigator.share({ title: deal.title, url });
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast({ title: "Link copied to clipboard" });
+    try {
+      const url = `${window.location.origin}/deal/${deal.id}`;
+      if (navigator.share) {
+        await navigator.share({ title: deal.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Link copied to clipboard" });
+      }
+    } catch {
+      // User cancelled share or permission denied
     }
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-4">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-24">
       <AuthModal />
 
       {/* Hero Image */}
@@ -117,114 +125,144 @@ export function DealDetailContent({
         {deal.image_url && (
           <Image src={deal.image_url} alt={deal.title} fill className="object-cover" priority />
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+        <button
+          onClick={() => router.back()}
+          className="absolute top-3 left-3 w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-transform cursor-pointer"
+        >
+          <ArrowLeft className="h-4.5 w-4.5" />
+        </button>
+
         {isExpired && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">Expired</span>
+            <span className="text-white font-bold text-lg bg-black/40 px-4 py-2 rounded-xl backdrop-blur-sm">Deal Expired</span>
           </div>
         )}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-3 right-3 text-white/70 hover:text-white bg-black/20 backdrop-blur-md hover:bg-black/30 rounded-xl h-9 w-9 p-0"
+          disabled={reporting}
+          onClick={() => {
+            requireAuth(async () => {
+              if (!user) return;
+              setReporting(true);
+              const reason = prompt("Why are you reporting this deal?");
+              if (reason) {
+                await supabase.from("deal_reports").insert({
+                  deal_id: deal.id,
+                  user_id: user.id,
+                  reason,
+                });
+                toast({ title: "Report submitted" });
+              }
+              setReporting(false);
+            });
+          }}
+        >
+          <Flag className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Info */}
       <div className="px-4 pt-4 space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge className="text-xs">{deal.provider}</Badge>
-            <Badge variant="secondary" className="text-xs">
-              {getCountryFlag(deal.country)} {deal.country}
-            </Badge>
-            {deal.category && <Badge variant="outline" className="text-xs">{deal.category}</Badge>}
-          </div>
-
-          <h1 className="text-xl font-bold">{deal.title}</h1>
-
-          <div className="flex items-center gap-4">
-            <DealCountdown endAt={deal.end_at} />
-            <HeatBadge score={deal.heat_score} />
-            <span className="text-xs text-muted-foreground">{saveCount} saves</span>
-          </div>
+        {/* Tags */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">{deal.provider}</Badge>
+          <Badge variant="secondary" className="text-[10px] font-medium">
+            {getCountryFlag(deal.country)} {deal.country}
+          </Badge>
+          {deal.category && <Badge variant="outline" className="text-[10px]">{deal.category}</Badge>}
+          <HeatBadge score={deal.heat_score} />
         </div>
 
-        {/* Price */}
+        <h1 className="text-xl font-extrabold leading-tight">{deal.title}</h1>
+
+        <DealCountdown endAt={deal.end_at} />
+
+        {/* Price Card */}
         {deal.deal_price != null && (
-          <div className="flex items-center gap-3">
-            {deal.original_price != null && (
-              <span className="text-lg text-muted-foreground line-through">
-                {formatPrice(deal.original_price, deal.currency)}
-              </span>
-            )}
-            <span className="text-2xl font-bold text-green-600">
-              {formatPrice(deal.deal_price, deal.currency)}
-            </span>
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-4 flex items-center justify-between">
+            <div className="space-y-0.5">
+              {deal.original_price != null && (
+                <p className="text-sm text-muted-foreground line-through">
+                  {formatPrice(deal.original_price, deal.currency)}
+                </p>
+              )}
+              <p className="text-2xl font-extrabold text-emerald-600">
+                {formatPrice(deal.deal_price, deal.currency)}
+              </p>
+            </div>
             {deal.discount_percent && (
-              <Badge className="bg-green-500 text-white border-0 text-sm">
+              <Badge className="bg-emerald-500 text-white border-0 text-base font-extrabold px-3.5 py-1.5 rounded-xl shadow-sm">
                 -{deal.discount_percent}%
               </Badge>
             )}
           </div>
         )}
 
-        {/* Action Row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <SaveRemindButton dealId={deal.id} />
-
-          <div className="flex items-center border rounded-lg overflow-hidden">
+        {/* Vote Row */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-card rounded-2xl overflow-hidden shadow-card">
             <button
               onClick={() => handleVote(1)}
               disabled={voting}
-              className={`p-2 transition cursor-pointer ${userVote === 1 ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
+              className={`px-3.5 py-2.5 transition cursor-pointer flex items-center gap-1.5 ${
+                userVote === 1 ? "bg-primary/10 text-primary" : "hover:bg-muted"
+              }`}
             >
               <ThumbsUp className="h-4 w-4" />
+              <span className="text-xs font-bold">Up</span>
             </button>
-            <span className="px-2 text-sm font-semibold tabular-nums min-w-[28px] text-center">
+            <span className="px-3 text-sm font-bold tabular-nums min-w-[32px] text-center border-x border-border/50">
               {voteCount}
             </span>
             <button
               onClick={() => handleVote(-1)}
               disabled={voting}
-              className={`p-2 transition cursor-pointer ${userVote === -1 ? "bg-destructive/10 text-destructive" : "hover:bg-muted"}`}
+              className={`px-3.5 py-2.5 transition cursor-pointer flex items-center gap-1.5 ${
+                userVote === -1 ? "bg-destructive/10 text-destructive" : "hover:bg-muted"
+              }`}
             >
               <ThumbsDown className="h-4 w-4" />
             </button>
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleShare}>
+          <Button variant="outline" size="sm" onClick={handleShare} className="rounded-xl gap-1.5">
             <Share2 className="h-4 w-4" />
             Share
           </Button>
 
-          {deal.external_url && (
-            <a href={deal.external_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="sm">
-                <ExternalLink className="h-4 w-4" />
-                Get Deal
-              </Button>
-            </a>
-          )}
-
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="text-muted-foreground ml-auto"
-            disabled={reporting}
-            onClick={() => {
-              requireAuth(async () => {
-                if (!user) return;
-                setReporting(true);
-                const reason = prompt("Why are you reporting this deal?");
-                if (reason) {
-                  await supabase.from("deal_reports").insert({
-                    deal_id: deal.id,
-                    user_id: user.id,
-                    reason,
-                  });
-                  toast({ title: "Report submitted" });
+            className="rounded-xl gap-1.5"
+            onClick={async () => {
+              try {
+                const res = await fetch(`/api/deals/share-card?id=${deal.id}`);
+                if (!res.ok) {
+                  toast({ title: "Failed to generate card", variant: "destructive" });
+                  return;
                 }
-                setReporting(false);
-              });
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${deal.title.replace(/[^a-zA-Z0-9]/g, "_")}_deal.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast({ title: "Card downloaded!" });
+              } catch {
+                toast({ title: "Download failed", variant: "destructive" });
+              }
             }}
           >
-            <Flag className="h-4 w-4" />
+            <Download className="h-4 w-4" />
           </Button>
+
+          <span className="text-xs text-muted-foreground font-medium ml-auto">{saveCount} saves</span>
         </div>
 
         {/* Tabs */}
@@ -236,36 +274,51 @@ export function DealDetailContent({
           </TabsList>
 
           <TabsContent value="details">
-            <div className="prose prose-sm max-w-none py-2">
+            <motion.div
+              key="details"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
+              className="py-3"
+            >
               {deal.description ? (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{deal.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{deal.description}</p>
               ) : (
                 <p className="text-sm text-muted-foreground">No description provided.</p>
               )}
-            </div>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="comments">
-            <div className="space-y-3 py-2">
+            <motion.div
+              key="comments"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
+              className="space-y-3 py-3"
+            >
               {comments.map((c) => (
-                <div key={c.id} className="border rounded-lg p-3 space-y-1">
+                <div key={c.id} className="bg-card rounded-2xl p-3.5 shadow-card space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center text-[10px] font-bold text-indigo-600">
+                      {c.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <span className="text-sm font-semibold">
                       {c.profile?.display_name || "User"}
                     </span>
                     {c.profile && c.profile.trust_score >= TRUSTED_SUBMITTER_THRESHOLD && (
-                      <Badge variant="secondary" className="text-[10px] py-0">Trusted</Badge>
+                      <Badge variant="secondary" className="text-[8px] py-0 px-1.5 font-bold">Trusted</Badge>
                     )}
                     <span className="text-[10px] text-muted-foreground ml-auto">
                       {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                     </span>
                   </div>
-                  <p className="text-sm">{c.content}</p>
+                  <p className="text-sm leading-relaxed">{c.content}</p>
                 </div>
               ))}
 
               {comments.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">No comments yet. Be the first!</p>
+                <p className="text-sm text-muted-foreground text-center py-6">No comments yet. Be the first!</p>
               )}
 
               <form onSubmit={handleComment} className="flex gap-2 mt-4">
@@ -273,26 +326,47 @@ export function DealDetailContent({
                   placeholder="Add a comment..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  className="min-h-[44px] resize-none"
+                  className="min-h-[44px] resize-none rounded-xl"
                   rows={1}
                 />
-                <Button type="submit" size="sm" disabled={commenting || !commentText.trim()} className="self-end">
+                <Button type="submit" size="sm" disabled={commenting || !commentText.trim()} className="self-end rounded-xl">
                   {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Post"}
                 </Button>
               </form>
-            </div>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="similar">
-            <div className="space-y-3 py-2">
+            <motion.div
+              key="similar"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
+              className="space-y-3 py-3"
+            >
               {similarDeals.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No similar deals found</p>
+                <p className="text-sm text-muted-foreground text-center py-6">No similar deals found</p>
               ) : (
                 similarDeals.map((d) => <DealCard key={d.id} deal={d} />)
               )}
-            </div>
+            </motion.div>
           </TabsContent>
         </Tabs>
+      </div>
+
+      {/* Sticky Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-xl border-t border-border/50 pb-safe">
+        <div className="flex items-center gap-2 px-4 py-3 max-w-lg mx-auto">
+          <SaveRemindButton dealId={deal.id} />
+          {deal.external_url && (
+            <a href={deal.external_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+              <Button className="w-full rounded-xl h-11 bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-semibold gap-2 shadow-lg shadow-indigo-500/20">
+                <ExternalLink className="h-4 w-4" />
+                Get Deal
+              </Button>
+            </a>
+          )}
+        </div>
       </div>
     </motion.div>
   );

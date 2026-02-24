@@ -2,12 +2,17 @@ export type DealStatus = "pending" | "approved" | "rejected";
 export type UserRole = "user" | "admin";
 export type VoteValue = 1 | -1;
 
+export type BadgeId = "early_hunter" | "trending_hunter" | "community_builder" | "trusted_submitter";
+
 export interface Profile {
   user_id: string;
   display_name: string | null;
   country: string | null;
   role: UserRole;
   trust_score: number;
+  points: number;
+  level: number;
+  badges: BadgeId[];
   created_at: string;
 }
 

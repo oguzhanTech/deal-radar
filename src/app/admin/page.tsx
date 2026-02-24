@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { AdminDashboardActions } from "./admin-dashboard-actions";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
@@ -24,7 +25,10 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold">Dashboard</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Dashboard</h2>
+        <AdminDashboardActions />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         {stats.map((stat) => (
           <div key={stat.label} className="border rounded-xl p-4">

@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DealCard } from "@/components/deals/deal-card";
@@ -34,7 +35,7 @@ function SearchContent() {
   const [filterProvider, setFilterProvider] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const fetchDeals = useCallback(async () => {
     setLoading(true);
@@ -222,8 +223,7 @@ function SearchContent() {
           Array.from({ length: 4 }).map((_, i) => <DealCardSkeleton key={i} />)
         ) : deals.length === 0 ? (
           <div className="text-center py-12">
-            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="font-medium">No deals found</p>
+            <RadarBuddy size="md" mood="thinking" message="No deals found" className="mb-3" />
             <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
           </div>
         ) : (

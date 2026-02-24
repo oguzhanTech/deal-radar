@@ -94,7 +94,7 @@ export default async function DealPage({ params }: PageProps) {
       .limit(5);
 
     // Increment view count
-    await supabase.rpc("increment_view_count", { target_deal_id: id }).catch(() => {});
+    try { await supabase.rpc("increment_view_count", { target_deal_id: id }); } catch {}
 
     return (
       <DealDetailContent
