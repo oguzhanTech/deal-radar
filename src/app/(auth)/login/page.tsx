@@ -86,6 +86,7 @@ export default function LoginPage() {
               <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> {t("auth.magicLink")}</>}
               </Button>
+              <p className="text-xs text-muted-foreground text-center">{t("auth.autoSignUp")}</p>
             </form>
           </div>
         )}

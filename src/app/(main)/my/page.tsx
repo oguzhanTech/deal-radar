@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Trash2, Bell, BellOff, Share2 } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
-import { motion, AnimatePresence } from "framer-motion";
 import { DealCountdown } from "@/components/deals/deal-countdown";
 import { HeatBadge } from "@/components/deals/heat-badge";
 import { Badge } from "@/components/ui/badge";
@@ -143,19 +142,13 @@ export default function MyRadarPage() {
         </div>
       ) : (
         <div className="px-4 space-y-2">
-          <AnimatePresence>
+          <div>
             {saves.map((save) => {
               const d = save.deal;
               const hasReminders = Object.values(save.reminder_settings || {}).some(Boolean);
 
               return (
-                <motion.div
-                  key={save.deal_id}
-                  layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0 }}
-                >
+                <div key={save.deal_id} className="mb-2">
                   <div className="flex gap-3 items-center rounded-2xl p-3 bg-card shadow-card">
                     <Link href={`/deal/${d.id}`} className="shrink-0">
                       <div className="relative w-20 h-14 rounded-xl overflow-hidden bg-muted">
@@ -189,10 +182,10 @@ export default function MyRadarPage() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
-          </AnimatePresence>
+          </div>
         </div>
       )}
     </div>

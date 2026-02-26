@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import {
   ThumbsUp,
   ThumbsDown,
@@ -324,29 +323,17 @@ export function DealDetailContent({
           </TabsList>
 
           <TabsContent value="details">
-            <motion.div
-              key="details"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15 }}
-              className="py-3"
-            >
+            <div className="py-3">
               {deal.description ? (
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{deal.description}</p>
               ) : (
                 <p className="text-sm text-muted-foreground">{t("tab.noDescription")}</p>
               )}
-            </motion.div>
+            </div>
           </TabsContent>
 
           <TabsContent value="comments">
-            <motion.div
-              key="comments"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-3 py-3"
-            >
+            <div className="space-y-3 py-3">
               {comments.map((c) => (
                 <div key={c.id} className="bg-card rounded-2xl p-3.5 shadow-card space-y-1.5">
                   <div className="flex items-center gap-2">
@@ -388,23 +375,17 @@ export function DealDetailContent({
                   {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("comment.post")}
                 </Button>
               </form>
-            </motion.div>
+            </div>
           </TabsContent>
 
           <TabsContent value="similar">
-            <motion.div
-              key="similar"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-3 py-3"
-            >
+            <div className="space-y-3 py-3">
               {similarDeals.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-6">{t("tab.noSimilar")}</p>
               ) : (
                 similarDeals.map((d) => <DealCard key={d.id} deal={d} />)
               )}
-            </motion.div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

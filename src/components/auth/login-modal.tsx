@@ -102,6 +102,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                   </>
                 )}
               </Button>
+              <p className="text-xs text-muted-foreground text-center">{t("auth.autoSignUp")}</p>
             </form>
           </div>
         )}

@@ -83,3 +83,13 @@
 @utility critical-glow {
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3), 0 4px 20px rgba(239, 68, 68, 0.15);
 }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}

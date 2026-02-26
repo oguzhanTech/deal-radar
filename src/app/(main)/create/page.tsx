@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -211,14 +210,9 @@ export default function CreateDealPage() {
   if (success) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 12 }}
-          className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center mb-5"
-        >
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center mb-5 animate-[scale-in_0.3s_ease-out]">
           <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-        </motion.div>
+        </div>
         <h2 className="text-2xl font-bold mb-2">{t("create.success.title")}</h2>
         <p className="text-muted-foreground mb-8 text-sm">
           {(profile?.trust_score ?? 0) >= TRUSTED_SUBMITTER_THRESHOLD
@@ -268,16 +262,9 @@ export default function CreateDealPage() {
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      <div>
         {step === 1 && (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-5"
-          >
+          <div className="space-y-5 animate-[fade-in_0.2s_ease-out]">
             <div>
               <h2 className="text-xl font-extrabold">{t("create.step1.title")}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{t("create.step1.desc")}</p>
@@ -341,18 +328,11 @@ export default function CreateDealPage() {
                 {t("common.continue")} <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {step === 2 && (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-5"
-          >
+          <div className="space-y-5 animate-[fade-in_0.2s_ease-out]">
             <div>
               <h2 className="text-xl font-extrabold">{t("create.step2.title")}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{t("create.step2.desc")}</p>
@@ -425,14 +405,9 @@ export default function CreateDealPage() {
                 </div>
               </button>
 
-              <AnimatePresence>
+              <div>
                 {form.hasCoupon && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden space-y-3"
-                  >
+                  <div className="space-y-3 animate-[fade-in_0.2s_ease-out]">
                     <div>
                       <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.coupon.code")}</label>
                       <Input value={form.couponCode} onChange={(e) => update("couponCode", e.target.value)} placeholder={t("create.coupon.codePlaceholder")} maxLength={30} className="rounded-xl h-12 font-mono tracking-wider" />
@@ -446,9 +421,9 @@ export default function CreateDealPage() {
                       <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.coupon.expiry")}</label>
                       <Input type="datetime-local" value={form.couponExpiry} onChange={(e) => update("couponExpiry", e.target.value)} className="rounded-xl h-12" />
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -466,18 +441,11 @@ export default function CreateDealPage() {
                 {t("common.continue")} <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {step === 3 && (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-5"
-          >
+          <div className="space-y-5 animate-[fade-in_0.2s_ease-out]">
             <div>
               <h2 className="text-xl font-extrabold">{t("create.step3.title")}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{t("create.step3.desc")}</p>
@@ -570,9 +538,9 @@ export default function CreateDealPage() {
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle2 className="h-4 w-4" /> {t("create.action.publish")}</>}
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

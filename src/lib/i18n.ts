@@ -35,6 +35,7 @@ const tr: Record<string, string> = {
   "auth.checkEmail": "E-postanı kontrol et!",
   "auth.magicLinkSent": "Giriş linki gönderildi:",
   "auth.emailPlaceholder": "ornek@email.com",
+  "auth.autoSignUp": "Hesabınız yoksa otomatik oluşturulur",
 
   // Home
   "home.trending": "Trend",

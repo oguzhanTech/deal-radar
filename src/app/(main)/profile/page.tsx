@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy, Settings } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +11,7 @@ import { LoginModal } from "@/components/auth/login-modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
-import { updateProfile as updateProfileAction, signOutAction } from "@/app/actions";
+import { updateProfile as updateProfileAction } from "@/app/actions";
 import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS, BADGE_INFO } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { formatDistanceToNow } from "date-fns";
@@ -67,16 +66,16 @@ export default function ProfilePage() {
       const result = await updateProfileAction(displayName);
       if (result.error) {
         toast({ title: t("create.error.failed"), description: result.error, variant: "destructive" });
-        setSaving(false);
         return;
       }
-      await refreshProfile();
       toast({ title: t("profile.updated") });
       setShowEdit(false);
+      refreshProfile().catch(() => {});
     } catch {
       toast({ title: t("create.error.failed"), variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (!authLoading && !user) {
@@ -185,11 +184,9 @@ export default function ProfilePage() {
 
         <div className="space-y-1">
           <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${levelInfo.progress * 100}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700 ease-out"
+              style={{ width: `${levelInfo.progress * 100}%` }}
             />
           </div>
           <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -272,31 +269,24 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {showEdit && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mx-4"
-          >
-            <div className="space-y-3 pt-3 pb-1">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("profile.displayName")}</label>
-                <Input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder={t("profile.displayNamePlaceholder")}
-                  className="rounded-xl"
-                />
-              </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl h-11">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("profile.saveChanges")}
-              </Button>
+      {showEdit && (
+        <div className="mx-4 animate-[fade-in_0.2s_ease-out]">
+          <div className="space-y-3 pt-3 pb-1">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("profile.displayName")}</label>
+              <Input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder={t("profile.displayNamePlaceholder")}
+                className="rounded-xl"
+              />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl h-11">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("profile.saveChanges")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* My Deals */}
       {myDeals.length > 0 && (
