@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,7 @@ import { Select } from "@/components/ui/select";
 import { LoginModal } from "@/components/auth/login-modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useToast } from "@/components/ui/toast";
-import { createClient } from "@/lib/supabase/client";
-import { createDeal } from "@/app/actions";
+import { createDeal, uploadDealImage } from "@/app/actions";
 import { PROVIDERS, CATEGORIES, CURRENCIES, TRUSTED_SUBMITTER_THRESHOLD } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -30,7 +29,6 @@ export default function CreateDealPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
   const [showLogin, setShowLogin] = useState(false);
   const [step, setStep] = useState(1);
 
@@ -134,25 +132,19 @@ export default function CreateDealPage() {
     setSubmitting(true);
 
     try {
-      let image_url = null;
-      let storage_path = null;
+      let image_url: string | null = null;
+      let storage_path: string | null = null;
 
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("deal-images")
-          .upload(path, imageFile);
-
-        if (uploadError) {
-          toast({ title: t("create.error.imageFailed"), description: uploadError.message, variant: "destructive" });
-          setSubmitting(false);
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        const uploadResult = await uploadDealImage(formData);
+        if (uploadResult.error) {
+          toast({ title: t("create.error.imageFailed"), description: uploadResult.error, variant: "destructive" });
           return;
         }
-
-        storage_path = path;
-        const { data: urlData } = supabase.storage.from("deal-images").getPublicUrl(path);
-        image_url = urlData.publicUrl;
+        image_url = uploadResult.url ?? null;
+        storage_path = uploadResult.path ?? null;
       }
 
       const isTrusted = (profile?.trust_score ?? 0) >= TRUSTED_SUBMITTER_THRESHOLD;
@@ -191,7 +183,6 @@ export default function CreateDealPage() {
 
       if (result.error) {
         toast({ title: t("create.error.failed"), description: result.error, variant: "destructive" });
-        setSubmitting(false);
         return;
       }
 
@@ -203,8 +194,9 @@ export default function CreateDealPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Beklenmeyen hata";
       toast({ title: t("create.error.failed"), description: message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   if (success) {

@@ -3,6 +3,32 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export async function uploadDealImage(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Oturum bulunamadı." };
+
+  const file = formData.get("file") as File | null;
+  if (!file?.size) return { error: "Görsel seçilmedi." };
+
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${user.id}/${Date.now()}.${ext}`;
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+
+  const { error } = await supabase.storage
+    .from("deal-images")
+    .upload(path, bytes, { contentType: file.type || "image/jpeg" });
+
+  if (error) {
+    console.error("[action] uploadDealImage error:", error);
+    return { error: error.message };
+  }
+
+  const { data: urlData } = supabase.storage.from("deal-images").getPublicUrl(path);
+  return { url: urlData.publicUrl, path };
+}
+
 export async function createDeal(payload: Record<string, unknown>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
