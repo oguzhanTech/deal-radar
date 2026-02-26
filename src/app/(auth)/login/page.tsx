@@ -1,33 +1,41 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { sendMagicLink, signInWithGoogleAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, Loader2, Radar } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const supabase = createClient();
+  const [error, setError] = useState<string | null>(null);
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setLoading(false);
-    if (!error) setSent(true);
+    setError(null);
+    try {
+      const result = await sendMagicLink(email, window.location.origin);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSent(true);
+      }
+    } catch {
+      setError("Bağlantı hatası. Tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
+    const result = await signInWithGoogleAction(window.location.origin);
+    if (result.url) {
+      window.location.href = result.url;
+    }
   };
 
   return (
@@ -37,16 +45,16 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4">
             <Radar className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold">DealRadar</h1>
-          <p className="text-muted-foreground mt-1">Never miss a deal again</p>
+          <h1 className="text-2xl font-bold">{t("app.name")}</h1>
+          <p className="text-muted-foreground mt-1">{t("app.tagline")}</p>
         </div>
 
         {sent ? (
           <div className="text-center py-6 space-y-3">
             <Mail className="h-12 w-12 mx-auto text-primary" />
-            <p className="font-medium">Check your email!</p>
+            <p className="font-medium">{t("auth.checkEmail")}</p>
             <p className="text-sm text-muted-foreground">
-              We sent a magic link to <strong>{email}</strong>
+              {t("auth.magicLinkSent")} <strong>{email}</strong>
             </p>
           </div>
         ) : (
@@ -58,7 +66,7 @@ export default function LoginPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              Continue with Google
+              {t("auth.googleSignIn")}
             </Button>
 
             <div className="relative">
@@ -66,14 +74,17 @@ export default function LoginPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">or</span>
+                <span className="bg-background px-2 text-muted-foreground">{t("common.or")}</span>
               </div>
             </div>
 
             <form onSubmit={handleMagicLink} className="space-y-3">
-              <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 text-base" />
+              <Input type="email" placeholder={t("auth.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 text-base" />
+              {error && (
+                <p className="text-sm text-destructive text-center">{error}</p>
+              )}
               <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> Send magic link</>}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> {t("auth.magicLink")}</>}
               </Button>
             </form>
           </div>

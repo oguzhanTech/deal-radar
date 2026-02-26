@@ -1,7 +1,7 @@
 {
-  "name": "DealRadar",
-  "short_name": "DealRadar",
-  "description": "Never miss a deal on digital products and subscriptions",
+  "name": "Topla",
+  "short_name": "Topla",
+  "description": "Topluluk destekli fırsat ve indirim hatırlatıcısı",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

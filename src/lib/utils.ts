@@ -5,22 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatPrice(price: number, currency: string = "TRY"): string {
+  return new Intl.NumberFormat("tr-TR", {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(price);
-}
-
-export function getCountryFlag(code: string): string {
-  if (code === "GLOBAL") return "🌍";
-  const codePoints = code
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
 }
 
 export function getTimeRemaining(endAt: string) {

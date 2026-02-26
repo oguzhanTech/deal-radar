@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useFeedCache } from "@/hooks/use-feed-cache";
 import { LEVEL_THRESHOLDS } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 import { Trophy, Zap, Crown, Medal, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -14,21 +15,8 @@ interface LeaderboardProfile {
   level: number;
 }
 
-const DEMO_PROFILES: LeaderboardProfile[] = [
-  { id: "d1", display_name: "DealMaster", points: 1250, level: 5 },
-  { id: "d2", display_name: "BargainKing", points: 890, level: 4 },
-  { id: "d3", display_name: "SaverPro", points: 620, level: 4 },
-  { id: "d4", display_name: "HuntElite", points: 410, level: 4 },
-  { id: "d5", display_name: "DealSeeker", points: 320, level: 3 },
-  { id: "d6", display_name: "SmartSaver", points: 210, level: 3 },
-  { id: "d7", display_name: "DiscountFan", points: 155, level: 3 },
-  { id: "d8", display_name: "NewHunter", points: 80, level: 2 },
-  { id: "d9", display_name: "FreshStart", points: 35, level: 1 },
-  { id: "d10", display_name: "Newbie", points: 10, level: 1 },
-];
-
 function getLevelLabel(level: number) {
-  return LEVEL_THRESHOLDS.find((t) => t.level === level)?.label ?? "Newcomer";
+  return LEVEL_THRESHOLDS.find((t) => t.level === level)?.label ?? "Sessiz Takipçi";
 }
 
 function getInitial(name: string | null) {
@@ -50,7 +38,6 @@ function RankIcon({ rank }: { rank: number }) {
 
 interface LeaderboardData {
   profiles: LeaderboardProfile[];
-  isDemo: boolean;
 }
 
 function LeaderboardSkeleton() {
@@ -77,16 +64,13 @@ export default function LeaderboardPage() {
         .order("points", { ascending: false })
         .limit(20);
 
-      const list = (profiles as LeaderboardProfile[]) ?? [];
-      const isDemo = list.length === 0;
       const result: LeaderboardData = {
-        profiles: isDemo ? DEMO_PROFILES : list,
-        isDemo,
+        profiles: (profiles as LeaderboardProfile[]) ?? [],
       };
       cache.set(result);
       setData(result);
     } catch {
-      setData({ profiles: DEMO_PROFILES, isDemo: true });
+      setData({ profiles: [] });
     }
     setLoading(false);
   }, [supabase, cache]);
@@ -96,7 +80,6 @@ export default function LeaderboardPage() {
   }, [fetchData]);
 
   const profiles = data?.profiles ?? [];
-  const showDemo = data?.isDemo ?? true;
 
   return (
     <div className="py-5 px-4 space-y-5">
@@ -105,21 +88,17 @@ export default function LeaderboardPage() {
           <Trophy className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h1 className="text-xl font-extrabold">Top Deal Hunters</h1>
-          <p className="text-xs text-muted-foreground">Community leaderboard</p>
+          <h1 className="text-xl font-extrabold">{t("leaderboard.title")}</h1>
+          <p className="text-xs text-muted-foreground">{t("leaderboard.subtitle")}</p>
         </div>
       </div>
 
-      {showDemo && !loading && (
-        <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-100">
-          <p className="text-xs text-indigo-600 font-semibold text-center">
-            Demo leaderboard — connect Supabase for real data
-          </p>
-        </div>
-      )}
-
       {loading && !data ? (
         <LeaderboardSkeleton />
+      ) : profiles.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-muted-foreground">{t("leaderboard.empty")}</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {profiles.map((p, i) => {
@@ -155,17 +134,17 @@ export default function LeaderboardPage() {
 
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-bold truncate ${isTop3 ? "text-white" : ""}`}>
-                    {p.display_name || "Anonymous"}
+                    {p.display_name || t("profile.anonymous")}
                   </p>
                   <p className={`text-xs ${isTop3 ? "text-white/70" : "text-muted-foreground"}`}>
-                    Level {p.level} · {getLevelLabel(p.level)}
+                    {t("levelUp.level")} {p.level} · {getLevelLabel(p.level)}
                   </p>
                 </div>
 
                 <div className={`flex items-center gap-1 flex-shrink-0 ${isTop3 ? "" : "text-amber-600"}`}>
                   <Zap className={`h-3.5 w-3.5 ${isTop3 ? "text-white/80" : ""}`} />
                   <span className={`text-sm font-extrabold ${isTop3 ? "text-white" : ""}`}>
-                    {p.points.toLocaleString()}
+                    {p.points.toLocaleString("tr-TR")}
                   </span>
                 </div>
               </div>

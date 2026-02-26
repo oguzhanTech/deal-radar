@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Notification } from "@/lib/types/database";
 import { formatDistanceToNow } from "date-fns";
+import { tr } from "date-fns/locale";
 
 export function NotificationBell() {
   const { user } = useAuth();
@@ -69,10 +70,10 @@ export function NotificationBell() {
       <SheetContent side="right" className="w-full max-w-sm">
         <SheetHeader>
           <div className="flex items-center justify-between">
-            <SheetTitle>Notifications</SheetTitle>
+            <SheetTitle>Bildirimler</SheetTitle>
             {unreadCount > 0 && (
               <button onClick={markAllRead} className="text-xs text-primary font-medium cursor-pointer">
-                Mark all read
+                Tümünü okundu işaretle
               </button>
             )}
           </div>
@@ -80,7 +81,7 @@ export function NotificationBell() {
 
         <div className="space-y-1 mt-2 -mx-2">
           {notifications.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm">No notifications yet</p>
+            <p className="text-center text-muted-foreground py-8 text-sm">Henüz bildirim yok</p>
           ) : (
             notifications.map((n) => (
               <div
@@ -90,7 +91,7 @@ export function NotificationBell() {
                 <p className="text-sm font-medium">{n.title}</p>
                 {n.message && <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>}
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: tr })}
                 </p>
               </div>
             ))

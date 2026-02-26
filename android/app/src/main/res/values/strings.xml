@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Deal Radar</string>
+    <string name="title_activity_main">Deal Radar</string>
+    <string name="package_name">com.dealradar.app</string>
+    <string name="custom_url_scheme">com.dealradar.app</string>
+</resources>

@@ -1,19 +1,22 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy } from "lucide-react";
+import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy, Settings } from "lucide-react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DealCard } from "@/components/deals/deal-card";
 import { LoginModal } from "@/components/auth/login-modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
-import { COUNTRIES, TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS, BADGE_INFO } from "@/lib/constants";
+import { updateProfile as updateProfileAction, signOutAction } from "@/app/actions";
+import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS, BADGE_INFO } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 import { formatDistanceToNow } from "date-fns";
+import { tr } from "date-fns/locale";
 import type { Deal } from "@/lib/types/database";
 
 function getLevelInfo(points: number) {
@@ -33,7 +36,6 @@ export default function ProfilePage() {
   const supabase = useMemo(() => createClient(), []);
   const [showLogin, setShowLogin] = useState(false);
   const [displayName, setDisplayName] = useState("");
-  const [country, setCountry] = useState("GLOBAL");
   const [saving, setSaving] = useState(false);
   const [myDeals, setMyDeals] = useState<Deal[]>([]);
   const [showEdit, setShowEdit] = useState(false);
@@ -41,13 +43,12 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || "");
-      setCountry(profile.country || "GLOBAL");
     }
   }, [profile]);
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchDeals = async () => {
       const { data } = await supabase
         .from("deals")
         .select("*")
@@ -56,20 +57,26 @@ export default function ProfilePage() {
         .limit(10);
       setMyDeals(data ?? []);
     };
-    fetch();
+    fetchDeals();
   }, [user, supabase]);
 
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    await supabase
-      .from("profiles")
-      .update({ display_name: displayName, country })
-      .eq("user_id", user.id);
-    await refreshProfile();
-    toast({ title: "Profile updated" });
+    try {
+      const result = await updateProfileAction(displayName);
+      if (result.error) {
+        toast({ title: t("create.error.failed"), description: result.error, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+      await refreshProfile();
+      toast({ title: t("profile.updated") });
+      setShowEdit(false);
+    } catch {
+      toast({ title: t("create.error.failed"), variant: "destructive" });
+    }
     setSaving(false);
-    setShowEdit(false);
   };
 
   if (!authLoading && !user) {
@@ -80,13 +87,13 @@ export default function ProfilePage() {
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center mb-5">
             <User className="h-10 w-10 text-indigo-400" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Your Profile</h2>
-          <p className="text-muted-foreground mb-8 text-sm">Sign in to manage your profile and track your deals</p>
+          <h2 className="text-2xl font-bold mb-2">{t("profile.title")}</h2>
+          <p className="text-muted-foreground mb-8 text-sm">{t("profile.signInDesc")}</p>
           <button
             onClick={() => setShowLogin(true)}
             className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white px-8 py-3 rounded-2xl font-semibold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform cursor-pointer"
           >
-            Sign in
+            {t("common.signIn")}
           </button>
         </div>
       </>
@@ -112,11 +119,11 @@ export default function ProfilePage() {
             {initial}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold truncate">{profile?.display_name || "Anonymous"}</h2>
+            <h2 className="text-lg font-bold truncate">{profile?.display_name || t("profile.anonymous")}</h2>
             <p className="text-white/60 text-xs truncate">{user?.email}</p>
             {profile && (
               <p className="text-white/50 text-[10px] mt-0.5">
-                Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true, locale: tr })}
               </p>
             )}
           </div>
@@ -125,11 +132,13 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* Badges */}
         <div className="flex items-center gap-2 mt-4 relative z-10 flex-wrap">
+          <Badge className="bg-white/10 text-white/80 border-white/20 text-[10px] font-bold backdrop-blur-sm">
+            {levelInfo.current.label}
+          </Badge>
           {isTrusted && (
             <Badge className="bg-emerald-400/20 text-emerald-100 border-emerald-400/30 text-[10px] font-bold gap-1 backdrop-blur-sm">
-              <Star className="h-2.5 w-2.5 fill-current" /> Trusted Submitter
+              <Star className="h-2.5 w-2.5 fill-current" /> {t("profile.trusted")}
             </Badge>
           )}
           <Badge className="bg-white/10 text-white/80 border-white/20 text-[10px] capitalize backdrop-blur-sm">
@@ -137,6 +146,22 @@ export default function ProfilePage() {
           </Badge>
         </div>
       </div>
+
+      {/* Admin Panel Link */}
+      {profile?.role === "admin" && (
+        <Link
+          href="/admin"
+          className="mx-4 mt-4 flex items-center justify-between bg-card rounded-2xl px-4 py-3.5 shadow-card active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <Settings className="h-4.5 w-4.5 text-white" />
+            </div>
+            <span className="font-semibold text-sm">{t("admin.title")}</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+      )}
 
       {/* Level Card */}
       <div className="mx-4 mt-4 bg-card rounded-2xl p-4 shadow-card">
@@ -147,18 +172,17 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="text-sm font-bold">{levelInfo.current.label}</p>
-              <p className="text-[10px] text-muted-foreground">Level {level}</p>
+              <p className="text-[10px] text-muted-foreground">{t("levelUp.level")} {level}</p>
             </div>
           </div>
           <div className="text-right">
             <p className="text-lg font-extrabold flex items-center gap-1">
               <Zap className="h-4 w-4 text-amber-500" /> {points}
             </p>
-            <p className="text-[10px] text-muted-foreground">points</p>
+            <p className="text-[10px] text-muted-foreground">{t("profile.points")}</p>
           </div>
         </div>
 
-        {/* XP Progress Bar */}
         <div className="space-y-1">
           <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden">
             <motion.div
@@ -169,11 +193,11 @@ export default function ProfilePage() {
             />
           </div>
           <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>{levelInfo.current.min} pts</span>
+            <span>{levelInfo.current.min} {t("profile.points")}</span>
             {levelInfo.next ? (
-              <span>{levelInfo.pointsToNext} pts to Level {levelInfo.next.level}</span>
+              <span>{levelInfo.pointsToNext} {t("profile.pointsToNext")} {levelInfo.next.level}</span>
             ) : (
-              <span>Max level reached!</span>
+              <span>{t("profile.maxLevel")}</span>
             )}
           </div>
         </div>
@@ -184,24 +208,24 @@ export default function ProfilePage() {
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
           <Award className="h-5 w-5 text-indigo-500 mx-auto mb-1.5" />
           <p className="text-xl font-extrabold">{profile?.trust_score ?? 0}</p>
-          <p className="text-[10px] text-muted-foreground font-medium">Trust</p>
+          <p className="text-[10px] text-muted-foreground font-medium">{t("profile.trust")}</p>
         </div>
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
           <Package className="h-5 w-5 text-violet-500 mx-auto mb-1.5" />
           <p className="text-xl font-extrabold">{myDeals.length}</p>
-          <p className="text-[10px] text-muted-foreground font-medium">Deals</p>
+          <p className="text-[10px] text-muted-foreground font-medium">{t("profile.deals")}</p>
         </div>
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
           <Trophy className="h-5 w-5 text-amber-500 mx-auto mb-1.5" />
           <p className="text-xl font-extrabold">{badges.length}</p>
-          <p className="text-[10px] text-muted-foreground font-medium">Badges</p>
+          <p className="text-[10px] text-muted-foreground font-medium">{t("profile.badges")}</p>
         </div>
       </div>
 
       {/* Badge Gallery */}
       {badges.length > 0 && (
         <div className="mx-4 mt-4">
-          <h3 className="text-sm font-bold mb-2.5 px-0.5">Badges</h3>
+          <h3 className="text-sm font-bold mb-2.5 px-0.5">{t("profile.badgesTitle")}</h3>
           <div className="grid grid-cols-2 gap-2">
             {badges.map((badge) => {
               const info = BADGE_INFO[badge];
@@ -220,10 +244,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* All Badges (locked/unlocked) */}
       {badges.length === 0 && (
         <div className="mx-4 mt-4">
-          <h3 className="text-sm font-bold mb-2.5 px-0.5">Badges to Earn</h3>
+          <h3 className="text-sm font-bold mb-2.5 px-0.5">{t("profile.badgesToEarn")}</h3>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(BADGE_INFO).map(([id, info]) => (
               <div key={id} className="bg-card rounded-2xl p-3 shadow-card flex items-center gap-2.5 opacity-40">
@@ -244,7 +267,7 @@ export default function ProfilePage() {
           onClick={() => setShowEdit(!showEdit)}
           className="w-full flex items-center justify-between bg-card rounded-2xl px-4 py-3.5 shadow-card cursor-pointer active:scale-[0.98] transition-transform"
         >
-          <span className="font-semibold text-sm">Edit Profile</span>
+          <span className="font-semibold text-sm">{t("profile.editProfile")}</span>
           <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showEdit ? "rotate-90" : ""}`} />
         </button>
       </div>
@@ -259,25 +282,16 @@ export default function ProfilePage() {
           >
             <div className="space-y-3 pt-3 pb-1">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Display Name</label>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">{t("profile.displayName")}</label>
                 <Input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your name"
-                  className="rounded-xl"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Country</label>
-                <Select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+                  placeholder={t("profile.displayNamePlaceholder")}
                   className="rounded-xl"
                 />
               </div>
               <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl h-11">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("profile.saveChanges")}
               </Button>
             </div>
           </motion.div>
@@ -287,7 +301,7 @@ export default function ProfilePage() {
       {/* My Deals */}
       {myDeals.length > 0 && (
         <div className="mx-4 mt-6 space-y-3">
-          <h3 className="text-lg font-bold px-0.5">My Deals</h3>
+          <h3 className="text-lg font-bold px-0.5">{t("profile.myDeals")}</h3>
           {myDeals.map((deal) => (
             <DealCard key={deal.id} deal={deal} />
           ))}

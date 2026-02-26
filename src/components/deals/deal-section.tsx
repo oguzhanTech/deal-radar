@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { DealCard } from "./deal-card";
 import { DealCardSkeleton } from "./deal-card-skeleton";
+import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 
 interface DealSectionProps {
@@ -47,7 +48,7 @@ export function DealSection({ title, emoji, deals, loading, seeAllHref }: DealSe
             href={seeAllHref}
             className="text-xs text-primary font-semibold flex items-center gap-0.5 hover:underline"
           >
-            See all
+            {t("common.seeAll")}
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         )}
@@ -67,11 +68,10 @@ export function DealSection({ title, emoji, deals, loading, seeAllHref }: DealSe
                 <DealCard key={deal.id} deal={deal} horizontal />
               ))}
           {!loading && deals.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8">No deals found</p>
+            <p className="text-sm text-muted-foreground py-8">{t("search.empty")}</p>
           )}
         </div>
 
-        {/* Right-edge gradient fade to hint scrollability */}
         {canScrollRight && (
           <div className="absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
         )}

@@ -3,13 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReminderEmail } from "@/lib/email";
 
 const REMINDER_WINDOWS = [
-  { key: "3d", ms: 3 * 24 * 60 * 60 * 1000, label: "3 days" },
-  { key: "1d", ms: 1 * 24 * 60 * 60 * 1000, label: "1 day" },
-  { key: "6h", ms: 6 * 60 * 60 * 1000, label: "6 hours" },
-  { key: "1h", ms: 1 * 60 * 60 * 1000, label: "1 hour" },
+  { key: "3d", ms: 3 * 24 * 60 * 60 * 1000, label: "3 gün" },
+  { key: "1d", ms: 1 * 24 * 60 * 60 * 1000, label: "1 gün" },
+  { key: "6h", ms: 6 * 60 * 60 * 1000, label: "6 saat" },
+  { key: "1h", ms: 1 * 60 * 60 * 1000, label: "1 saat" },
 ];
 
-// 15-minute buffer for cron interval
 const BUFFER_MS = 16 * 60 * 1000;
 
 export async function GET(request: Request) {
@@ -22,7 +21,6 @@ export async function GET(request: Request) {
   const now = Date.now();
   let sent = 0;
 
-  // Get all active saves with their deals and user emails
   const { data: saves } = await supabase
     .from("deal_saves")
     .select(`
@@ -41,7 +39,7 @@ export async function GET(request: Request) {
     if (!deal || deal.status !== "approved") continue;
 
     const endTime = new Date(deal.end_at).getTime();
-    if (endTime <= now) continue; // already expired
+    if (endTime <= now) continue;
 
     const timeUntilEnd = endTime - now;
     const sentReminders = (save.sent_reminders as Record<string, boolean>) || {};
@@ -50,16 +48,13 @@ export async function GET(request: Request) {
       const isEnabled = (save.reminder_settings as Record<string, boolean>)?.[window.key];
       const alreadySent = sentReminders[window.key];
 
-      // Send if enabled, not yet sent, and we're within the window
       if (isEnabled && !alreadySent && timeUntilEnd <= window.ms && timeUntilEnd > (window.ms - BUFFER_MS)) {
-        // Get user email
         const { data: userData } = await supabase.auth.admin.getUserById(save.user_id);
         const email = userData?.user?.email;
 
         if (email) {
           const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL}/deal/${deal.id}`;
 
-          // Send email
           await sendReminderEmail({
             to: email,
             dealTitle: deal.title,
@@ -68,16 +63,14 @@ export async function GET(request: Request) {
             dealUrl,
           });
 
-          // Create in-app notification
           await supabase.from("notifications").insert({
             user_id: save.user_id,
             type: "reminder",
-            title: `"${deal.title}" ends in ${window.label}!`,
-            message: "Don't miss this deal — act now before it expires.",
+            title: `"${deal.title}" ${window.label} sonra bitiyor!`,
+            message: "Bu fırsatı kaçırma — süresi dolmadan yakala.",
             payload: { deal_id: deal.id },
           });
 
-          // Mark as sent
           await supabase
             .from("deal_saves")
             .update({

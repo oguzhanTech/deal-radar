@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useAuth } from "./auth-provider";
 import { LoginModal } from "./login-modal";
 
 export function useAuthGuard() {
   const { user } = useAuth();
+  const userRef = useRef(user);
+  userRef.current = user;
+
   const [showLogin, setShowLogin] = useState(false);
 
   const requireAuth = useCallback(
     (action: () => void | Promise<void>) => {
-      if (user) {
+      if (userRef.current) {
         const result = action();
         if (result instanceof Promise) {
           result.catch(console.error);
@@ -19,7 +22,7 @@ export function useAuthGuard() {
         setShowLogin(true);
       }
     },
-    [user]
+    []
   );
 
   const AuthModal = () => (

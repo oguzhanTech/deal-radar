@@ -4,6 +4,7 @@ import { Radar } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { t } from "@/lib/i18n";
 import Link from "next/link";
 
 export function TopHeader() {
@@ -17,8 +18,8 @@ export function TopHeader() {
             <Radar className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="font-extrabold text-lg leading-tight tracking-tight">DealRadar</span>
-            <span className="text-[9px] font-medium text-white/60 leading-none -mt-0.5">Never miss a deal</span>
+            <span className="font-extrabold text-lg leading-tight tracking-tight">{t("app.name")}</span>
+            <span className="text-[9px] font-medium text-white/60 leading-none -mt-0.5">{t("app.tagline")}</span>
           </div>
         </Link>
 
@@ -37,7 +38,7 @@ export function TopHeader() {
               href="/login"
               className="text-sm font-semibold bg-white/15 backdrop-blur-sm px-4 py-2 rounded-xl hover:bg-white/25 transition-all active:scale-95"
             >
-              Sign in
+              {t("common.signIn")}
             </Link>
           )}
         </div>

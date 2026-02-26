@@ -3,14 +3,14 @@ import { ServiceWorkerRegistrar } from "@/components/layout/sw-registrar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DealRadar — Never Miss a Deal",
+  title: "Topla — Fırsatları Kaçırma",
   description:
-    "Community-driven deals and discount reminders for digital products and subscriptions.",
+    "Topluluk destekli fırsat ve indirim hatırlatıcısı. Dijital ürün ve aboneliklerde en iyi fırsatlar.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "DealRadar",
+    title: "Topla",
   },
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { signOutAction } from "@/app/actions";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types/database";
 
@@ -91,7 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         if (session?.user) await fetchProfile(session.user);
       } catch {
-        // auth not available
       }
       setLoading(false);
     };
@@ -113,10 +113,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, fetchProfile]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await signOutAction();
+    } catch {
+      // ignore
+    }
     setUser(null);
     setProfile(null);
     prevLevelRef.current = null;
+    window.location.href = "/login";
   };
 
   return (

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { useAuth } from "@/components/auth/auth-provider";
 import { LEVEL_THRESHOLDS } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 
 const CONFETTI_COLORS = ["#6366f1", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", "#3b82f6"];
 
@@ -92,9 +93,9 @@ export function LevelUpModal() {
               <span className="text-2xl font-black text-white">{levelUp}</span>
             </motion.div>
 
-            <h2 className="text-2xl font-extrabold mb-1">Level Up!</h2>
+            <h2 className="text-2xl font-extrabold mb-1">{t("levelUp.title")}</h2>
             <p className="text-muted-foreground text-sm">
-              You are now <span className="font-bold text-foreground">Level {levelUp}</span>
+              {t("levelUp.description")} <span className="font-bold text-foreground">{t("levelUp.level")} {levelUp}</span>
               {levelInfo && <> — {levelInfo.label}</>}
             </p>
 
@@ -102,7 +103,7 @@ export function LevelUpModal() {
               onClick={() => { setVisible(false); dismissLevelUp(); }}
               className="mt-6 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform cursor-pointer"
             >
-              Awesome!
+              {t("levelUp.dismiss")}
             </button>
           </motion.div>
         </motion.div>

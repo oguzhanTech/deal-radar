@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
+import { t } from "@/lib/i18n";
 import { CheckCircle2, XCircle, Trash2, Loader2, Pencil, X, Save } from "lucide-react";
 import type { Deal } from "@/lib/types/database";
 
@@ -14,29 +16,50 @@ interface AdminDeal extends Deal {
 
 interface AdminDealsContentProps {
   initialDeals: AdminDeal[];
+  initialFilter?: string;
 }
 
-export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
+export function AdminDealsContent({ initialDeals, initialFilter = "all" }: AdminDealsContentProps) {
   const [deals, setDeals] = useState(initialDeals);
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>(initialFilter);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: "", end_at: "", original_price: "", deal_price: "" });
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const { toast } = useToast();
 
   const filtered = filter === "all" ? deals : deals.filter((d) => d.status === filter);
 
+  const filterLabels: Record<string, string> = {
+    all: t("admin.deals.all"),
+    pending: t("admin.deals.pending"),
+    approved: t("admin.deals.approved"),
+    rejected: t("admin.deals.rejected"),
+  };
+
   const updateStatus = async (id: string, status: string) => {
+    if (status === "rejected" && !window.confirm(t("admin.confirm.reject"))) return;
     setLoadingId(id);
-    await supabase.from("deals").update({ status }).eq("id", id);
-    setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, status: status as Deal["status"] } : d)));
+    const { error } = await supabase.from("deals").update({ status }).eq("id", id);
+    if (error) {
+      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+    } else {
+      setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, status: status as Deal["status"] } : d)));
+      toast({ title: status === "approved" ? t("admin.toast.approved") : t("admin.toast.rejected") });
+    }
     setLoadingId(null);
   };
 
   const deleteDeal = async (id: string) => {
+    if (!window.confirm(t("admin.confirm.delete"))) return;
     setLoadingId(id);
-    await supabase.from("deals").delete().eq("id", id);
-    setDeals((prev) => prev.filter((d) => d.id !== id));
+    const { error } = await supabase.from("deals").delete().eq("id", id);
+    if (error) {
+      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+    } else {
+      setDeals((prev) => prev.filter((d) => d.id !== id));
+      toast({ title: t("admin.toast.deleted") });
+    }
     setLoadingId(null);
   };
 
@@ -58,7 +81,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
       ? Math.round(((original - dealPrice) / original) * 100)
       : null;
 
-    await supabase.from("deals").update({
+    const { error } = await supabase.from("deals").update({
       title: editForm.title,
       end_at: editForm.end_at ? new Date(editForm.end_at).toISOString() : undefined,
       original_price: original,
@@ -66,21 +89,26 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
       discount_percent: discount,
     }).eq("id", id);
 
-    setDeals((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? {
-              ...d,
-              title: editForm.title,
-              end_at: editForm.end_at ? new Date(editForm.end_at).toISOString() : d.end_at,
-              original_price: original,
-              deal_price: dealPrice,
-              discount_percent: discount,
-            }
-          : d
-      )
-    );
-    setEditingId(null);
+    if (error) {
+      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+    } else {
+      setDeals((prev) =>
+        prev.map((d) =>
+          d.id === id
+            ? {
+                ...d,
+                title: editForm.title,
+                end_at: editForm.end_at ? new Date(editForm.end_at).toISOString() : d.end_at,
+                original_price: original,
+                deal_price: dealPrice,
+                discount_percent: discount,
+              }
+            : d
+        )
+      );
+      setEditingId(null);
+      toast({ title: t("admin.toast.saved") });
+    }
     setLoadingId(null);
   };
 
@@ -93,8 +121,8 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Deals Management</h2>
-        <span className="text-sm text-muted-foreground">{filtered.length} deals</span>
+        <h2 className="text-xl font-bold">{t("admin.deals.title")}</h2>
+        <span className="text-sm text-muted-foreground">{filtered.length} fırsat</span>
       </div>
 
       <div className="flex gap-1.5">
@@ -102,11 +130,11 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full capitalize transition cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-full transition cursor-pointer ${
               filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
-            {f} {f !== "all" && `(${deals.filter((d) => d.status === f).length})`}
+            {filterLabels[f]} {f !== "all" && `(${deals.filter((d) => d.status === f).length})`}
           </button>
         ))}
       </div>
@@ -119,7 +147,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                 <Input
                   value={editForm.title}
                   onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="Title"
+                  placeholder={t("create.field.title")}
                   className="text-sm h-8"
                 />
                 <Input
@@ -134,7 +162,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                     step="0.01"
                     value={editForm.original_price}
                     onChange={(e) => setEditForm((f) => ({ ...f, original_price: e.target.value }))}
-                    placeholder="Original price"
+                    placeholder={t("create.field.originalPrice")}
                     className="text-sm h-8"
                   />
                   <Input
@@ -142,17 +170,17 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                     step="0.01"
                     value={editForm.deal_price}
                     onChange={(e) => setEditForm((f) => ({ ...f, deal_price: e.target.value }))}
-                    placeholder="Deal price"
+                    placeholder={t("create.field.dealPrice")}
                     className="text-sm h-8"
                   />
                 </div>
                 <div className="flex gap-1.5">
                   <Button size="sm" className="h-7 text-xs gap-1" onClick={() => saveEdit(deal.id)} disabled={loadingId === deal.id}>
                     {loadingId === deal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                    Save
+                    {t("admin.deals.save")}
                   </Button>
                   <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => setEditingId(null)}>
-                    <X className="h-3 w-3" /> Cancel
+                    <X className="h-3 w-3" /> {t("admin.deals.cancel")}
                   </Button>
                 </div>
               </div>
@@ -162,11 +190,11 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-sm truncate">{deal.title}</h3>
                     <p className="text-xs text-muted-foreground">
-                      {deal.provider} · {deal.country} · by {deal.profile?.display_name || "Unknown"}
+                      {deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
                     </p>
                   </div>
                   <Badge className={`text-[10px] ${statusColors[deal.status]} border-0 shrink-0`}>
-                    {deal.status}
+                    {filterLabels[deal.status]}
                   </Badge>
                 </div>
 
@@ -180,7 +208,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                       disabled={loadingId === deal.id}
                     >
                       {loadingId === deal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
-                      Approve
+                      {t("admin.deals.approve")}
                     </Button>
                   )}
                   {deal.status !== "rejected" && (
@@ -192,7 +220,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                       disabled={loadingId === deal.id}
                     >
                       <XCircle className="h-3 w-3" />
-                      Reject
+                      {t("admin.deals.reject")}
                     </Button>
                   )}
                   <Button
@@ -202,7 +230,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
                     onClick={() => startEdit(deal)}
                   >
                     <Pencil className="h-3 w-3" />
-                    Edit
+                    {t("admin.deals.edit")}
                   </Button>
                   <Button
                     size="sm"
@@ -220,7 +248,7 @@ export function AdminDealsContent({ initialDeals }: AdminDealsContentProps) {
         ))}
 
         {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">No deals found</p>
+          <p className="text-center text-muted-foreground py-8">{t("admin.deals.empty")}</p>
         )}
       </div>
     </div>

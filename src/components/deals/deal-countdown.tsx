@@ -2,6 +2,7 @@
 
 import { useCountdown } from "@/hooks/use-countdown";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 import { Clock, AlertTriangle } from "lucide-react";
 
 interface DealCountdownProps {
@@ -16,20 +17,20 @@ export function DealCountdown({ endAt, compact = false, className }: DealCountdo
   if (isExpired) {
     return (
       <span className={cn("inline-flex items-center gap-1 text-xs font-bold text-muted-foreground bg-muted rounded-full px-2.5 py-1", className)}>
-        Expired
+        {t("deal.expired")}
       </span>
     );
   }
 
   const timeString = compact
     ? days > 0
-      ? `${days}d ${hours}h`
+      ? `${days}g ${hours}s`
       : hours > 0
-        ? `${hours}h ${minutes}m`
-        : `${minutes}m ${seconds}s`
-    : `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        ? `${hours}s ${minutes}dk`
+        : `${minutes}dk ${seconds}sn`
+    : `${days}g ${hours}s ${minutes}dk ${seconds}sn`;
 
-  const label = isVeryUrgent ? "Ending now" : isUrgent ? "Ending soon" : null;
+  const label = isVeryUrgent ? t("deal.endingNow") : isUrgent ? t("deal.endingSoon") : null;
 
   return (
     <span

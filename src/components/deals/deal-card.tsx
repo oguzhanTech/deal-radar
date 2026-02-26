@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { DealCountdown } from "./deal-countdown";
 import { HeatBadge } from "./heat-badge";
 import { SaveRemindButton } from "./save-remind-button";
-import { getCountryFlag, formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/use-countdown";
 import { cn } from "@/lib/utils";
 import { HEAT_TRENDING_THRESHOLD } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 
 interface DealCardProps {
@@ -23,10 +23,11 @@ export function DealCard({ deal, horizontal = false }: DealCardProps) {
   const isTrending = deal.heat_score >= HEAT_TRENDING_THRESHOLD;
 
   return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.97 }}
-      className={horizontal ? "flex-shrink-0 w-[280px] snap-start" : "w-full"}
+    <div
+      className={cn(
+        "hover:-translate-y-[3px] active:scale-[0.97] transition-transform duration-200",
+        horizontal ? "flex-shrink-0 w-[280px] snap-start" : "w-full"
+      )}
     >
       <Link href={`/deal/${deal.id}`} prefetch={true} className="block">
         <div
@@ -52,11 +53,10 @@ export function DealCard({ deal, horizontal = false }: DealCardProps) {
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground/40 text-sm font-medium">
-                No image
+                {t("deal.noImage")}
               </div>
             )}
 
-            {/* Gradient overlay for readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
 
             {/* Provider pill */}
@@ -66,14 +66,11 @@ export function DealCard({ deal, horizontal = false }: DealCardProps) {
               </Badge>
             </div>
 
-            {/* Country + Discount */}
+            {/* Discount */}
             <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 items-end">
-              <Badge variant="secondary" className="text-[10px] bg-white/90 backdrop-blur-sm text-foreground border-0 font-medium px-2 py-0.5">
-                {getCountryFlag(deal.country)} {deal.country}
-              </Badge>
               {deal.discount_percent && (
                 <Badge className="text-xs bg-emerald-500 text-white border-0 font-bold px-2.5 py-0.5 shadow-sm">
-                  -{deal.discount_percent}%
+                  -%{deal.discount_percent}
                 </Badge>
               )}
             </div>
@@ -104,12 +101,12 @@ export function DealCard({ deal, horizontal = false }: DealCardProps) {
                   </span>
                 </>
               ) : (
-                <span className="text-xs text-muted-foreground">View deal</span>
+                <span className="text-xs text-muted-foreground">{t("deal.viewDeal")}</span>
               )}
             </div>
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_REMINDER_SETTINGS } from "@/lib/constants";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 interface SaveRemindButtonProps {
   dealId: string;
@@ -26,10 +27,8 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
   const [showCheck, setShowCheck] = useState(false);
   const supabase = useMemo(() => createClient(), []);
 
-  const isDemo = dealId.startsWith("demo-");
-
   useEffect(() => {
-    if (!user || isDemo) return;
+    if (!user) return;
     const check = async () => {
       try {
         const { data } = await supabase
@@ -44,14 +43,9 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
       }
     };
     check();
-  }, [user, dealId, supabase, isDemo]);
+  }, [user, dealId, supabase]);
 
   const handleToggle = async () => {
-    if (isDemo) {
-      toast({ title: "Demo deal", description: "Connect Supabase to save real deals", variant: "destructive" });
-      return;
-    }
-
     requireAuth(async () => {
       if (!user) return;
       setLoading(true);
@@ -59,12 +53,12 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
         if (saved) {
           const { error } = await supabase.from("deal_saves").delete().eq("user_id", user.id).eq("deal_id", dealId);
           if (error) {
-            toast({ title: "Failed to remove deal", description: error.message, variant: "destructive" });
+            toast({ title: t("save.removeFailed"), description: error.message, variant: "destructive" });
             setLoading(false);
             return;
           }
           setSaved(false);
-          toast({ title: "Deal removed from your radar" });
+          toast({ title: t("save.removed") });
         } else {
           const { error } = await supabase.from("deal_saves").insert({
             user_id: user.id,
@@ -72,17 +66,17 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
             reminder_settings: DEFAULT_REMINDER_SETTINGS,
           });
           if (error) {
-            toast({ title: "Failed to save deal", description: error.message, variant: "destructive" });
+            toast({ title: t("save.failed"), description: error.message, variant: "destructive" });
             setLoading(false);
             return;
           }
           setSaved(true);
           setShowCheck(true);
           setTimeout(() => setShowCheck(false), 1200);
-          toast({ title: "Saved! Reminders activated", description: "We'll notify you before it ends" });
+          toast({ title: t("save.savedToast"), description: t("save.savedDesc") });
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Something went wrong";
+        const message = err instanceof Error ? err.message : t("create.error.failed");
         toast({ title: message, variant: "destructive" });
       }
       setLoading(false);
@@ -158,17 +152,17 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
                   className="flex items-center gap-2"
                 >
                   <Check className="h-4 w-4" />
-                  Saved!
+                  {t("save.saved")}
                 </motion.div>
               ) : saved ? (
                 <motion.div key="saved" initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex items-center gap-2">
                   <BellRing className="h-4 w-4" />
-                  Saved
+                  {t("save.saved")}
                 </motion.div>
               ) : (
                 <motion.div key="unsaved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
                   <Bell className="h-4 w-4" />
-                  Save & Remind
+                  {t("save.saveRemind")}
                 </motion.div>
               )}
             </AnimatePresence>

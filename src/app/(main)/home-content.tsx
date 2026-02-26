@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { DealSection } from "@/components/deals/deal-section";
-import { Trophy, ChevronRight } from "lucide-react";
+import { Trophy, ChevronRight, PlusCircle } from "lucide-react";
+import { RadarBuddy } from "@/components/mascot/radar-buddy";
+import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 
 interface HomeContentProps {
@@ -10,51 +12,66 @@ interface HomeContentProps {
   popular: Deal[];
   newest: Deal[];
   trending: Deal[];
-  isDemo?: boolean;
 }
 
-export function HomeContent({ endingSoon, popular, newest, trending, isDemo }: HomeContentProps) {
+export function HomeContent({ endingSoon, popular, newest, trending }: HomeContentProps) {
+  const isEmpty = endingSoon.length === 0 && popular.length === 0 && newest.length === 0 && trending.length === 0;
+
   return (
     <div className="space-y-6 py-5">
-      {isDemo && (
-        <div className="mx-4 p-3.5 rounded-2xl bg-indigo-50 border border-indigo-100">
-          <p className="text-xs text-indigo-600 font-semibold text-center">
-            Showing demo data — set up Supabase to see real deals
-          </p>
+      {isEmpty ? (
+        <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+          <RadarBuddy size="lg" mood="thinking" className="mb-4" />
+          <h2 className="text-lg font-bold mb-1">{t("home.emptyTitle")}</h2>
+          <p className="text-sm text-muted-foreground mb-6">{t("home.emptyState")}</p>
+          <Link
+            href="/create"
+            className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-600 text-white px-6 py-3 rounded-2xl font-semibold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {t("nav.create")}
+          </Link>
         </div>
+      ) : (
+        <>
+          {trending.length > 0 && (
+            <DealSection
+              title={t("home.trending")}
+              emoji="🔥"
+              deals={trending}
+              seeAllHref="/search?sort=trending"
+            />
+          )}
+
+          {endingSoon.length > 0 && (
+            <DealSection
+              title={t("home.endingSoon")}
+              emoji="⏰"
+              deals={endingSoon}
+              seeAllHref="/search?sort=popular"
+            />
+          )}
+
+          {popular.length > 0 && (
+            <DealSection
+              title={t("home.popular")}
+              emoji="💎"
+              deals={popular}
+              seeAllHref="/search?sort=popular"
+            />
+          )}
+
+          {newest.length > 0 && (
+            <DealSection
+              title={t("home.newDeals")}
+              emoji="✨"
+              deals={newest}
+              seeAllHref="/search?sort=new"
+            />
+          )}
+        </>
       )}
 
-      {trending.length > 0 && (
-        <DealSection
-          title="Trending Now"
-          emoji="🔥"
-          deals={trending}
-          seeAllHref="/search?sort=popular"
-        />
-      )}
-
-      <DealSection
-        title="Ending Soon"
-        emoji="⏰"
-        deals={endingSoon}
-        seeAllHref="/search?sort=ending"
-      />
-
-      <DealSection
-        title="Popular"
-        emoji="💎"
-        deals={popular}
-        seeAllHref="/search?sort=popular"
-      />
-
-      <DealSection
-        title="New Deals"
-        emoji="✨"
-        deals={newest}
-        seeAllHref="/search?sort=new"
-      />
-
-      {/* Leaderboard Banner */}
       <div className="px-4">
         <Link
           href="/leaderboard"
@@ -65,8 +82,8 @@ export function HomeContent({ endingSoon, popular, newest, trending, isDemo }: H
             <Trophy className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground">Top Deal Hunters</p>
-            <p className="text-xs text-muted-foreground">See who&apos;s finding the best deals</p>
+            <p className="text-sm font-bold text-foreground">{t("home.leaderboardTitle")}</p>
+            <p className="text-xs text-muted-foreground">{t("home.leaderboardDesc")}</p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
         </Link>

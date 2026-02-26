@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 
 const CACHE_TTL = 60_000;
 
@@ -12,21 +12,19 @@ interface CacheEntry<T> {
 const memoryCache = new Map<string, CacheEntry<unknown>>();
 
 export function useFeedCache<T>(key: string) {
-  const cacheRef = useRef(memoryCache);
-
   const get = useCallback((): T | null => {
-    const entry = cacheRef.current.get(key) as CacheEntry<T> | undefined;
+    const entry = memoryCache.get(key) as CacheEntry<T> | undefined;
     if (!entry) return null;
     if (Date.now() - entry.timestamp > CACHE_TTL) {
-      cacheRef.current.delete(key);
+      memoryCache.delete(key);
       return null;
     }
     return entry.data;
   }, [key]);
 
   const set = useCallback((data: T) => {
-    cacheRef.current.set(key, { data, timestamp: Date.now() });
+    memoryCache.set(key, { data, timestamp: Date.now() });
   }, [key]);
 
-  return { get, set };
+  return useMemo(() => ({ get, set }), [get, set]);
 }

@@ -6,8 +6,8 @@ export const runtime = "edge";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dealId = searchParams.get("id");
-  const mode = searchParams.get("mode"); // "deal" or "summary"
-  const count = searchParams.get("count"); // for summary mode
+  const mode = searchParams.get("mode");
+  const count = searchParams.get("count");
 
   if (mode === "summary") {
     return new ImageResponse(
@@ -27,9 +27,9 @@ export async function GET(request: Request) {
         >
           <div style={{ fontSize: 72, marginBottom: 12, display: "flex" }}>🔥</div>
           <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 8, display: "flex" }}>
-            I saved {count || "5"} deals
+            {count || "5"} fırsat kaydettim
           </div>
-          <div style={{ fontSize: 20, opacity: 0.9, display: "flex" }}>ending this week on DealRadar</div>
+          <div style={{ fontSize: 20, opacity: 0.9, display: "flex" }}>bu hafta biten fırsatlar — Topla</div>
           <div
             style={{
               marginTop: 32,
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
               display: "flex",
             }}
           >
-            dealradar.app
+            topla.app
           </div>
         </div>
       ),
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
             fontFamily: "sans-serif",
           }}
         >
-          DealRadar
+          Topla
         </div>
       ),
       { width: 1200, height: 630 }
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
   const { data: deal } = await supabase.from("deals").select("*").eq("id", dealId).single();
 
   if (!deal) {
-    return new Response("Deal not found", { status: 404 });
+    return new Response("Fırsat bulunamadı", { status: 404 });
   }
 
   const timeLeft = new Date(deal.end_at).getTime() - Date.now();
@@ -129,7 +129,7 @@ export async function GET(request: Request) {
                     display: "flex",
                   }}
                 >
-                  -{deal.discount_percent}%
+                  -%{deal.discount_percent}
                 </div>
               )}
             </div>
@@ -141,9 +141,9 @@ export async function GET(request: Request) {
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 14, opacity: 0.7, display: "flex" }}>Ends in</div>
+              <div style={{ fontSize: 14, opacity: 0.7, display: "flex" }}>Kalan süre</div>
               <div style={{ fontSize: 32, fontWeight: 700, display: "flex" }}>
-                {timeLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : "Expired"}
+                {timeLeft > 0 ? `${daysLeft}g ${hoursLeft}s` : "Süre doldu"}
               </div>
             </div>
             <div
@@ -156,7 +156,7 @@ export async function GET(request: Request) {
                 display: "flex",
               }}
             >
-              DealRadar
+              Topla
             </div>
           </div>
         </div>

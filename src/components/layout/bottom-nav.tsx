@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, PlusCircle, Radar, User } from "lucide-react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 const tabs = [
-  { href: "/", icon: Home, label: "Home" },
-  { href: "/search", icon: Search, label: "Search" },
-  { href: "/create", icon: PlusCircle, label: "Create", accent: true },
-  { href: "/my", icon: Radar, label: "My Radar" },
-  { href: "/profile", icon: User, label: "Profile" },
+  { href: "/", icon: Home, labelKey: "nav.home" },
+  { href: "/search", icon: Search, labelKey: "nav.search" },
+  { href: "/create", icon: PlusCircle, labelKey: "nav.create", accent: true },
+  { href: "/my", icon: Radar, labelKey: "nav.myRadar" },
+  { href: "/profile", icon: User, labelKey: "nav.profile" },
 ];
 
 export function BottomNav() {
@@ -54,13 +54,11 @@ export function BottomNav() {
                       isActive ? "text-primary" : "text-stone-400"
                     )}
                   >
-                    {tab.label}
+                    {t(tab.labelKey)}
                   </span>
                   {isActive && (
-                    <motion.div
-                      layoutId="bottomNavIndicator"
-                      className="absolute -top-px left-1/2 -translate-x-1/2 w-10 h-[3px] bg-primary rounded-full"
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    <div
+                      className="absolute -top-px left-1/2 -translate-x-1/2 w-10 h-[3px] bg-primary rounded-full transition-all duration-200"
                     />
                   )}
                 </>

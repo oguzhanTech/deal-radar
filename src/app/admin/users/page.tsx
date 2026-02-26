@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminUsersContent } from "./admin-users-content";
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: users } = await supabase
     .from("profiles")
     .select("*")

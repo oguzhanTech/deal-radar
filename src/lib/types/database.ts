@@ -7,7 +7,6 @@ export type BadgeId = "early_hunter" | "trending_hunter" | "community_builder" |
 export interface Profile {
   user_id: string;
   display_name: string | null;
-  country: string | null;
   role: UserRole;
   trust_score: number;
   points: number;
@@ -22,7 +21,6 @@ export interface Deal {
   description: string | null;
   provider: string;
   category: string | null;
-  country: string;
   start_at: string | null;
   end_at: string;
   original_price: number | null;
@@ -32,6 +30,9 @@ export interface Deal {
   image_url: string | null;
   storage_path: string | null;
   external_url: string | null;
+  coupon_code: string | null;
+  coupon_description: string | null;
+  coupon_expiry: string | null;
   created_by: string;
   status: DealStatus;
   heat_score: number;

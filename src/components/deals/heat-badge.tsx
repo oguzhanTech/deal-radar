@@ -3,6 +3,7 @@
 import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HEAT_TRENDING_THRESHOLD } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 
 interface HeatBadgeProps {
   score: number;
@@ -25,7 +26,7 @@ export function HeatBadge({ score, className }: HeatBadgeProps) {
       )}
     >
       <Flame className={cn("h-3 w-3", isTrending && "fill-orange-500 text-orange-500 drop-shadow-sm")} />
-      {isTrending ? "Trending" : Math.round(score)}
+      {isTrending ? t("deal.trending") : Math.round(score)}
     </span>
   );
 }

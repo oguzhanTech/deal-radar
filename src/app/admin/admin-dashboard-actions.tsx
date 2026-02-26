@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Database } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 export function AdminDashboardActions() {
   const [seeding, setSeeding] = useState(false);
@@ -15,12 +16,12 @@ export function AdminDashboardActions() {
       const res = await fetch("/api/setup", { method: "POST" });
       const data = await res.json();
       if (res.ok) {
-        setResult(`Seeded ${data.count ?? "demo"} deals successfully!`);
+        setResult(t("admin.seedSuccess"));
       } else {
-        setResult(`Error: ${data.error || "Unknown error"}`);
+        setResult(`${t("admin.seedError")}: ${data.error || ""}`);
       }
     } catch {
-      setResult("Failed to seed deals");
+      setResult(t("admin.seedError"));
     }
     setSeeding(false);
   };
@@ -35,10 +36,10 @@ export function AdminDashboardActions() {
         className="gap-2 text-xs"
       >
         {seeding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Database className="h-3 w-3" />}
-        Seed Demo Deals
+        {t("admin.seed")}
       </Button>
       {result && (
-        <p className={`text-[10px] ${result.startsWith("Error") ? "text-destructive" : "text-green-600"}`}>
+        <p className={`text-[10px] ${result.includes("hata") || result.includes("ters") ? "text-destructive" : "text-green-600"}`}>
           {result}
         </p>
       )}
