@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const MAIN_ROUTES = ["/", "/search", "/my", "/profile", "/leaderboard"];
+const MAIN_ROUTES = ["/", "/search", "/my", "/profile", "/leaderboard", "/create", "/login"];
 
 export function useRoutePreloader() {
   const router = useRouter();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      MAIN_ROUTES.forEach((route) => router.prefetch(route));
-    }, 300);
-    return () => clearTimeout(timer);
+  useLayoutEffect(() => {
+    MAIN_ROUTES.forEach((route) => router.prefetch(route));
   }, [router]);
 }

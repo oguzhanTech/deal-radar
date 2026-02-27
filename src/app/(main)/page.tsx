@@ -1,7 +1,7 @@
 import { createReadOnlyClient } from "@/lib/supabase/server";
 import { HomeContent } from "./home-content";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function HomePage() {
   const supabase = await createReadOnlyClient();

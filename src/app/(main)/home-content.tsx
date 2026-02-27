@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DealSection } from "@/components/deals/deal-section";
 import { Trophy, ChevronRight, PlusCircle } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
@@ -15,6 +16,7 @@ interface HomeContentProps {
 }
 
 export function HomeContent({ endingSoon, popular, newest, trending }: HomeContentProps) {
+  const router = useRouter();
   const isEmpty = endingSoon.length === 0 && popular.length === 0 && newest.length === 0 && trending.length === 0;
 
   return (
@@ -75,7 +77,9 @@ export function HomeContent({ endingSoon, popular, newest, trending }: HomeConte
       <div className="px-4">
         <Link
           href="/leaderboard"
-          prefetch={true}
+          prefetch
+          onMouseEnter={() => router.prefetch("/leaderboard")}
+          onTouchStart={() => router.prefetch("/leaderboard")}
           className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 shadow-card hover:shadow-card-hover transition-all group"
         >
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-sm">

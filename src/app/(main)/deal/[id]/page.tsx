@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { DealDetailContent } from "./deal-detail-content";
 import type { Metadata } from "next";
 
+export const revalidate = 60;
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

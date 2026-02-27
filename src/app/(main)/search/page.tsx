@@ -9,6 +9,7 @@ import { DealCard } from "@/components/deals/deal-card";
 import { DealCardSkeleton } from "@/components/deals/deal-card-skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { PROVIDERS } from "@/lib/constants";
+import { useFeedCache } from "@/hooks/use-feed-cache";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 import { useSearchParams } from "next/navigation";
@@ -26,18 +27,27 @@ export default function SearchPage() {
 function SearchContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortOption>(
     (searchParams.get("sort") as SortOption) || "new"
   );
   const [filterProvider, setFilterProvider] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  const cacheKey = `search:${query}:${sort}:${filterProvider ?? ""}`;
+  const cache = useFeedCache<Deal[]>(cacheKey);
+  const [deals, setDeals] = useState<Deal[]>(() => cache.get() ?? []);
+  const [loading, setLoading] = useState(!cache.get());
+
   const supabase = useMemo(() => createClient(), []);
 
   const fetchDeals = useCallback(async () => {
-    setLoading(true);
+    const cached = cache.get();
+    if (cached) {
+      setDeals(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     try {
       let q = supabase
         .from("deals")
@@ -62,17 +72,19 @@ function SearchContent() {
       q = q.limit(50);
 
       const { data } = await q;
-      setDeals(data ?? []);
+      const result = data ?? [];
+      cache.set(result);
+      setDeals(result);
     } catch {
       setDeals([]);
     }
     setLoading(false);
-  }, [query, sort, filterProvider, supabase]);
+  }, [query, sort, filterProvider, supabase, cache]);
 
   useEffect(() => {
-    const timer = setTimeout(fetchDeals, 300);
+    const timer = setTimeout(fetchDeals, query ? 300 : 0);
     return () => clearTimeout(timer);
-  }, [fetchDeals]);
+  }, [fetchDeals, query]);
 
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: "trending", label: t("search.sortTrending") },

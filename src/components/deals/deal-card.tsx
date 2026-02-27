@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { DealCountdown } from "./deal-countdown";
@@ -19,11 +20,16 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, horizontal = false }: DealCardProps) {
+  const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
   const isTrending = deal.heat_score >= HEAT_TRENDING_THRESHOLD;
 
+  const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
+
   return (
     <div
+      onMouseEnter={prefetchDetail}
+      onTouchStart={prefetchDetail}
       className={cn(
         "hover:-translate-y-[3px] active:scale-[0.97] transition-transform duration-200",
         horizontal ? "flex-shrink-0 w-[280px] snap-start" : "w-full"

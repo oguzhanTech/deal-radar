@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { DealCard } from "./deal-card";
 import { DealCardSkeleton } from "./deal-card-skeleton";
@@ -17,6 +18,7 @@ interface DealSectionProps {
 }
 
 export function DealSection({ title, emoji, deals, loading, seeAllHref }: DealSectionProps) {
+  const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -46,6 +48,9 @@ export function DealSection({ title, emoji, deals, loading, seeAllHref }: DealSe
         {seeAllHref && (
           <Link
             href={seeAllHref}
+            prefetch
+            onMouseEnter={() => router.prefetch(seeAllHref)}
+            onTouchStart={() => router.prefetch(seeAllHref)}
             className="text-xs text-primary font-semibold flex items-center gap-0.5 hover:underline"
           >
             {t("common.seeAll")}

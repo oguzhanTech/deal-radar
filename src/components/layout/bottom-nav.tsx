@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, Search, PlusCircle, Radar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -16,6 +16,7 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl shadow-nav pb-safe border-t border-border/50">
@@ -30,6 +31,8 @@ export function BottomNav() {
               key={tab.href}
               href={tab.href}
               prefetch={true}
+              onMouseEnter={() => router.prefetch(tab.href)}
+              onTouchStart={() => router.prefetch(tab.href)}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative",
                 "active:scale-90 transition-transform"
