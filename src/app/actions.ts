@@ -119,10 +119,10 @@ export async function postComment(dealId: string, content: string) {
     return { error: "Oturum bulunamadı." };
   }
 
-  const { data, error } = await supabase
+  const { data: comment, error } = await supabase
     .from("deal_comments")
     .insert({ deal_id: dealId, user_id: user.id, content })
-    .select("*, profile:profiles(display_name, trust_score)")
+    .select("*")
     .single();
 
   if (error) {
@@ -130,7 +130,33 @@ export async function postComment(dealId: string, content: string) {
     return { error: error.message };
   }
 
-  return { data };
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, trust_score")
+    .eq("user_id", user.id)
+    .single();
+
+  return {
+    data: {
+      ...comment,
+      profile: profile ?? { display_name: null, trust_score: 0 },
+    },
+  };
+}
+
+export async function getSaveStatus(dealId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { saved: false };
+
+  const { data } = await supabase
+    .from("deal_saves")
+    .select("deal_id")
+    .eq("user_id", user.id)
+    .eq("deal_id", dealId)
+    .maybeSingle();
+
+  return { saved: !!data };
 }
 
 export async function toggleSaveDeal(dealId: string) {
@@ -149,10 +175,12 @@ export async function toggleSaveDeal(dealId: string) {
     .maybeSingle();
 
   if (existing) {
-    await supabase.from("deal_saves").delete().eq("user_id", user.id).eq("deal_id", dealId);
+    const { error } = await supabase.from("deal_saves").delete().eq("user_id", user.id).eq("deal_id", dealId);
+    if (error) return { error: error.message };
     return { saved: false };
   } else {
-    await supabase.from("deal_saves").insert({ user_id: user.id, deal_id: dealId });
+    const { error } = await supabase.from("deal_saves").insert({ user_id: user.id, deal_id: dealId });
+    if (error) return { error: error.message };
     return { saved: true };
   }
 }
