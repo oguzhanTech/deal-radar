@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy, Settings } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ function getLevelInfo(points: number) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, profile, loading: authLoading, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
   const supabase = useMemo(() => createClient(), []);
@@ -150,6 +152,9 @@ export default function ProfilePage() {
       {profile?.role === "admin" && (
         <Link
           href="/admin"
+          prefetch
+          onMouseEnter={() => router.prefetch("/admin")}
+          onTouchStart={() => router.prefetch("/admin")}
           className="mx-4 mt-4 flex items-center justify-between bg-card rounded-2xl px-4 py-3.5 shadow-card active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center gap-2.5">

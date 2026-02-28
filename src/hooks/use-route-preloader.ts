@@ -3,8 +3,8 @@
 import { useLayoutEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-const TAB_ROUTES = ["/profile", "/create", "/search", "/my"];
-const OTHER_ROUTES = ["/", "/leaderboard", "/login"];
+const TAB_ROUTES = ["/", "/profile", "/create", "/search", "/my"];
+const OTHER_ROUTES = ["/leaderboard", "/login"];
 
 export function useRoutePreloader() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function useRoutePreloader() {
       OTHER_ROUTES.forEach((route) => {
         if (!skip(route)) router.prefetch(route);
       });
-    }, 50);
+    }, 30);
 
     return () => clearTimeout(t);
   }, [router, pathname]);

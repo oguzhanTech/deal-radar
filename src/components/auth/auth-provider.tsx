@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { signOutAction } from "@/app/actions";
 import type { User } from "@supabase/supabase-js";
@@ -31,11 +32,13 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const prevLevelRef = useRef<number | null>(null);
+  const profileRetryCount = useRef(0);
   const supabase = useMemo(() => createClient(), []);
 
   const fetchProfile = useCallback(
@@ -85,12 +88,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const dismissLevelUp = useCallback(() => setLevelUp(null), []);
 
+  const syncSessionFromStorage = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.user) await fetchProfile(session.user);
+      else setProfile(null);
+    } catch {
+      setUser(null);
+      setProfile(null);
+    }
+  }, [supabase, fetchProfile]);
+
+  useEffect(() => {
+    if (pathname === "/" || pathname === "/search") {
+      syncSessionFromStorage();
+    }
+  }, [pathname, syncSessionFromStorage]);
+
   useEffect(() => {
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
-        if (session?.user) await fetchProfile(session.user);
+        if (session?.user) {
+          await fetchProfile(session.user);
+        }
       } catch {
       }
       setLoading(false);
@@ -101,16 +124,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        profileRetryCount.current = 0;
         await fetchProfile(session.user);
       } else {
         setProfile(null);
         prevLevelRef.current = null;
+        profileRetryCount.current = 0;
       }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, [supabase, fetchProfile]);
+
+  useEffect(() => {
+    if (!user || profile || loading) return;
+    if (profileRetryCount.current >= 2) return;
+    const delay = profileRetryCount.current === 0 ? 500 : 1500;
+    const t = setTimeout(() => {
+      profileRetryCount.current += 1;
+      fetchProfile(user).catch(() => {});
+    }, delay);
+    return () => clearTimeout(t);
+  }, [user, profile, loading, fetchProfile]);
 
   const signOut = async () => {
     try {

@@ -14,10 +14,12 @@ import { t } from "@/lib/i18n";
 interface SaveRemindButtonProps {
   dealId: string;
   compact?: boolean;
+  /** Liste/anasayfa kartlarında mount'ta getSaveStatus çağrılmasın (POST sayısını azaltır) */
+  skipInitialFetch?: boolean;
   className?: string;
 }
 
-export function SaveRemindButton({ dealId, compact = false, className }: SaveRemindButtonProps) {
+export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = false, className }: SaveRemindButtonProps) {
   const { user } = useAuth();
   const { requireAuth, AuthModal } = useAuthGuard();
   const { toast } = useToast();
@@ -27,19 +29,23 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
   const justToggledRef = useRef(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (skipInitialFetch) return;
+    if (!user?.id) return;
     if (justToggledRef.current) return;
     getSaveStatus(dealId).then((r) => setSaved(r.saved));
-  }, [user, dealId]);
+  }, [skipInitialFetch, user?.id, dealId]);
 
   const handleToggle = async () => {
     requireAuth(async () => {
       if (!user) return;
+      const previousSaved = saved;
+      setSaved(!saved);
       setLoading(true);
       try {
         const result = await toggleSaveDeal(dealId);
         if (result.error) {
-          toast({ title: saved ? t("save.removeFailed") : t("save.failed"), description: result.error, variant: "destructive" });
+          setSaved(previousSaved);
+          toast({ title: previousSaved ? t("save.removeFailed") : t("save.failed"), description: result.error, variant: "destructive" });
           return;
         }
         justToggledRef.current = true;
@@ -56,6 +62,7 @@ export function SaveRemindButton({ dealId, compact = false, className }: SaveRem
           toast({ title: t("save.removed") });
         }
       } catch (err) {
+        setSaved(previousSaved);
         const message = err instanceof Error ? err.message : t("create.error.failed");
         toast({ title: message, variant: "destructive" });
       } finally {

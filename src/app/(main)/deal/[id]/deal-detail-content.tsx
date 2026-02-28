@@ -53,7 +53,7 @@ export function DealDetailContent({
   saveCount,
   similarDeals,
 }: DealDetailContentProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { requireAuth, AuthModal } = useAuthGuard();
   const { toast } = useToast();
   const router = useRouter();
@@ -69,28 +69,36 @@ export function DealDetailContent({
   const isExpired = new Date(deal.end_at) < new Date();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     getUserVote(deal.id).then((result) => {
       if (result.vote) setUserVote(result.vote);
     });
-  }, [user, deal.id]);
+  }, [user?.id, deal.id]);
 
   const handleVote = (vote: 1 | -1) => {
     requireAuth(async () => {
       if (voting) return;
+      const prevVote = userVote;
+      const prevCount = voteCount;
+      const nextVote = prevVote === vote ? null : vote;
+      const delta = (nextVote ?? 0) - (prevVote ?? 0);
+      setVoteCount((c) => c + delta);
+      setUserVote(nextVote);
       setVoting(true);
       try {
-        const result = await voteDeal(deal.id, vote, userVote);
+        const result = await voteDeal(deal.id, vote, prevVote);
         if (result.error) {
+          setVoteCount(prevCount);
+          setUserVote(prevVote);
           toast({ title: t("vote.failed"), variant: "destructive" });
-        } else {
-          setVoteCount((v) => v + (result.delta ?? 0));
-          setUserVote(result.newVote ?? null);
         }
       } catch {
+        setVoteCount(prevCount);
+        setUserVote(prevVote);
         toast({ title: t("vote.failed"), variant: "destructive" });
+      } finally {
+        setVoting(false);
       }
-      setVoting(false);
     });
   };
 
@@ -99,17 +107,34 @@ export function DealDetailContent({
     e.stopPropagation();
     requireAuth(async () => {
       if (!commentText.trim() || commenting) return;
+      const text = commentText.trim();
+      setCommentText("");
+      const tempId = `temp-${Date.now()}`;
+      const optimisticComment = {
+        id: tempId,
+        deal_id: deal.id,
+        user_id: user!.id,
+        content: text,
+        created_at: new Date().toISOString(),
+        profile: {
+          display_name: profile?.display_name ?? null,
+          trust_score: profile?.trust_score ?? 0,
+          level: profile?.level ?? 1,
+        },
+      } as (typeof comments)[number];
+      setComments((prev) => [...prev, optimisticComment]);
       setCommenting(true);
       try {
-        const result = await postComment(deal.id, commentText.trim());
+        const result = await postComment(deal.id, text);
         if (result.error) {
+          setComments((prev) => prev.filter((c) => c.id !== tempId));
           toast({ title: t("comment.failed"), variant: "destructive" });
         } else if (result.data) {
-          setComments((prev) => [...prev, result.data]);
-          setCommentText("");
+          setComments((prev) => prev.map((c) => (c.id === tempId ? result.data : c)));
           toast({ title: t("comment.posted") });
         }
       } catch {
+        setComments((prev) => prev.filter((c) => c.id !== tempId));
         toast({ title: t("comment.failed"), variant: "destructive" });
       }
       setCommenting(false);

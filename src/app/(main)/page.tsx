@@ -1,48 +1,50 @@
+import { Suspense } from "react";
 import { createReadOnlyClient } from "@/lib/supabase/server";
-import { HomeContent } from "./home-content";
+import { HomeEmptyState, HomeLeaderboardLink } from "./home-content";
+import {
+  HomeTrendingSection,
+  HomeEndingSoonSection,
+  HomePopularSection,
+  HomeNewestSection,
+} from "./home-sections";
+import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
   const supabase = await createReadOnlyClient();
+  const { data: hasDeals } = await supabase
+    .from("deals")
+    .select("id")
+    .eq("status", "approved")
+    .gt("end_at", new Date().toISOString())
+    .limit(1)
+    .maybeSingle();
 
-  const [endingSoon, popular, newest, trending] = await Promise.all([
-    supabase
-      .from("deals")
-      .select("*")
-      .eq("status", "approved")
-      .gt("end_at", new Date().toISOString())
-      .order("end_at", { ascending: true })
-      .limit(10),
-    supabase
-      .from("deals")
-      .select("*")
-      .eq("status", "approved")
-      .gt("end_at", new Date().toISOString())
-      .order("heat_score", { ascending: false })
-      .limit(10),
-    supabase
-      .from("deals")
-      .select("*")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(10),
-    supabase
-      .from("deals")
-      .select("*")
-      .eq("status", "approved")
-      .gt("end_at", new Date().toISOString())
-      .gte("heat_score", 20)
-      .order("heat_score", { ascending: false })
-      .limit(8),
-  ]);
+  if (!hasDeals) {
+    return (
+      <div className="space-y-6 py-5">
+        <HomeEmptyState />
+        <HomeLeaderboardLink />
+      </div>
+    );
+  }
 
   return (
-    <HomeContent
-      endingSoon={endingSoon.data ?? []}
-      popular={popular.data ?? []}
-      newest={newest.data ?? []}
-      trending={trending.data ?? []}
-    />
+    <div className="space-y-6 py-5">
+      <Suspense fallback={<DealSectionSkeleton />}>
+        <HomeTrendingSection />
+      </Suspense>
+      <Suspense fallback={<DealSectionSkeleton />}>
+        <HomeEndingSoonSection />
+      </Suspense>
+      <Suspense fallback={<DealSectionSkeleton />}>
+        <HomePopularSection />
+      </Suspense>
+      <Suspense fallback={<DealSectionSkeleton />}>
+        <HomeNewestSection />
+      </Suspense>
+      <HomeLeaderboardLink />
+    </div>
   );
 }
