@@ -137,7 +137,7 @@ export function DealDetailContent({
   };
 
   return (
-    <div className="pb-24 animate-in fade-in duration-200">
+    <div className="pb-28 animate-in fade-in duration-200">
       <AuthModal />
 
       {/* Hero Image */}
@@ -390,16 +390,16 @@ export function DealDetailContent({
         </Tabs>
       </div>
 
-      {/* Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-xl border-t border-border/50 pb-safe">
-        <div className="flex items-center gap-2 px-4 py-3 max-w-lg mx-auto">
-          <SaveRemindButton dealId={deal.id} />
+      {/* Sticky Bottom Action Bar - above bottom nav with gap (nav h-16, gap 3) */}
+      <div className="fixed left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border" style={{ bottom: "calc(4rem + 12px)" }}>
+        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto pb-safe">
+          <SaveRemindButton dealId={deal.id} compact className="h-11 w-11 shrink-0 rounded-xl border border-border bg-muted/80 hover:bg-muted !p-0 flex items-center justify-center" />
           {deal.external_url && (
-            <a href={deal.external_url} target="_blank" rel="noopener noreferrer" className="flex-1">
-              <Button className="w-full rounded-xl h-11 bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-semibold gap-2 shadow-lg shadow-indigo-500/20">
-                <ExternalLink className="h-4 w-4" />
-                {t("deal.getDeal")}
-              </Button>
+            <a href={deal.external_url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-0">
+              <span className="flex items-center justify-center gap-2 w-full rounded-xl h-11 bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm">
+                <ExternalLink className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("deal.getDeal")}</span>
+              </span>
             </a>
           )}
         </div>
