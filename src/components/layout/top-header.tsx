@@ -2,7 +2,7 @@
 
 import { Radar } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth, useAuthDisplay } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { t } from "@/lib/i18n";
@@ -10,7 +10,10 @@ import Link from "next/link";
 
 export function TopHeader() {
   const router = useRouter();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { showAsLoggedIn, initial, profile } = useAuthDisplay();
+
+  const avatarLetter = profile?.display_name?.charAt(0)?.toUpperCase() || initial;
 
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-lg backdrop-blur-md bg-opacity-95">
@@ -27,11 +30,11 @@ export function TopHeader() {
 
         <div className="flex items-center gap-3">
           {user && <NotificationBell />}
-          {user ? (
+          {showAsLoggedIn ? (
             <Link href="/profile" prefetch onMouseEnter={() => router.prefetch("/profile")} onTouchStart={() => router.prefetch("/profile")}>
               <Avatar className="h-9 w-9 border-2 border-white/25 ring-2 ring-white/10">
                 <AvatarFallback className="bg-white/15 text-white text-xs font-bold">
-                  {profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
+                  {avatarLetter}
                 </AvatarFallback>
               </Avatar>
             </Link>

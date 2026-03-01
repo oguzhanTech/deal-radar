@@ -10,19 +10,30 @@ import { useRoutePreloader } from "@/hooks/use-route-preloader";
 import { LevelUpModal } from "@/components/rewards/level-up-modal";
 import { getPageSkeleton } from "@/components/layout/page-skeleton";
 
+const SKELETON_DELAY_MS = 100;
+
 function LayoutShell({ children }: { children: React.ReactNode }) {
   useRoutePreloader();
   const pathname = usePathname();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [showSkeleton, setShowSkeleton] = useState(false);
 
   useEffect(() => {
     setPendingPath(null);
+    setShowSkeleton(false);
   }, [pathname]);
 
   useEffect(() => {
     if (!pendingPath) return;
-    const t = setTimeout(() => setPendingPath(null), 4000);
-    return () => clearTimeout(t);
+    const showTimer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS);
+    const fallback = setTimeout(() => {
+      setPendingPath(null);
+      setShowSkeleton(false);
+    }, 4000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(fallback);
+    };
   }, [pendingPath]);
 
   const handleLinkCapture = useCallback(
@@ -35,9 +46,12 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       const path = href.split("?")[0];
       if (path === pathname) return;
       setPendingPath(path);
+      setShowSkeleton(false);
     },
     [pathname]
   );
+
+  const useSkeleton = pendingPath && showSkeleton;
 
   return (
     <div
@@ -46,7 +60,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     >
       <TopHeader />
       <main className="flex-1 pb-20 min-w-0">
-        {pendingPath ? getPageSkeleton(pendingPath) : children}
+        {useSkeleton ? getPageSkeleton(pendingPath!) : children}
       </main>
       <BottomNav />
       <LevelUpModal />
