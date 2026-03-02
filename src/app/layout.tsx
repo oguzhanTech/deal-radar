@@ -10,7 +10,7 @@ const fontSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Topla — Fırsatları Kaçırma",
+  title: "Topla — En güzel fırsatları kaçırma!",
   description:
     "Topluluk destekli fırsat ve indirim hatırlatıcısı. Dijital ürün ve aboneliklerde en iyi fırsatlar.",
   manifest: "/manifest.json",

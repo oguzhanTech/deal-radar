@@ -1,7 +1,7 @@
 const tr: Record<string, string> = {
   // App
   "app.name": "Topla",
-  "app.tagline": "Fırsatları kaçırma",
+  "app.tagline": "En güzel fırsatları kaçırma!",
   "app.description": "Topluluk destekli fırsat ve indirim hatırlatıcısı.",
 
   // Navigation
