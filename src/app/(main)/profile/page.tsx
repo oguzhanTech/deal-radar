@@ -302,6 +302,23 @@ export default function ProfilePage() {
           ))}
         </div>
       )}
+
+      {/* Legal links */}
+      <div className="mx-4 my-6 border-t border-border/60 pt-3">
+        <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+          <Link href="/privacy" className="underline-offset-4 hover:underline">
+            {t("legal.privacy")}
+          </Link>
+          <span className="text-border">•</span>
+          <Link href="/terms" className="underline-offset-4 hover:underline">
+            {t("legal.terms")}
+          </Link>
+          <span className="text-border">•</span>
+          <Link href="/contact" className="underline-offset-4 hover:underline">
+            {t("legal.contact")}
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

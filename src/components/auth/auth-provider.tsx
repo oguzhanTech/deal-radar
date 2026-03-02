@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCachedDisplay(getCachedAuthSync());
         profileRetryCount.current = 0;
         await fetchProfile(session.user);
-      } else if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+      } else if (event === "SIGNED_OUT") {
         setUser(null);
         setProfile(null);
         setCachedDisplay(null);

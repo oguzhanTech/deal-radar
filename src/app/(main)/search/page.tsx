@@ -52,8 +52,7 @@ function SearchContent() {
       let q = supabase
         .from("deals")
         .select("*")
-        .eq("status", "approved")
-        .gt("end_at", new Date().toISOString());
+        .eq("status", "approved");
 
       if (query.trim()) {
         q = q.or(`title.ilike.%${query}%,provider.ilike.%${query}%`);

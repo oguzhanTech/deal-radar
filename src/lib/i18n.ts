@@ -288,6 +288,12 @@ const tr: Record<string, string> = {
   "coupon.copied": "Kupon kodu kopyalandı!",
   "coupon.expires": "Son kullanma:",
   "coupon.title": "Kupon Kodu",
+
+  // Legal
+  "legal.title": "Yasal",
+  "legal.privacy": "Gizlilik Politikası",
+  "legal.terms": "Kullanım Şartları",
+  "legal.contact": "İletişim",
 };
 
 export function t(key: string): string {
