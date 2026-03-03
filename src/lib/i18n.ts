@@ -6,7 +6,7 @@ const tr: Record<string, string> = {
 
   // Navigation
   "nav.home": "Ana Sayfa",
-  "nav.search": "Ara",
+  "nav.search": "Keşfet",
   "nav.create": "Fırsat Paylaş",
   "nav.myRadar": "Radarım",
   "nav.profile": "Profil",
