@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { Input } from "@/components/ui/input";
@@ -17,14 +17,6 @@ import { useSearchParams } from "next/navigation";
 type SortOption = "trending" | "popular" | "new";
 
 export default function SearchPage() {
-  return (
-    <Suspense fallback={<div className="px-4 py-8 space-y-3">{Array.from({ length: 4 }).map((_, i) => <DealCardSkeleton key={i} />)}</div>}>
-      <SearchContent />
-    </Suspense>
-  );
-}
-
-function SearchContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>(

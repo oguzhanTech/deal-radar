@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Bell, BellRing, Loader2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useAuthGuard } from "@/components/auth/auth-guard";
-import { getSaveStatus, toggleSaveDeal } from "@/app/actions";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
 
 interface SaveRemindButtonProps {
   dealId: string;
@@ -27,44 +27,84 @@ export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = f
   const [loading, setLoading] = useState(false);
   const [showCheck, setShowCheck] = useState(false);
   const justToggledRef = useRef(false);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (skipInitialFetch) return;
     if (!user?.id) return;
     if (justToggledRef.current) return;
-    getSaveStatus(dealId).then((r) => setSaved(r.saved));
-  }, [skipInitialFetch, user?.id, dealId]);
+
+    let cancelled = false;
+
+    const fetchStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("deal_saves")
+          .select("deal_id")
+          .eq("user_id", user.id)
+          .eq("deal_id", dealId)
+          .maybeSingle();
+
+        if (error) return;
+        if (!cancelled) setSaved(!!data);
+      } catch {
+        // sessizce yut – buton optimistik çalışmaya devam etsin
+      }
+    };
+
+    fetchStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [skipInitialFetch, user?.id, dealId, supabase]);
 
   const handleToggle = async () => {
     requireAuth(async () => {
-      if (!user) return;
+      if (!user || loading) return;
       const previousSaved = saved;
       setSaved(!saved);
       setLoading(true);
       try {
-        const result = await toggleSaveDeal(dealId);
-        if (result.error) {
-          setSaved(previousSaved);
-          toast({ title: previousSaved ? t("save.removeFailed") : t("save.failed"), description: result.error, variant: "destructive" });
-          return;
-        }
         justToggledRef.current = true;
-        setSaved(result.saved ?? false);
-        if (result.saved) {
+
+        if (previousSaved) {
+          // Radardan çıkar
+          const { error } = await supabase
+            .from("deal_saves")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("deal_id", dealId);
+
+          if (error) throw error;
+
+          setSaved(false);
+          toast({ title: t("save.removed") });
+        } else {
+          // Radara ekle
+          const { error } = await supabase
+            .from("deal_saves")
+            .insert({ user_id: user.id, deal_id: dealId });
+
+          if (error) throw error;
+
+          setSaved(true);
           setShowCheck(true);
           setTimeout(() => {
             setShowCheck(false);
             justToggledRef.current = false;
           }, 1200);
           toast({ title: t("save.savedToast"), description: t("save.savedDesc") });
-        } else {
-          justToggledRef.current = false;
-          toast({ title: t("save.removed") });
         }
       } catch (err) {
         setSaved(previousSaved);
         const message = err instanceof Error ? err.message : t("create.error.failed");
-        toast({ title: message, variant: "destructive" });
+        toast({
+          title: previousSaved ? t("save.removeFailed") : t("save.failed"),
+          description: message,
+          variant: "destructive",
+        });
+        justToggledRef.current = false;
       } finally {
         setLoading(false);
       }

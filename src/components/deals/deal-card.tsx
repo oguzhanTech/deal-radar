@@ -82,8 +82,12 @@ export function DealCard({ deal, horizontal = false }: DealCardProps) {
             </div>
 
             {/* Save button */}
-            <div className="absolute bottom-2.5 right-2.5" onClick={(e) => e.preventDefault()}>
-              <SaveRemindButton dealId={deal.id} compact skipInitialFetch />
+            <div
+              className="absolute bottom-2.5 right-2.5"
+              onClick={(e) => e.preventDefault()}
+              data-no-skeleton
+            >
+              <SaveRemindButton dealId={deal.id} compact />
             </div>
           </div>
 

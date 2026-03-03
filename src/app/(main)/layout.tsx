@@ -39,6 +39,11 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const handleLinkCapture = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      // Bazı etkileşimler (ör. radar butonu) sayfayı gerçekten değiştirmiyor,
+      // sadece kart içi aksiyonlar. Bu alanlar için data-no-skeleton kullanıyoruz.
+      if (target.closest("[data-no-skeleton]")) return;
+
       const a = target.closest('a[href^="/"]');
       if (!a) return;
       const href = a.getAttribute("href");
