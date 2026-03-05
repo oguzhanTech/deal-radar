@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
 import { createClient } from "@/lib/supabase/client";
-import { useFeedCache } from "@/hooks/use-feed-cache";
+import { useFeedCache, invalidateFeedCache } from "@/hooks/use-feed-cache";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import type { Deal, DealSave } from "@/lib/types/database";
@@ -78,6 +78,7 @@ export default function MyRadarPage() {
       setLoading(false);
       return;
     }
+    invalidateFeedCache(`my-saves:${user.id}`);
     fetchSaves();
   }, [user, authLoading, fetchSaves]);
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { SavedDealIdsProvider } from "@/components/saved-deals/saved-deal-ids-context";
 import { ToastProvider } from "@/components/ui/toast";
 import { TopHeader } from "@/components/layout/top-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -76,9 +77,11 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <LayoutShell>{children}</LayoutShell>
-      </ToastProvider>
+      <SavedDealIdsProvider>
+        <ToastProvider>
+          <LayoutShell>{children}</LayoutShell>
+        </ToastProvider>
+      </SavedDealIdsProvider>
     </AuthProvider>
   );
 }

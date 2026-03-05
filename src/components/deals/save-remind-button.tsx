@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useAuthGuard } from "@/components/auth/auth-guard";
+import { useSavedDealIds } from "@/components/saved-deals/saved-deal-ids-context";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -23,21 +24,21 @@ interface SaveRemindButtonProps {
 export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = false, className }: SaveRemindButtonProps) {
   const { user } = useAuth();
   const { requireAuth, AuthModal } = useAuthGuard();
+  const savedIds = useSavedDealIds();
   const { toast } = useToast();
-  const [saved, setSaved] = useState(false);
+  const [localSaved, setLocalSaved] = useState(false);
   const [showCheck, setShowCheck] = useState(false);
   const justToggledRef = useRef(false);
   const togglingRef = useRef(false);
   const supabase = useMemo(() => createClient(), []);
 
+  const useContext = savedIds.savedDealIds !== null;
+  const saved = useContext ? savedIds.isSaved(dealId) : localSaved;
+
   useEffect(() => {
-    if (skipInitialFetch) return;
-    if (!user?.id) return;
-    if (justToggledRef.current) return;
-
+    if (useContext || skipInitialFetch || !user?.id || justToggledRef.current) return;
     let cancelled = false;
-
-    const fetchStatus = async () => {
+    (async () => {
       try {
         const { data, error } = await supabase
           .from("deal_saves")
@@ -45,20 +46,14 @@ export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = f
           .eq("user_id", user.id)
           .eq("deal_id", dealId)
           .maybeSingle();
-
-        if (error) return;
-        if (!cancelled) setSaved(!!data);
+        if (error || cancelled) return;
+        if (!cancelled) setLocalSaved(!!data);
       } catch {
-        // sessizce yut – buton optimistik çalışmaya devam etsin
+        // ignore
       }
-    };
-
-    fetchStatus();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [skipInitialFetch, user?.id, dealId, supabase]);
+    })();
+    return () => { cancelled = true; };
+  }, [useContext, skipInitialFetch, user?.id, dealId, supabase]);
 
   const handleToggle = () => {
     if (togglingRef.current) return;
@@ -69,7 +64,13 @@ export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = f
 
     togglingRef.current = true;
     const previousSaved = saved;
-    setSaved(!previousSaved);
+    invalidateFeedCache(`my-saves:${user.id}`);
+    if (useContext) {
+      if (previousSaved) savedIds.removeSaved(dealId);
+      else savedIds.addSaved(dealId);
+    } else {
+      setLocalSaved(!previousSaved);
+    }
     justToggledRef.current = true;
     if (!previousSaved) setShowCheck(true);
 
@@ -82,18 +83,21 @@ export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = f
             .eq("user_id", user.id)
             .eq("deal_id", dealId);
           if (error) throw error;
-          invalidateFeedCache(`my-saves:${user.id}`);
           toast({ title: t("save.removed") });
         } else {
           const { error } = await supabase
             .from("deal_saves")
             .insert({ user_id: user.id, deal_id: dealId });
           if (error) throw error;
-          invalidateFeedCache(`my-saves:${user.id}`);
           toast({ title: t("save.savedToast"), description: t("save.savedDesc") });
         }
       } catch (err) {
-        setSaved(previousSaved);
+        if (useContext) {
+          if (previousSaved) savedIds.addSaved(dealId);
+          else savedIds.removeSaved(dealId);
+        } else {
+          setLocalSaved(previousSaved);
+        }
         toast({
           title: previousSaved ? t("save.removeFailed") : t("save.failed"),
           description: err instanceof Error ? err.message : t("create.error.failed"),
