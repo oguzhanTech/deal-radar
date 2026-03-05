@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Trash2, Bell, BellOff, Share2 } from "lucide-react";
+import { Trash2, Bell, BellOff } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { DealCountdown } from "@/components/deals/deal-countdown";
 import { HeatBadge } from "@/components/deals/heat-badge";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
@@ -93,38 +92,6 @@ export default function MyRadarPage() {
     toast({ title: t("myRadar.removed") });
   };
 
-  const handleShareSaves = async () => {
-    const url = `/api/deals/share-card?mode=summary&count=${saves.length}`;
-    const shareUrl = `${window.location.origin}${url}`;
-
-    try {
-      if (navigator.share) {
-        const res = await fetch(url);
-        if (!res.ok) {
-          toast({ title: t("share.cardFailed"), variant: "destructive" });
-          return;
-        }
-        const blob = await res.blob();
-        const file = new File([blob], "firsatlarim.png", { type: "image/png" });
-        try {
-          await navigator.share({
-            title: `Topla'da ${saves.length} ${t("share.myDeals")}`,
-            text: `Topla'da takip ettiğim fırsatlara göz at`,
-            files: [file],
-          });
-        } catch {
-          await navigator.clipboard.writeText(shareUrl);
-          toast({ title: t("share.linkCopied") });
-        }
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({ title: t("share.linkCopied") });
-      }
-    } catch {
-      toast({ title: t("share.shareFailed"), variant: "destructive" });
-    }
-  };
-
   if (!authLoading && !user) {
     return (
       <>
@@ -146,17 +113,9 @@ export default function MyRadarPage() {
 
   return (
     <div className="py-5">
-      <div className="px-4 mb-4 flex items-end justify-between">
-        <div>
-          <h2 className="text-xl font-extrabold">{t("myRadar.title")}</h2>
-          <p className="text-xs text-muted-foreground font-medium">{saves.length} {t("myRadar.savedDeals")}</p>
-        </div>
-        {saves.length > 0 && (
-          <Button variant="outline" size="sm" className="rounded-xl gap-1.5 text-xs" onClick={handleShareSaves}>
-            <Share2 className="h-3.5 w-3.5" />
-            {t("myRadar.shareSaves")}
-          </Button>
-        )}
+      <div className="px-4 mb-4">
+        <h2 className="text-xl font-extrabold">{t("myRadar.title")}</h2>
+        <p className="text-xs text-muted-foreground font-medium">{saves.length} {t("myRadar.savedDeals")}</p>
       </div>
 
       {loading ? (

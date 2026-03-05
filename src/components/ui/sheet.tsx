@@ -88,8 +88,9 @@ function SheetContent({ className, children, side = "right" }: SheetContentProps
           >
             {children}
             <button
-              className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 cursor-pointer"
+              className="absolute right-3 top-3 rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               onClick={() => onOpenChange(false)}
+              aria-label="Kapat"
             >
               <X className="h-4 w-4" />
             </button>
