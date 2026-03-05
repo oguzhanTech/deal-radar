@@ -1,10 +1,10 @@
-import { createReadOnlyClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { DealSection } from "@/components/deals/deal-section";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 
 async function fetchTrending() {
-  const supabase = await createReadOnlyClient();
+  const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
     .select("*")
@@ -17,7 +17,7 @@ async function fetchTrending() {
 }
 
 async function fetchEndingSoon() {
-  const supabase = await createReadOnlyClient();
+  const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
     .select("*")
@@ -29,7 +29,7 @@ async function fetchEndingSoon() {
 }
 
 async function fetchPopular() {
-  const supabase = await createReadOnlyClient();
+  const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
     .select("*")
@@ -41,7 +41,7 @@ async function fetchPopular() {
 }
 
 async function fetchNewest() {
-  const supabase = await createReadOnlyClient();
+  const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
     .select("*")

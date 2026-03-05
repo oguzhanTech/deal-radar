@@ -41,12 +41,28 @@ export default function MyRadarPage() {
       setLoading(true);
     }
     try {
-      const { data } = await supabase
+      const { data: savesRows } = await supabase
         .from("deal_saves")
-        .select("*, deal:deals(*)")
+        .select("user_id, deal_id, reminder_settings, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
-      const result = ((data ?? []) as unknown as SavedDeal[]).filter((s) => s.deal != null);
+      if (!savesRows?.length) {
+        cache.set([]);
+        setSaves([]);
+        setLoading(false);
+        return;
+      }
+      const dealIds = savesRows.map((r) => r.deal_id);
+      const res = await fetch(`/api/deals?ids=${dealIds.join(",")}`);
+      const dealsList = (await res.json()) as Deal[];
+      const dealsById = new Map(dealsList.map((d) => [d.id, d]));
+      const result: SavedDeal[] = savesRows
+        .map((row) => {
+          const deal = dealsById.get(row.deal_id);
+          if (!deal) return null;
+          return { ...row, deal } as SavedDeal;
+        })
+        .filter((s): s is SavedDeal => s != null);
       cache.set(result);
       setSaves(result);
     } catch {

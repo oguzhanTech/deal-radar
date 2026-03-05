@@ -38,6 +38,8 @@ function getLevelLabel(level: number): string {
   return LEVEL_THRESHOLDS.find((l) => l.level === level)?.label ?? "Sessiz Takipçi";
 }
 
+const ENABLE_DEAL_DOWNLOAD = false;
+
 interface DealDetailContentProps {
   deal: Deal;
   comments: (DealComment & { profile?: { display_name: string | null; trust_score: number; level?: number } | null })[];
@@ -309,32 +311,34 @@ export function DealDetailContent({
             {t("common.share")}
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-xl gap-1.5"
-            onClick={async () => {
-              try {
-                const res = await fetch(`/api/deals/share-card?id=${deal.id}`);
-                if (!res.ok) {
-                  toast({ title: t("share.cardFailed"), variant: "destructive" });
-                  return;
+          {ENABLE_DEAL_DOWNLOAD && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl gap-1.5"
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/deals/share-card?id=${deal.id}`);
+                  if (!res.ok) {
+                    toast({ title: t("share.cardFailed"), variant: "destructive" });
+                    return;
+                  }
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${deal.title.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]/g, "_")}_firsat.png`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast({ title: t("share.cardDownloaded") });
+                } catch {
+                  toast({ title: t("share.downloadFailed"), variant: "destructive" });
                 }
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${deal.title.replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]/g, "_")}_firsat.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-                toast({ title: t("share.cardDownloaded") });
-              } catch {
-                toast({ title: t("share.downloadFailed"), variant: "destructive" });
-              }
-            }}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
+              }}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
 
           <span className="text-xs text-muted-foreground font-medium ml-auto">{saveCount} {t("deal.saves")}</span>
         </div>

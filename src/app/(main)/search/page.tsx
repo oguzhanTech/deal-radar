@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DealCard } from "@/components/deals/deal-card";
 import { DealCardSkeleton } from "@/components/deals/deal-card-skeleton";
-import { createClient } from "@/lib/supabase/client";
 import { PROVIDERS } from "@/lib/constants";
 import { useFeedCache } from "@/hooks/use-feed-cache";
 import { t } from "@/lib/i18n";
@@ -30,8 +29,6 @@ export default function SearchPage() {
   const [deals, setDeals] = useState<Deal[]>(() => cache.get() ?? []);
   const [loading, setLoading] = useState(!cache.get());
 
-  const supabase = useMemo(() => createClient(), []);
-
   const fetchDeals = useCallback(async () => {
     const cached = cache.get();
     if (cached) {
@@ -41,36 +38,18 @@ export default function SearchPage() {
       setLoading(true);
     }
     try {
-      let q = supabase
-        .from("deals")
-        .select("*")
-        .eq("status", "approved");
-
-      if (query.trim()) {
-        q = q.or(`title.ilike.%${query}%,provider.ilike.%${query}%`);
-      }
-      if (filterProvider) q = q.eq("provider", filterProvider);
-
-      if (sort === "trending") {
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        q = q.gte("created_at", sevenDaysAgo).order("heat_score", { ascending: false });
-      } else if (sort === "popular") {
-        q = q.order("heat_score", { ascending: false });
-      } else {
-        q = q.order("created_at", { ascending: false });
-      }
-
-      q = q.limit(50);
-
-      const { data } = await q;
-      const result = data ?? [];
-      cache.set(result);
-      setDeals(result);
+      const params = new URLSearchParams({ sort });
+      if (query.trim()) params.set("q", query.trim());
+      if (filterProvider) params.set("provider", filterProvider);
+      const res = await fetch(`/api/deals?${params}`);
+      const result = (await res.json()) as Deal[];
+      cache.set(result ?? []);
+      setDeals(result ?? []);
     } catch {
       setDeals([]);
     }
     setLoading(false);
-  }, [query, sort, filterProvider, supabase, cache]);
+  }, [query, sort, filterProvider, cache]);
 
   useEffect(() => {
     const timer = setTimeout(fetchDeals, query ? 300 : 0);

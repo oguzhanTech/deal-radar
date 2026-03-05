@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { createReadOnlyClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { HomeEmptyState, HomeLeaderboardLink } from "./home-content";
 import {
   HomeTrendingSection,
@@ -12,7 +12,7 @@ import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const supabase = await createReadOnlyClient();
+  const supabase = await createAnonClient();
   const { data: hasDeals } = await supabase
     .from("deals")
     .select("id")
