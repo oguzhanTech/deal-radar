@@ -164,18 +164,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCachedAuth(session.user);
           setCachedDisplay(getCachedAuthSync());
           await fetchProfile(session.user);
-        } else if (!userRef.current) {
-          setUser(null);
-          setProfile(null);
-          setCachedDisplay(null);
-          clearCachedAuth();
         }
+        // Oturum yoksa veya hata varsa state'i temizleme – sadece onAuthStateChange SIGNED_OUT'ta temizle.
+        // Böylece admin'den dönüşte veya geçici getSession hatasında logout flash olmaz.
       } catch {
-        if (!userRef.current) {
-          setUser(null);
-          setCachedDisplay(null);
-          clearCachedAuth();
-        }
+        // Geçici hata – session'ı silmeyip sadece loading'i kapatıyoruz
       }
       setLoading(false);
     };

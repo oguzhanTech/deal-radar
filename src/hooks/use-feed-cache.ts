@@ -11,6 +11,11 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<unknown>>();
 
+/** Radarım listesinin bir sonraki açılışta yeniden fetch edilmesi için save/unsave sonrası çağrılır */
+export function invalidateFeedCache(key: string): void {
+  memoryCache.delete(key);
+}
+
 export function useFeedCache<T>(key: string) {
   const get = useCallback((): T | null => {
     const entry = memoryCache.get(key) as CacheEntry<T> | undefined;
