@@ -209,8 +209,9 @@ const tr: Record<string, string> = {
 
   // Leaderboard
   "leaderboard.title": "Topla Avcıları",
-  "leaderboard.subtitle": "Topluluk sıralaması",
+  "leaderboard.subtitle": "En çok fırsat ekleyenler",
   "leaderboard.empty": "Henüz sıralamada kimse yok",
+  "leaderboard.deals": "fırsat",
 
   // Level Up
   "levelUp.title": "Seviye Atladın!",

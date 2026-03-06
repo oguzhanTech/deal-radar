@@ -1,22 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect, useCallback } from "react";
 import { useFeedCache } from "@/hooks/use-feed-cache";
-import { LEVEL_THRESHOLDS } from "@/lib/constants";
 import { t } from "@/lib/i18n";
-import { Trophy, Zap, Crown, Medal, Award } from "lucide-react";
+import { Trophy, PlusCircle, Crown, Medal, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaderboardProfile {
   id: string;
   display_name: string | null;
-  points: number;
-  level: number;
-}
-
-function getLevelLabel(level: number) {
-  return LEVEL_THRESHOLDS.find((t) => t.level === level)?.label ?? "Sessiz Takipçi";
+  deal_count: number;
 }
 
 function getInitial(name: string | null) {
@@ -51,29 +44,29 @@ function LeaderboardSkeleton() {
 }
 
 export default function LeaderboardPage() {
-  const supabase = useMemo(() => createClient(), []);
-  const cache = useFeedCache<LeaderboardData>("leaderboard");
+  const cache = useFeedCache<LeaderboardData>("leaderboard-deals");
   const [data, setData] = useState<LeaderboardData | null>(() => cache.get());
   const [loading, setLoading] = useState(!data);
 
   const fetchData = useCallback(async () => {
+    const cached = cache.get();
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     try {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, points, level")
-        .order("points", { ascending: false })
-        .limit(20);
-
-      const result: LeaderboardData = {
-        profiles: (profiles as LeaderboardProfile[]) ?? [],
-      };
+      const res = await fetch("/api/leaderboard");
+      const profiles = (await res.json()) as LeaderboardProfile[];
+      const result: LeaderboardData = { profiles: Array.isArray(profiles) ? profiles : [] };
       cache.set(result);
       setData(result);
     } catch {
       setData({ profiles: [] });
     }
     setLoading(false);
-  }, [supabase, cache]);
+  }, [cache]);
 
   useEffect(() => {
     fetchData();
@@ -137,14 +130,14 @@ export default function LeaderboardPage() {
                     {p.display_name || t("profile.anonymous")}
                   </p>
                   <p className={`text-xs ${isTop3 ? "text-white/70" : "text-muted-foreground"}`}>
-                    {t("levelUp.level")} {p.level} · {getLevelLabel(p.level)}
+                    {p.deal_count} {t("leaderboard.deals")}
                   </p>
                 </div>
 
                 <div className={`flex items-center gap-1 flex-shrink-0 ${isTop3 ? "" : "text-amber-600"}`}>
-                  <Zap className={`h-3.5 w-3.5 ${isTop3 ? "text-white/80" : ""}`} />
+                  <PlusCircle className={`h-3.5 w-3.5 ${isTop3 ? "text-white/80" : ""}`} />
                   <span className={`text-sm font-extrabold ${isTop3 ? "text-white" : ""}`}>
-                    {p.points.toLocaleString("tr-TR")}
+                    {p.deal_count.toLocaleString("tr-TR")}
                   </span>
                 </div>
               </div>
