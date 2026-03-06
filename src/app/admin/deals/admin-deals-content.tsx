@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
+import { adminUpdateDealStatus, adminDeleteDeal, adminUpdateDeal } from "@/app/actions";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { CheckCircle2, XCircle, Trash2, Loader2, Pencil, X, Save } from "lucide-react";
@@ -25,7 +25,6 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: "", end_at: "", original_price: "", deal_price: "" });
-  const supabase = useMemo(() => createClient(), []);
   const { toast } = useToast();
 
   const filtered = filter === "all" ? deals : deals.filter((d) => d.status === filter);
@@ -37,12 +36,12 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
     rejected: t("admin.deals.rejected"),
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: "approved" | "rejected") => {
     if (status === "rejected" && !window.confirm(t("admin.confirm.reject"))) return;
     setLoadingId(id);
-    const { error } = await supabase.from("deals").update({ status }).eq("id", id);
+    const { error } = await adminUpdateDealStatus(id, status);
     if (error) {
-      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
       setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, status: status as Deal["status"] } : d)));
       toast({ title: status === "approved" ? t("admin.toast.approved") : t("admin.toast.rejected") });
@@ -53,9 +52,9 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
   const deleteDeal = async (id: string) => {
     if (!window.confirm(t("admin.confirm.delete"))) return;
     setLoadingId(id);
-    const { error } = await supabase.from("deals").delete().eq("id", id);
+    const { error } = await adminDeleteDeal(id);
     if (error) {
-      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
       setDeals((prev) => prev.filter((d) => d.id !== id));
       toast({ title: t("admin.toast.deleted") });
@@ -81,16 +80,16 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
       ? Math.round(((original - dealPrice) / original) * 100)
       : null;
 
-    const { error } = await supabase.from("deals").update({
+    const { error } = await adminUpdateDeal(id, {
       title: editForm.title,
       end_at: editForm.end_at ? new Date(editForm.end_at).toISOString() : undefined,
       original_price: original,
       deal_price: dealPrice,
       discount_percent: discount,
-    }).eq("id", id);
+    });
 
     if (error) {
-      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
       setDeals((prev) =>
         prev.map((d) =>

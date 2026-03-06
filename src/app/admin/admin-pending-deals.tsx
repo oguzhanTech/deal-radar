@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { CheckCircle2, XCircle, Loader2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { adminUpdateDealStatus } from "@/app/actions";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import Link from "next/link";
@@ -20,15 +20,14 @@ interface AdminPendingDealsProps {
 export function AdminPendingDeals({ initialDeals }: AdminPendingDealsProps) {
   const [deals, setDeals] = useState(initialDeals);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const supabase = useMemo(() => createClient(), []);
   const { toast } = useToast();
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: "approved" | "rejected") => {
     if (status === "rejected" && !window.confirm(t("admin.confirm.reject"))) return;
     setLoadingId(id);
-    const { error } = await supabase.from("deals").update({ status }).eq("id", id);
+    const { error } = await adminUpdateDealStatus(id, status);
     if (error) {
-      toast({ title: t("admin.toast.error"), description: error.message, variant: "destructive" });
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
       setDeals((prev) => prev.filter((d) => d.id !== id));
       toast({ title: status === "approved" ? t("admin.toast.approved") : t("admin.toast.rejected") });

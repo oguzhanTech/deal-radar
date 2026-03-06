@@ -291,3 +291,42 @@ export async function seedDemoDeals() {
   if (error) return { error: error.message };
   return { data, count: data?.length ?? 0 };
 }
+
+async function ensureAdmin(): Promise<{ error: string } | { supabase: Awaited<ReturnType<typeof createClient>> }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Oturum bulunamadı." };
+  const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user.id).single();
+  if (profile?.role !== "admin") return { error: "Yetkisiz." };
+  return { supabase };
+}
+
+export async function adminUpdateDealStatus(dealId: string, status: "approved" | "rejected") {
+  const result = await ensureAdmin();
+  if ("error" in result) return { error: result.error };
+  const { error } = await result.supabase.from("deals").update({ status }).eq("id", dealId);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function adminDeleteDeal(dealId: string) {
+  const result = await ensureAdmin();
+  if ("error" in result) return { error: result.error };
+  const { error } = await result.supabase.from("deals").delete().eq("id", dealId);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function adminUpdateDeal(dealId: string, payload: { title?: string; end_at?: string; original_price?: number | null; deal_price?: number | null; discount_percent?: number | null }) {
+  const result = await ensureAdmin();
+  if ("error" in result) return { error: result.error };
+  const clean: Record<string, unknown> = {};
+  if (payload.title !== undefined) clean.title = payload.title;
+  if (payload.end_at !== undefined) clean.end_at = payload.end_at;
+  if (payload.original_price !== undefined) clean.original_price = payload.original_price;
+  if (payload.deal_price !== undefined) clean.deal_price = payload.deal_price;
+  if (payload.discount_percent !== undefined) clean.discount_percent = payload.discount_percent;
+  const { error } = await result.supabase.from("deals").update(clean).eq("id", dealId);
+  if (error) return { error: error.message };
+  return { success: true };
+}
