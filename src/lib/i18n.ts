@@ -23,6 +23,8 @@ const tr: Record<string, string> = {
   "common.close": "Kapat",
   "common.loading": "Yükleniyor...",
   "common.seeAll": "Tümünü gör",
+  "common.previous": "Önceki",
+  "common.next": "Sonraki",
   "common.or": "veya",
   "common.share": "Paylaş",
   "common.copy": "Kopyala",
