@@ -76,12 +76,18 @@ interface MainLayoutClientProps {
   children: React.ReactNode;
   initialUser: User | null;
   initialProfile: Profile | null;
+  initialSavedDealIds?: string[];
 }
 
-export default function MainLayoutClient({ children, initialUser, initialProfile }: MainLayoutClientProps) {
+export default function MainLayoutClient({
+  children,
+  initialUser,
+  initialProfile,
+  initialSavedDealIds = [],
+}: MainLayoutClientProps) {
   return (
     <AuthProvider initialUser={initialUser} initialProfile={initialProfile}>
-      <SavedDealIdsProvider>
+      <SavedDealIdsProvider initialSavedDealIds={initialSavedDealIds}>
         <ToastProvider>
           <LayoutShell>{children}</LayoutShell>
         </ToastProvider>

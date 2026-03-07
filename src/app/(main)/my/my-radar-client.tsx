@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoginModal } from "@/components/auth/login-modal";
 import { removeSavedDeal } from "@/app/actions";
+import { useSavedDealIds } from "@/components/saved-deals/saved-deal-ids-context";
 import { useFeedCache, invalidateFeedCache } from "@/hooks/use-feed-cache";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
@@ -28,14 +29,17 @@ interface MyRadarClientProps {
 
 export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClientProps) {
   const { toast } = useToast();
+  const savedIds = useSavedDealIds();
   const cache = useFeedCache<SavedDealItem[]>(`my-saves:${userId ?? "anon"}`);
   const [saves, setSaves] = useState<SavedDealItem[]>(() => initialSaves ?? cache.get() ?? []);
   const [loading, setLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
-    if (initialSaves && initialSaves.length > 0 && userId) {
-      cache.set(initialSaves);
+    const list = initialSaves ?? [];
+    setSaves(list);
+    if (list.length > 0 && userId) {
+      cache.set(list);
     }
   }, [initialSaves, userId, cache]);
 
@@ -47,6 +51,7 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
         toast({ title: error, variant: "destructive" });
         return;
       }
+      savedIds.removeSaved(dealId);
       setSaves((prev) => {
         const next = prev.filter((s) => s.deal_id !== dealId);
         cache.set(next);
@@ -55,7 +60,7 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
       toast({ title: t("myRadar.removed") });
       invalidateFeedCache(`my-saves:${userId}`);
     },
-    [userId, cache, toast]
+    [userId, cache, toast, savedIds]
   );
 
   if (needsLogin) {

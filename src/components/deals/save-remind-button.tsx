@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { Bell, BellRing, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { useSavedDealIds } from "@/components/saved-deals/saved-deal-ids-context
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
-import { createClient } from "@/lib/supabase/client";
+import { toggleSaveDeal } from "@/app/actions";
 import { invalidateFeedCache } from "@/hooks/use-feed-cache";
 
 interface SaveRemindButtonProps {
@@ -30,30 +30,9 @@ export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = f
   const [showCheck, setShowCheck] = useState(false);
   const justToggledRef = useRef(false);
   const togglingRef = useRef(false);
-  const supabase = useMemo(() => createClient(), []);
 
   const useContext = savedIds.savedDealIds !== null;
   const saved = useContext ? savedIds.isSaved(dealId) : localSaved;
-
-  useEffect(() => {
-    if (useContext || skipInitialFetch || !user?.id || justToggledRef.current) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("deal_saves")
-          .select("deal_id")
-          .eq("user_id", user.id)
-          .eq("deal_id", dealId)
-          .maybeSingle();
-        if (error || cancelled) return;
-        if (!cancelled) setLocalSaved(!!data);
-      } catch {
-        // ignore
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [useContext, skipInitialFetch, user?.id, dealId, supabase]);
 
   const handleToggle = () => {
     if (togglingRef.current) return;
@@ -76,20 +55,12 @@ export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = f
 
     (async () => {
       try {
-        if (previousSaved) {
-          const { error } = await supabase
-            .from("deal_saves")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("deal_id", dealId);
-          if (error) throw error;
-          toast({ title: t("save.removed") });
-        } else {
-          const { error } = await supabase
-            .from("deal_saves")
-            .insert({ user_id: user.id, deal_id: dealId });
-          if (error) throw error;
+        const result = await toggleSaveDeal(dealId);
+        if (result.error) throw new Error(result.error);
+        if (result.saved) {
           toast({ title: t("save.savedToast"), description: t("save.savedDesc") });
+        } else {
+          toast({ title: t("save.removed") });
         }
       } catch (err) {
         if (useContext) {

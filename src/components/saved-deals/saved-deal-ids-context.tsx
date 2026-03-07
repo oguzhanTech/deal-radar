@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/auth-provider";
 
 type SavedDealIdsState = Set<string> | null;
@@ -24,34 +23,25 @@ export function useSavedDealIds() {
   return useContext(SavedDealIdsContext);
 }
 
-export function SavedDealIdsProvider({ children }: { children: React.ReactNode }) {
+interface SavedDealIdsProviderProps {
+  children: React.ReactNode;
+  /** Sunucudan gelen kayıtlı deal ID'leri (radar butonu ve Radarım senkronu için). */
+  initialSavedDealIds?: string[];
+}
+
+export function SavedDealIdsProvider({ children, initialSavedDealIds = [] }: SavedDealIdsProviderProps) {
   const { user } = useAuth();
-  const [savedDealIds, setSavedDealIds] = useState<SavedDealIdsState>(null);
-  const supabase = useMemo(() => createClient(), []);
+  const [savedDealIds, setSavedDealIds] = useState<SavedDealIdsState>(() =>
+    user ? new Set(initialSavedDealIds) : null
+  );
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!user) {
       setSavedDealIds(null);
       return;
     }
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("deal_saves")
-          .select("deal_id")
-          .eq("user_id", user.id);
-        if (error || cancelled) return;
-        const set = new Set<string>((data ?? []).map((r) => r.deal_id));
-        if (!cancelled) setSavedDealIds(set);
-      } catch {
-        if (!cancelled) setSavedDealIds(new Set());
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id, supabase]);
+    setSavedDealIds(new Set(initialSavedDealIds));
+  }, [user?.id, initialSavedDealIds]);
 
   const isSaved = useCallback(
     (dealId: string) => (savedDealIds ? savedDealIds.has(dealId) : false),
