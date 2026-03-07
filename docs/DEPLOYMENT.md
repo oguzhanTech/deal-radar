@@ -62,10 +62,51 @@ Uygulama zaten şunları üretir:
 - **robots.txt**: Tüm botlar için index/follow açık; admin, auth, api ve /my kapalı.
 - **Mobil öncelik**: Viewport, theme-color, manifest ve Apple web app meta’ları mevcut; öncelik mobil, masaüstü de desteklenir.
 
-## 6. Kontrol listesi
+## 6. Canlıda oturum / Radarım / profil ismi sorunu
+
+Local’de çalışıp canlıda **Radarım açılmıyor**, **profil ismi güncellenmiyor** veya **giriş sonrası session kayboluyor** gibi durumlar neredeyse hep aşağıdaki ayarlardan kaynaklanır.
+
+### Vercel (veya kullandığın host) Environment Variables
+
+Canlı projede mutlaka tanımlı olsun:
+
+| Değişken | Değer (canlı) |
+|----------|----------------|
+| `NEXT_PUBLIC_APP_URL` | `https://topla.online` |
+| `NEXT_PUBLIC_SUPABASE_URL` | (local’deki ile aynı) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (local’deki ile aynı) |
+| `SUPABASE_SERVICE_ROLE_KEY` | (local’deki ile aynı) |
+
+- **Önemli:** `NEXT_PUBLIC_APP_URL` canlıda **kesinlikle** `https://topla.online` olmalı (localhost değil).
+- Değişkenleri ekledikten veya değiştirdikten sonra **redeploy** (Production’da yeniden deploy) yap.
+
+### Supabase Dashboard → Authentication → URL Configuration
+
+1. **Site URL** alanı canlı için şu olmalı:  
+   `https://topla.online`  
+   (Sadece localhost bırakılırsa giriş sonrası yönlendirme ve cookie’ler canlıda bozulur.)
+
+2. **Redirect URLs** listesinde **ikisi de** bulunmalı:
+   - `https://topla.online`
+   - `https://topla.online/auth/callback`
+
+   İstersen ek olarak şunlar da olabilir:
+   - `https://topla.online/login`
+   - `http://localhost:3000/auth/callback` (local geliştirme için)
+
+Bu iki ayar (Vercel env + Supabase URL/Redirect) doğru değilse canlıda session düşer, Radarım ve profil sayfası “giriş yapmamış” gibi davranır veya profil ismi güncellenmiş gibi görünmez.
+
+### Özet kontrol
+
+- [ ] Vercel’de `NEXT_PUBLIC_APP_URL=https://topla.online` (ve redeploy)
+- [ ] Supabase **Site URL** = `https://topla.online`
+- [ ] Supabase **Redirect URLs** içinde `https://topla.online/auth/callback` var
+- [ ] Tarayıcıda canlı sitede **çıkış yap → tekrar giriş yap** denendi
+
+## 7. Genel kontrol listesi
 
 - [ ] Production’da `NEXT_PUBLIC_APP_URL=https://topla.online`
-- [ ] Supabase Site URL ve Redirect URLs güncellendi
+- [ ] Supabase Site URL ve Redirect URLs güncellendi (yukarıdaki gibi)
 - [ ] Domain DNS ve Vercel domain bağlantısı tamamlandı
 - [ ] Google Search Console’da alan doğrulandı
 - [ ] Sitemap olarak `https://topla.online/sitemap.xml` eklendi

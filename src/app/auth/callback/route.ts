@@ -20,9 +20,16 @@ export async function GET(request: Request) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options as { path?: string; maxAge?: number; httpOnly?: boolean; secure?: boolean; sameSite?: "lax" | "strict" | "none" })
-            );
+            const isProd = origin.startsWith("https://");
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const opts = (options ?? {}) as { path?: string; maxAge?: number; httpOnly?: boolean; secure?: boolean; sameSite?: "lax" | "strict" | "none" };
+              response.cookies.set(name, value, {
+                path: "/",
+                ...opts,
+                secure: opts.secure ?? isProd,
+                sameSite: opts.sameSite ?? "lax",
+              });
+            });
           },
         },
       }
