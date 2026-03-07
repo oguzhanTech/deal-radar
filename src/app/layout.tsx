@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/layout/sw-registrar";
 import "./globals.css";
+
+const GA_MEASUREMENT_ID = "G-92MP5DC776";
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -66,6 +69,18 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <body className={`min-h-dvh antialiased ${fontSans.className}`} suppressHydrationWarning>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-config" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         {children}
         <ServiceWorkerRegistrar />
       </body>
