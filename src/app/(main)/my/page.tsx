@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Trash2, Bell, BellOff } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { DealCountdown } from "@/components/deals/deal-countdown";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, useAuthDisplay } from "@/components/auth/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
-import { createClient } from "@/lib/supabase/client";
+import { removeSavedDeal } from "@/app/actions";
 import { useFeedCache, invalidateFeedCache } from "@/hooks/use-feed-cache";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
@@ -29,7 +29,6 @@ export default function MyRadarPage() {
   const [saves, setSaves] = useState<SavedDeal[]>(() => cache.get() ?? []);
   const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
 
   const fetchSaves = useCallback(async () => {
     if (!user) return;
@@ -41,35 +40,16 @@ export default function MyRadarPage() {
       setLoading(true);
     }
     try {
-      const { data: savesRows } = await supabase
-        .from("deal_saves")
-        .select("user_id, deal_id, reminder_settings, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      if (!savesRows?.length) {
-        cache.set([]);
-        setSaves([]);
-        setLoading(false);
-        return;
-      }
-      const dealIds = savesRows.map((r) => r.deal_id);
-      const res = await fetch(`/api/deals?ids=${dealIds.join(",")}`);
-      const dealsList = (await res.json()) as Deal[];
-      const dealsById = new Map(dealsList.map((d) => [d.id, d]));
-      const result: SavedDeal[] = savesRows
-        .map((row) => {
-          const deal = dealsById.get(row.deal_id);
-          if (!deal) return null;
-          return { ...row, deal } as SavedDeal;
-        })
-        .filter((s): s is SavedDeal => s != null);
-      cache.set(result);
-      setSaves(result);
+      const res = await fetch("/api/my/saves", { credentials: "same-origin", cache: "no-store" });
+      const result = (await res.json()) as SavedDeal[];
+      const list = Array.isArray(result) ? result : [];
+      cache.set(list);
+      setSaves(list);
     } catch {
       setSaves([]);
     }
     setLoading(false);
-  }, [user, supabase, cache]);
+  }, [user, cache]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -88,7 +68,11 @@ export default function MyRadarPage() {
 
   const handleRemove = async (dealId: string) => {
     if (!user) return;
-    await supabase.from("deal_saves").delete().eq("user_id", user.id).eq("deal_id", dealId);
+    const { error } = await removeSavedDeal(dealId);
+    if (error) {
+      toast({ title: error, variant: "destructive" });
+      return;
+    }
     setSaves((prev) => {
       const next = prev.filter((s) => s.deal_id !== dealId);
       cache.set(next);
