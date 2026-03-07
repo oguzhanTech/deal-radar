@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   description:
     "Topluluk destekli fırsat ve indirim hatırlatıcısı. Dijital ürün ve aboneliklerde en iyi fırsatlar.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-192.svg",
+    apple: "/icons/icon-192.svg",
+  },
   openGraph: {
     type: "website",
     locale: "tr_TR",
@@ -61,9 +65,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-      </head>
       <body className={`min-h-dvh antialiased ${fontSans.className}`} suppressHydrationWarning>
         {children}
         <ServiceWorkerRegistrar />
