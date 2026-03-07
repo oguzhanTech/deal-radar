@@ -43,6 +43,26 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
     }
   }, [initialSaves, userId, cache]);
 
+  // Radara ekleme/çıkarma sonrası sayfaya gelince listeyi güncelle (sayfa yenilemeden)
+  useEffect(() => {
+    if (!userId || needsLogin) return;
+    let cancelled = false;
+    fetch("/api/my/saves", { credentials: "same-origin", cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : [];
+        setSaves(list);
+        cache.set(list);
+      })
+      .catch(() => {
+        if (!cancelled) setSaves([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, needsLogin, cache]);
+
   const handleRemove = useCallback(
     async (dealId: string) => {
       if (!userId) return;
