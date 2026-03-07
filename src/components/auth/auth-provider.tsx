@@ -171,9 +171,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCachedAuth(session.user);
           setCachedDisplay(getCachedAuthSync());
           await fetchProfile(session.user);
+          setLoading(false);
+          return;
+        }
+        // Canlıda client bazen HttpOnly cookie'leri okuyamıyor; sunucudan session al.
+        const res = await fetch("/api/auth/session", { credentials: "same-origin", cache: "no-store" });
+        const data = (await res.json()) as { user: User | null; profile: Profile | null };
+        if (data?.user) {
+          setUser(data.user as User);
+          setCachedAuth(data.user as User);
+          setCachedDisplay(getCachedAuthSync());
+          if (data.profile) {
+            setProfile(data.profile as Profile);
+          } else {
+            await fetchProfile(data.user as User);
+          }
         }
         // Oturum yoksa veya hata varsa state'i temizleme – sadece onAuthStateChange SIGNED_OUT'ta temizle.
-        // Böylece admin'den dönüşte veya geçici getSession hatasında logout flash olmaz.
       } catch {
         // Geçici hata – session'ı silmeyip sadece loading'i kapatıyoruz
       }
