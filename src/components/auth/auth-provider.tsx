@@ -83,9 +83,16 @@ export function useAuthDisplay() {
   return { showAsLoggedIn, initial, profile, user: display.kind === "user" ? display.user : null };
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+interface AuthProviderProps {
+  children: React.ReactNode;
+  /** Sunucudan okunan ilk session (canlıda cookie client'ta okunamadığı için kritik). */
+  initialUser?: User | null;
+  initialProfile?: Profile | null;
+}
+
+export function AuthProvider({ children, initialUser: initialUserProp, initialProfile: initialProfileProp }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(initialUserProp ?? null);
+  const [profile, setProfile] = useState<Profile | null>(initialProfileProp ?? null);
   const [loading, setLoading] = useState(true);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const prevLevelRef = useRef<number | null>(null);
@@ -161,6 +168,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const dismissLevelUp = useCallback(() => setLevelUp(null), []);
+
+  useEffect(() => {
+    if (initialUserProp) {
+      setCachedAuth(initialUserProp as User);
+    }
+    if (initialProfileProp) {
+      prevLevelRef.current = initialProfileProp.level;
+    }
+  }, [initialUserProp, initialProfileProp]);
 
   useEffect(() => {
     const getSession = async () => {
