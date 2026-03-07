@@ -55,6 +55,8 @@ interface AuthContextValue {
   dismissLevelUp: () => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Profil ismi güncellendikten hemen sonra UI'ı güncellemek için (sunucudan beklemeden). */
+  setProfileDisplayName: (name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -66,6 +68,7 @@ const AuthContext = createContext<AuthContextValue>({
   dismissLevelUp: () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
+  setProfileDisplayName: () => {},
 });
 
 export function useAuth() {
@@ -153,6 +156,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) await fetchProfile(user);
   }, [user, fetchProfile]);
 
+  const setProfileDisplayName = useCallback((display_name: string) => {
+    setProfile((prev) => (prev ? { ...prev, display_name } : null));
+  }, []);
+
   const dismissLevelUp = useCallback(() => setLevelUp(null), []);
 
   useEffect(() => {
@@ -222,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, display, loading, levelUp, dismissLevelUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, display, loading, levelUp, dismissLevelUp, signOut, refreshProfile, setProfileDisplayName }}>
       {children}
     </AuthContext.Provider>
   );

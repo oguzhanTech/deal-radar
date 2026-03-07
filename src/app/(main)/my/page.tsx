@@ -7,7 +7,7 @@ import { DealCountdown } from "@/components/deals/deal-countdown";
 import { HeatBadge } from "@/components/deals/heat-badge";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth, useAuthDisplay } from "@/components/auth/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
 import { createClient } from "@/lib/supabase/client";
 import { useFeedCache, invalidateFeedCache } from "@/hooks/use-feed-cache";
@@ -23,10 +23,11 @@ interface SavedDeal extends DealSave {
 
 export default function MyRadarPage() {
   const { user, loading: authLoading } = useAuth();
+  const { showAsLoggedIn } = useAuthDisplay();
   const { toast } = useToast();
   const cache = useFeedCache<SavedDeal[]>(`my-saves:${user?.id ?? "anon"}`);
   const [saves, setSaves] = useState<SavedDeal[]>(() => cache.get() ?? []);
-  const [loading, setLoading] = useState(!cache.get());
+  const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const supabase = useMemo(() => createClient(), []);
 
@@ -72,14 +73,18 @@ export default function MyRadarPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
+    if (!showAsLoggedIn) {
       setSaves([]);
       setLoading(false);
       return;
     }
+    if (!user) {
+      setLoading(true);
+      return;
+    }
     invalidateFeedCache(`my-saves:${user.id}`);
     fetchSaves();
-  }, [user, authLoading, fetchSaves]);
+  }, [user, authLoading, showAsLoggedIn, fetchSaves]);
 
   const handleRemove = async (dealId: string) => {
     if (!user) return;
@@ -92,7 +97,7 @@ export default function MyRadarPage() {
     toast({ title: t("myRadar.removed") });
   };
 
-  if (!authLoading && !user) {
+  if (!authLoading && !showAsLoggedIn) {
     return (
       <>
         <LoginModal open={showLogin} onOpenChange={setShowLogin} />

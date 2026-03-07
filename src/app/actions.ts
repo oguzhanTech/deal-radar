@@ -71,7 +71,7 @@ export async function updateProfile(displayName: string) {
     return { error: error.message };
   }
 
-  return { success: true };
+  return { success: true, display_name: displayName };
 }
 
 export async function signOutAction() {

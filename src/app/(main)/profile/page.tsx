@@ -32,7 +32,7 @@ function getLevelInfo(points: number) {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, signOut, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, signOut, refreshProfile, setProfileDisplayName } = useAuth();
   const { toast } = useToast();
   const supabase = useMemo(() => createClient(), []);
   const [showLogin, setShowLogin] = useState(false);
@@ -70,9 +70,12 @@ export default function ProfilePage() {
         toast({ title: t("create.error.failed"), description: result.error, variant: "destructive" });
         return;
       }
+      if ("display_name" in result && result.display_name) {
+        setProfileDisplayName(result.display_name);
+      }
       toast({ title: t("profile.updated") });
       setShowEdit(false);
-      refreshProfile().catch(() => {});
+      await refreshProfile();
     } catch {
       toast({ title: t("create.error.failed"), variant: "destructive" });
     } finally {
