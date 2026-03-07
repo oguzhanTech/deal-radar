@@ -36,6 +36,8 @@ CRON_SECRET=a-random-secret-string
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
+Production’da `NEXT_PUBLIC_APP_URL=https://topla.online` kullanın. Domain, sitemap, Google Search Console ve Supabase ayarları için [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dosyasına bakın.
+
 ### 3. Set up the database
 
 Run the migration SQL in your Supabase SQL editor:
@@ -60,7 +62,7 @@ supabase/seed.sql
 In your Supabase dashboard:
 - Enable **Email** provider (magic link)
 - Enable **Google** provider (add OAuth credentials)
-- Set redirect URL to `http://localhost:3000/auth/callback`
+- Set redirect URL to `http://localhost:3000/auth/callback` (development). Production için `https://topla.online/auth/callback` ekleyin (bkz. docs/DEPLOYMENT.md).
 
 ### 5. Run the dev server
 

@@ -19,10 +19,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: `${deal.title} — Topla`,
       description: deal.description || `%${deal.discount_percent} indirim — ${deal.provider}`,
+      alternates: { canonical: `/deal/${id}` },
       openGraph: {
         title: deal.title,
         description: deal.description || undefined,
         images: deal.image_url ? [deal.image_url] : undefined,
+        url: `/deal/${id}`,
       },
     };
   } catch {

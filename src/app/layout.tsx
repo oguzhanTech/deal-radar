@@ -9,11 +9,36 @@ const fontSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://topla.online";
+
 export const metadata: Metadata = {
-  title: "Topla — En güzel fırsatları kaçırma!",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Topla — En güzel fırsatları kaçırma!",
+    template: "%s | Topla",
+  },
   description:
     "Topluluk destekli fırsat ve indirim hatırlatıcısı. Dijital ürün ve aboneliklerde en iyi fırsatlar.",
   manifest: "/manifest.json",
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    siteName: "Topla",
+    title: "Topla — En güzel fırsatları kaçırma!",
+    description: "Topluluk destekli fırsat ve indirim hatırlatıcısı. Dijital ürün ve aboneliklerde en iyi fırsatlar.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Topla — En güzel fırsatları kaçırma!",
+    description: "Topluluk destekli fırsat ve indirim hatırlatıcısı.",
+  },
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
