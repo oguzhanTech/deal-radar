@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendReminderEmail } from "@/lib/email";
 
 const REMINDER_WINDOWS = [
   { key: "3d", ms: 3 * 24 * 60 * 60 * 1000, label: "3 gün" },
@@ -49,38 +48,48 @@ export async function GET(request: Request) {
       const alreadySent = sentReminders[window.key];
 
       if (isEnabled && !alreadySent && timeUntilEnd <= window.ms && timeUntilEnd > (window.ms - BUFFER_MS)) {
-        const { data: userData } = await supabase.auth.admin.getUserById(save.user_id);
-        const email = userData?.user?.email;
+        const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/deal/${deal.id}`;
+        const title = `"${deal.title}" ${window.label} sonra bitiyor!`;
+        const message = "Bu fırsatı kaçırma — süresi dolmadan yakala.";
 
-        if (email) {
-          const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL}/deal/${deal.id}`;
+        await supabase.from("notifications").insert({
+          user_id: save.user_id,
+          type: "reminder",
+          title,
+          message,
+          payload: { deal_id: deal.id },
+        });
 
-          await sendReminderEmail({
-            to: email,
-            dealTitle: deal.title,
-            dealId: deal.id,
-            timeLeft: window.label,
-            dealUrl,
-          });
+        if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+          const { data: subscriptions } = await supabase
+            .from("push_subscriptions")
+            .select("endpoint, p256dh, auth")
+            .eq("user_id", save.user_id);
 
-          await supabase.from("notifications").insert({
-            user_id: save.user_id,
-            type: "reminder",
-            title: `"${deal.title}" ${window.label} sonra bitiyor!`,
-            message: "Bu fırsatı kaçırma — süresi dolmadan yakala.",
-            payload: { deal_id: deal.id },
-          });
-
-          await supabase
-            .from("deal_saves")
-            .update({
-              sent_reminders: { ...sentReminders, [window.key]: true },
-            })
-            .eq("user_id", save.user_id)
-            .eq("deal_id", save.deal_id);
-
-          sent++;
+          if (subscriptions?.length) {
+            const { sendWebPush } = await import("@/lib/push");
+            for (const sub of subscriptions) {
+              try {
+                await sendWebPush(
+                  { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+                  { title, body: message, url: dealUrl }
+                );
+              } catch {
+                // Subscription may be invalid; skip
+              }
+            }
+          }
         }
+
+        await supabase
+          .from("deal_saves")
+          .update({
+            sent_reminders: { ...sentReminders, [window.key]: true },
+          })
+          .eq("user_id", save.user_id)
+          .eq("deal_id", save.deal_id);
+
+        sent++;
       }
     }
   }

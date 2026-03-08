@@ -103,9 +103,38 @@ Bu iki ayar (Vercel env + Supabase URL/Redirect) doğru değilse canlıda sessio
 - [ ] Supabase **Redirect URLs** içinde `https://topla.online/auth/callback` var
 - [ ] Tarayıcıda canlı sitede **çıkış yap → tekrar giriş yap** denendi
 
-## 7. Genel kontrol listesi
+## 7. Mobil push bildirimleri (ücretsiz Web Push)
+
+Hatırlatmalar e-posta ile değil, sadece **mobil push** (ve tarayıcı bildirimi) ile gönderilir. Web Push API kullanılır; ek ücret yok.
+
+### 7.1 VAPID anahtarları
+
+1. Proje kökünde: `npx web-push generate-vapid-keys`
+2. Çıkan **public key** ve **private key**’i Vercel (ve .env.local) ortam değişkenlerine ekleyin:
+
+| Değişken | Açıklama |
+|----------|----------|
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Üretilen public key (client + server) |
+| `VAPID_PRIVATE_KEY` | Üretilen private key (sadece server; deploy’da gizli tutun) |
+
+### 7.2 Veritabanı
+
+Supabase SQL Editor’da `supabase/migrations/004_push_subscriptions.sql` dosyasını çalıştırın (push abonelikleri tablosu).
+
+### 7.3 Cron (hatırlatma job’ı)
+
+Vercel’de **Cron Jobs** kısmına bir job ekleyin; örneğin günde 2–4 kez veya her saat:
+
+- **Path**: `/api/cron/reminders`
+- **Schedule**: Örn. `0 */6 * * *` (her 6 saatte bir)
+- **Header**: `Authorization: Bearer <CRON_SECRET>` (CRON_SECRET env’de tanımlı olsun)
+
+Böylece radar’a eklenen fırsatlar bitişe 3 gün / 1 gün / 6 saat / 1 saat kala kullanıcıya hem uygulama içi bildirim hem de mobil push ile iletilecek.
+
+## 8. Genel kontrol listesi
 
 - [ ] Production’da `NEXT_PUBLIC_APP_URL=https://topla.online`
+- [ ] Push için: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` ve `VAPID_PRIVATE_KEY` tanımlı, `004_push_subscriptions.sql` çalıştırıldı, cron job ayarlandı
 - [ ] Supabase Site URL ve Redirect URLs güncellendi (yukarıdaki gibi)
 - [ ] Domain DNS ve Vercel domain bağlantısı tamamlandı
 - [ ] Google Search Console’da alan doğrulandı
