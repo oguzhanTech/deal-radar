@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { createAnonClient } from "@/lib/supabase/server";
-import { HomeEmptyState, HomeLeaderboardLink } from "./home-content";
+import { HomeEmptyState } from "./home-content";
 import {
   HomeTrendingSection,
   HomeEndingSoonSection,
@@ -25,7 +25,6 @@ export default async function HomePage() {
     return (
       <div className="space-y-6 py-5">
         <HomeEmptyState />
-        <HomeLeaderboardLink />
       </div>
     );
   }
@@ -44,7 +43,6 @@ export default async function HomePage() {
       <Suspense fallback={<DealSectionSkeleton />}>
         <HomeNewestSection />
       </Suspense>
-      <HomeLeaderboardLink />
     </div>
   );
 }

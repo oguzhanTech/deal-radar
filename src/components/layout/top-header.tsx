@@ -1,6 +1,6 @@
 "use client";
 
-import { Radar } from "lucide-react";
+import { Radar, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth, useAuthDisplay } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,7 +28,18 @@ export function TopHeader() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/leaderboard"
+            prefetch
+            onMouseEnter={() => router.prefetch("/leaderboard")}
+            onTouchStart={() => router.prefetch("/leaderboard")}
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 transition-colors"
+            title={t("home.leaderboardTitle")}
+            aria-label={t("home.leaderboardTitle")}
+          >
+            <Trophy className="h-5 w-5" />
+          </Link>
           {user && <NotificationBell />}
           {showAsLoggedIn ? (
             <Link href="/profile" prefetch onMouseEnter={() => router.prefetch("/profile")} onTouchStart={() => router.prefetch("/profile")}>

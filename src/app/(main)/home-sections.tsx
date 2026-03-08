@@ -12,7 +12,7 @@ async function fetchTrending() {
     .gt("end_at", new Date().toISOString())
     .gte("heat_score", 20)
     .order("heat_score", { ascending: false })
-    .limit(8);
+    .limit(5);
   return data ?? [];
 }
 
@@ -24,7 +24,7 @@ async function fetchEndingSoon() {
     .eq("status", "approved")
     .gt("end_at", new Date().toISOString())
     .order("end_at", { ascending: true })
-    .limit(10);
+    .limit(5);
   return data ?? [];
 }
 
@@ -36,7 +36,7 @@ async function fetchPopular() {
     .eq("status", "approved")
     .gt("end_at", new Date().toISOString())
     .order("heat_score", { ascending: false })
-    .limit(10);
+    .limit(5);
   return data ?? [];
 }
 
@@ -47,7 +47,7 @@ async function fetchNewest() {
     .select("*")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(5);
   return data ?? [];
 }
 
