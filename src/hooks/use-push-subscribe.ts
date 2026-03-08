@@ -44,9 +44,10 @@ export function usePushSubscribe() {
         return false;
       }
       const reg = await navigator.serviceWorker.ready;
+      const keyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: keyBytes as unknown as BufferSource,
       });
       const payload = sub.toJSON();
       const res = await fetch("/api/push/subscribe", {
