@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const idsParam = searchParams.get("ids"); // comma-separated UUIDs for Radarım
     const sort = (searchParams.get("sort") as SortOption) || "new";
     const q = searchParams.get("q")?.trim() ?? "";
-    const provider = searchParams.get("provider");
+    const category = searchParams.get("category");
 
     const supabase = await createAnonClient();
     let query = supabase
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
       if (ids.length) query = query.in("id", ids);
     }
     if (q) {
-      query = query.or(`title.ilike.%${q}%,provider.ilike.%${q}%`);
+      query = query.or(`title.ilike.%${q}%,provider.ilike.%${q}%,category.ilike.%${q}%`);
     }
-    if (provider) {
-      query = query.eq("provider", provider);
+    if (category) {
+      query = query.eq("category", category);
     }
 
     if (!idsParam) {

@@ -216,8 +216,7 @@ export function DealDetailContent({
       <div className="px-4 pt-4 space-y-4">
         {/* Tags */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">{deal.provider}</Badge>
-          {deal.category && <Badge variant="outline" className="text-[10px]">{deal.category}</Badge>}
+          <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">{deal.category || deal.provider}</Badge>
           <HeatBadge score={deal.heat_score} />
         </div>
 

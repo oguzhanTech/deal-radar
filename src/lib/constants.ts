@@ -1,31 +1,17 @@
-export const PROVIDERS = [
-  "Netflix",
-  "Steam",
-  "PlayStation",
-  "Amazon",
-  "X (Twitter)",
-  "Spotify",
-  "Adobe",
-  "NordVPN",
-  "Microsoft",
-  "Apple",
-  "Google",
-  "Trendyol",
-  "Hepsiburada",
-  "Diğer",
-] as const;
-
-export const CATEGORIES = [
-  "Yayın",
+/** Fırsat oluştururken ve filtrelerde kullanılan kategoriler. */
+export const DEAL_CATEGORIES = [
+  "Teknoloji",
+  "Market",
+  "Giyim & Moda",
+  "Ev & Yaşam",
   "Oyun",
-  "Yazılım",
-  "Bulut",
-  "Müzik",
-  "Sosyal",
-  "Güvenlik",
-  "Verimlilik",
-  "Alışveriş",
-  "Diğer",
+  "Dijital Üyelikler",
+  "Seyahat",
+  "Kozmetik & Kişisel Bakım",
+  "Spor & Outdoor",
+  "Anne & Bebek",
+  "Evcil Hayvan",
+  "Hobi & Eğlence",
 ] as const;
 
 export const CURRENCIES = ["TRY", "USD", "EUR"] as const;

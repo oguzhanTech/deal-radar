@@ -54,13 +54,13 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground/40 text-xs">
-                  {deal.provider}
+                  {deal.category || deal.provider}
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
               <h3 className="font-semibold text-[13px] leading-tight line-clamp-1">{deal.title}</h3>
-              <p className="text-[11px] text-muted-foreground">{deal.provider}</p>
+              <p className="text-[11px] text-muted-foreground">{deal.category || deal.provider}</p>
               <div className="flex items-center gap-2 mt-1">
                 {deal.deal_price != null && deal.original_price != null ? (
                   <>
@@ -131,7 +131,7 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
 
             <div className="absolute top-2.5 left-2.5">
               <Badge className="text-[10px] bg-black/50 text-white border-0 backdrop-blur-md px-2.5 py-0.5 font-semibold">
-                {deal.provider}
+                {deal.category || deal.provider}
               </Badge>
             </div>
 

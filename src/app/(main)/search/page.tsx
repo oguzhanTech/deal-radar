@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DealCard } from "@/components/deals/deal-card";
 import { DealCardSkeleton } from "@/components/deals/deal-card-skeleton";
-import { PROVIDERS } from "@/lib/constants";
+import { DEAL_CATEGORIES } from "@/lib/constants";
 import { useFeedCache } from "@/hooks/use-feed-cache";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
@@ -21,10 +21,10 @@ export default function SearchPage() {
   const [sort, setSort] = useState<SortOption>(
     (searchParams.get("sort") as SortOption) || "new"
   );
-  const [filterProvider, setFilterProvider] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const cacheKey = `search:${query}:${sort}:${filterProvider ?? ""}`;
+  const cacheKey = `search:${query}:${sort}:${filterCategory ?? ""}`;
   const cache = useFeedCache<Deal[]>(cacheKey);
   const [deals, setDeals] = useState<Deal[]>(() => cache.get() ?? []);
   const [loading, setLoading] = useState(!cache.get());
@@ -40,7 +40,7 @@ export default function SearchPage() {
     try {
       const params = new URLSearchParams({ sort });
       if (query.trim()) params.set("q", query.trim());
-      if (filterProvider) params.set("provider", filterProvider);
+      if (filterCategory) params.set("category", filterCategory);
       const res = await fetch(`/api/deals?${params}`);
       const result = (await res.json()) as Deal[];
       cache.set(result ?? []);
@@ -49,7 +49,7 @@ export default function SearchPage() {
       setDeals([]);
     }
     setLoading(false);
-  }, [query, sort, filterProvider, cache]);
+  }, [query, sort, filterCategory, cache]);
 
   useEffect(() => {
     const timer = setTimeout(fetchDeals, query ? 300 : 0);
@@ -63,10 +63,10 @@ export default function SearchPage() {
   ];
 
   const clearFilters = () => {
-    setFilterProvider(null);
+    setFilterCategory(null);
   };
 
-  const hasActiveFilters = !!filterProvider;
+  const hasActiveFilters = !!filterCategory;
 
   return (
     <div className="space-y-4 py-4">
@@ -118,19 +118,19 @@ export default function SearchPage() {
         {showFilters && (
           <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
             <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1.5">{t("search.filterProvider")}</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">{t("search.filterCategory")}</p>
               <div className="flex flex-wrap gap-1.5">
-                {PROVIDERS.map((p) => (
+                {DEAL_CATEGORIES.map((c) => (
                   <button
-                    key={p}
-                    onClick={() => setFilterProvider(filterProvider === p ? null : p)}
+                    key={c}
+                    onClick={() => setFilterCategory(filterCategory === c ? null : c)}
                     className={`px-2 py-1 text-[11px] font-medium rounded-full transition cursor-pointer ${
-                      filterProvider === p
+                      filterCategory === c
                         ? "bg-primary text-primary-foreground"
                         : "bg-background border text-foreground"
                     }`}
                   >
-                    {p}
+                    {c}
                   </button>
                 ))}
               </div>

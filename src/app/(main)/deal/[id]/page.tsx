@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (!deal) return { title: "Fırsat bulunamadı" };
     return {
       title: `${deal.title} — Topla`,
-      description: deal.description || `%${deal.discount_percent} indirim — ${deal.provider}`,
+      description: deal.description || `%${deal.discount_percent} indirim — ${deal.category || deal.provider}`,
       alternates: { canonical: `/deal/${id}` },
       openGraph: {
         title: deal.title,

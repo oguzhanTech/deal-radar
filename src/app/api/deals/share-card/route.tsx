@@ -116,7 +116,7 @@ export async function GET(request: Request) {
                   display: "flex",
                 }}
               >
-                {deal.provider}
+                {deal.category || deal.provider}
               </div>
               {deal.discount_percent && (
                 <div

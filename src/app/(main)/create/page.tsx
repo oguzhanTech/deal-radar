@@ -11,7 +11,7 @@ import { LoginModal } from "@/components/auth/login-modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import { createDeal, uploadDealImage } from "@/app/actions";
-import { PROVIDERS, CATEGORIES, CURRENCIES, TRUSTED_SUBMITTER_THRESHOLD } from "@/lib/constants";
+import { DEAL_CATEGORIES, CURRENCIES, TRUSTED_SUBMITTER_THRESHOLD } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import {
@@ -35,7 +35,6 @@ export default function CreateDealPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    provider: "",
     category: "",
     start_at: "",
     end_at: "",
@@ -93,8 +92,8 @@ export default function CreateDealPage() {
       toast({ title: t("create.error.titleMin"), variant: "destructive" });
       return false;
     }
-    if (!form.provider || !form.provider.trim()) {
-      toast({ title: t("create.error.provider"), variant: "destructive" });
+    if (!form.category || !form.category.trim()) {
+      toast({ title: t("create.error.category"), variant: "destructive" });
       return false;
     }
     if (!form.end_at) {
@@ -159,8 +158,8 @@ export default function CreateDealPage() {
       const payload: Record<string, unknown> = {
         title: form.title.trim(),
         description: form.description.trim() || null,
-        provider: form.provider.trim(),
-        category: form.category || null,
+        provider: "—",
+        category: form.category.trim(),
         start_at: startAtISO,
         end_at: endAtISO,
         original_price: form.original_price ? parseFloat(form.original_price) : null,
@@ -216,7 +215,7 @@ export default function CreateDealPage() {
             onClick={() => {
               setSuccess(false);
               setStep(1);
-              setForm({ title: "", description: "", provider: "", category: "", start_at: "", end_at: "", original_price: "", deal_price: "", currency: "TRY", external_url: "", hasCoupon: false, couponCode: "", couponDescription: "", couponExpiry: "" });
+              setForm({ title: "", description: "", category: "", start_at: "", end_at: "", original_price: "", deal_price: "", currency: "TRY", external_url: "", hasCoupon: false, couponCode: "", couponDescription: "", couponExpiry: "" });
               setImageFile(null);
               setImagePreview(null);
             }}
@@ -285,10 +284,10 @@ export default function CreateDealPage() {
               <Input value={form.title} onChange={(e) => update("title", e.target.value)} placeholder={t("create.field.titlePlaceholder")} className="rounded-xl h-12" />
             </div>
 
-            {/* Provider */}
+            {/* Category */}
             <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.provider")}</label>
-              <Select value={form.provider} onChange={(e) => update("provider", e.target.value)} placeholder={t("create.field.providerPlaceholder")} options={PROVIDERS.map((p) => ({ value: p, label: p }))} className="rounded-xl h-12" />
+              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.category")}</label>
+              <Select value={form.category} onChange={(e) => update("category", e.target.value)} placeholder={t("create.field.categoryPlaceholder")} options={DEAL_CATEGORIES.map((c) => ({ value: c, label: c }))} className="rounded-xl h-12" />
             </div>
 
             {/* End Date */}
@@ -334,12 +333,6 @@ export default function CreateDealPage() {
             <div>
               <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.startDate")}</label>
               <Input type="datetime-local" value={form.start_at} onChange={(e) => update("start_at", e.target.value)} className="rounded-xl h-12" />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.category")}</label>
-              <Select value={form.category} onChange={(e) => update("category", e.target.value)} placeholder={t("create.field.categoryPlaceholder")} options={CATEGORIES.map((c) => ({ value: c, label: c }))} className="rounded-xl h-12" />
             </div>
 
             {/* Pricing */}
@@ -452,10 +445,10 @@ export default function CreateDealPage() {
                 </div>
               )}
 
-              {/* Title + Provider */}
+              {/* Title + Category */}
               <div>
                 <h3 className="font-bold text-lg leading-tight">{form.title || "—"}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{form.provider} {form.category && `· ${form.category}`}</p>
+                <p className="text-sm text-muted-foreground mt-1">{form.category || "—"}</p>
               </div>
 
               {/* Price */}

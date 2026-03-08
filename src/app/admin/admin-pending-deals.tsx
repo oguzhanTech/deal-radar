@@ -51,7 +51,7 @@ export function AdminPendingDeals({ initialDeals }: AdminPendingDealsProps) {
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold truncate">{deal.title}</h4>
               <p className="text-xs text-muted-foreground truncate">
-                {deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
+                {deal.category || deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
               </p>
             </div>
 

@@ -189,7 +189,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-sm truncate">{deal.title}</h3>
                     <p className="text-xs text-muted-foreground">
-                      {deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
+                      {deal.category || deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
                     </p>
                   </div>
                   <Badge className={`text-[10px] ${statusColors[deal.status]} border-0 shrink-0`}>
