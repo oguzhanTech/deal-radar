@@ -16,12 +16,10 @@ import { invalidateFeedCache } from "@/hooks/use-feed-cache";
 interface SaveRemindButtonProps {
   dealId: string;
   compact?: boolean;
-  /** Liste/anasayfa kartlarında mount'ta getSaveStatus çağrılmasın (POST sayısını azaltır) */
-  skipInitialFetch?: boolean;
   className?: string;
 }
 
-export function SaveRemindButton({ dealId, compact = false, skipInitialFetch = false, className }: SaveRemindButtonProps) {
+export function SaveRemindButton({ dealId, compact = false, className }: SaveRemindButtonProps) {
   const { user } = useAuth();
   const { requireAuth, AuthModal } = useAuthGuard();
   const savedIds = useSavedDealIds();

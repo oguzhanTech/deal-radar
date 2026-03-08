@@ -147,9 +147,9 @@ export default function SearchPage() {
 
       {hasActiveFilters && !showFilters && (
         <div className="flex gap-1.5 px-4 flex-wrap">
-          {filterProvider && (
-            <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setFilterProvider(null)}>
-              {filterProvider} <X className="h-3 w-3" />
+          {filterCategory && (
+            <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setFilterCategory(null)}>
+              {filterCategory} <X className="h-3 w-3" />
             </Badge>
           )}
         </div>
