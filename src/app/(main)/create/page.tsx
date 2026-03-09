@@ -79,6 +79,21 @@ export default function CreateDealPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const isGif =
+      file.type === "image/gif" ||
+      file.name.toLowerCase().endsWith(".gif");
+    if (isGif) {
+      // GIF desteği yok; kullanıcıyı uyar ve dosyayı sıfırla
+      toast({
+        title: "GIF desteklenmiyor",
+        description: "Lütfen JPG veya PNG formatında bir görsel yükleyin.",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
