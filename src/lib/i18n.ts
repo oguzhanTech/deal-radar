@@ -198,6 +198,12 @@ const tr: Record<string, string> = {
   "profile.points": "puan",
   "profile.pointsToNext": "puan — Seviye",
   "profile.maxLevel": "Maksimum seviyedesin!",
+  "profile.pointsInfoTrigger": "Puan sistemi nasıl çalışır?",
+  "profile.pointsInfoTitle": "Puan sistemi",
+  "profile.pointsInfoApproved": "Onaylanan her fırsat için +7 puan.",
+  "profile.pointsInfoSaved": "Fırsatların radar'a eklendiğinde +2 puan.",
+  "profile.pointsInfoVoted": "Fırsatların + oy aldığında +1 puan.",
+  "profile.pointsInfoTrending": "Fırsatın trend olduğunda +25 puan.",
 
   // My Radar
   "myRadar.title": "Radarım",

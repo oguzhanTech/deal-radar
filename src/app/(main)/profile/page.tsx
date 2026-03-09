@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy, Settings } from "lucide-react";
+import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy, Settings, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [myDeals, setMyDeals] = useState<Deal[]>([]);
   const [showEdit, setShowEdit] = useState(false);
+  const [showPointsInfo, setShowPointsInfo] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -197,7 +198,7 @@ export default function ProfilePage() {
               style={{ width: `${levelInfo.progress * 100}%` }}
             />
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground">
+          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
             <span>{levelInfo.current.min} {t("profile.points")}</span>
             {levelInfo.next ? (
               <span>{levelInfo.pointsToNext} {t("profile.pointsToNext")} {levelInfo.next.level}</span>
@@ -205,6 +206,27 @@ export default function ProfilePage() {
               <span>{t("profile.maxLevel")}</span>
             )}
           </div>
+        </div>
+        <div className="mt-2">
+          <button
+            type="button"
+            className="flex items-center gap-1 text-[10px] text-primary hover:underline cursor-pointer"
+            onClick={() => setShowPointsInfo((v) => !v)}
+          >
+            <Info className="h-3 w-3" />
+            {t("profile.pointsInfoTrigger")}
+          </button>
+          {showPointsInfo && (
+            <div className="mt-2 rounded-2xl bg-muted px-3 py-2 text-[11px] text-muted-foreground space-y-1">
+              <p className="text-xs font-semibold text-foreground mb-1">{t("profile.pointsInfoTitle")}</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>{t("profile.pointsInfoApproved")}</li>
+                <li>{t("profile.pointsInfoSaved")}</li>
+                <li>{t("profile.pointsInfoVoted")}</li>
+                <li>{t("profile.pointsInfoTrending")}</li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
