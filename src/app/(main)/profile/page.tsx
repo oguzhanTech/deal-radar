@@ -39,6 +39,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
   const [myDeals, setMyDeals] = useState<Deal[]>([]);
+  const [myDealsCount, setMyDealsCount] = useState<number | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [showPointsInfo, setShowPointsInfo] = useState(false);
 
@@ -58,6 +59,13 @@ export default function ProfilePage() {
         .order("created_at", { ascending: false })
         .limit(10);
       setMyDeals(data ?? []);
+
+      const { count } = await supabase
+        .from("deals")
+        .select("*", { count: "exact", head: true })
+        .eq("created_by", user.id)
+        .eq("status", "approved");
+      setMyDealsCount(count ?? 0);
     };
     fetchDeals();
   }, [user, supabase]);
@@ -239,7 +247,9 @@ export default function ProfilePage() {
         </div>
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
           <Package className="h-5 w-5 text-violet-500 mx-auto mb-1.5" />
-          <p className="text-xl font-extrabold">{myDeals.length}</p>
+          <p className="text-xl font-extrabold">
+            {myDealsCount === null ? "…" : myDealsCount}
+          </p>
           <p className="text-[10px] text-muted-foreground font-medium">{t("profile.deals")}</p>
         </div>
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
