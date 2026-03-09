@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { RadarBuddy } from "@/components/mascot/radar-buddy";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -107,11 +107,13 @@ export default function SearchPage() {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-lg transition cursor-pointer ${
-              showFilters || hasActiveFilters ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition cursor-pointer ${
+              showFilters || hasActiveFilters
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            <SlidersHorizontal className="h-4 w-4" />
+            {t("search.filterCategory")}
           </button>
         </div>
 

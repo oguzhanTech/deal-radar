@@ -173,7 +173,7 @@ const tr: Record<string, string> = {
   "search.sortPopular": "Popüler",
   "search.sortNew": "En Yeni",
   "search.filterProvider": "Sağlayıcı",
-  "search.filterCategory": "Kategori",
+  "search.filterCategory": "Kategoriler",
   "search.clearFilters": "Filtreleri temizle",
   "search.empty": "Fırsat bulunamadı",
   "search.emptyDesc": "Filtreleri değiştirmeyi dene",

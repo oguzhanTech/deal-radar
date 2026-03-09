@@ -41,7 +41,31 @@ export async function GET(request: Request) {
     }
 
     const { data } = await query;
-    return NextResponse.json(data ?? []);
+    const deals = (data ?? []) as { created_by: string }[];
+
+    if (!deals.length) {
+      return NextResponse.json([]);
+    }
+
+    // Attach creator display_name for compact/home/search widgets
+    const userIds = Array.from(new Set(deals.map((d) => d.created_by)));
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", userIds);
+
+    const nameMap =
+      profiles?.reduce<Record<string, string | null>>((acc, p) => {
+        acc[p.user_id] = p.display_name ?? null;
+        return acc;
+      }, {}) ?? {};
+
+    const withCreators = deals.map((d) => ({
+      ...d,
+      profile: { display_name: nameMap[d.created_by] ?? null },
+    }));
+
+    return NextResponse.json(withCreators);
   } catch {
     return NextResponse.json([], { status: 200 });
   }

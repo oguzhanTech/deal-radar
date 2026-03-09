@@ -29,11 +29,10 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
 
   const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
 
-  if (compact) {
-    const creatorName =
-      (deal as any).profile?.display_name ||
-      t("admin.users.unnamed");
+  const creatorName =
+    (deal as any).profile?.display_name || t("admin.users.unnamed");
 
+  if (compact) {
     return (
       <div
         onMouseEnter={prefetchDetail}
@@ -161,7 +160,15 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
           </div>
 
           <div className="p-3.5 space-y-2">
-            <h3 className="font-bold text-[15px] leading-tight line-clamp-1">{deal.title}</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-bold text-[15px] leading-tight line-clamp-1 flex-1 min-w-0">
+                {deal.title}
+              </h3>
+              <div className="flex items-center gap-1 text-[12px] text-muted-foreground shrink-0 pl-1">
+                <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
+                <span className="max-w-[120px] truncate">{creatorName}</span>
+              </div>
+            </div>
 
             <div className="flex items-center justify-between gap-2">
               <DealCountdown endAt={deal.end_at} compact />
