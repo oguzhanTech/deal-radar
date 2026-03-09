@@ -54,7 +54,8 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
                   alt={deal.title}
                   fill
                   className="object-cover"
-                  sizes="64px"
+                  sizes="256px"
+                  quality={90}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground/40 text-xs">

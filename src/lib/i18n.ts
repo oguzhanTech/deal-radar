@@ -41,7 +41,7 @@ const tr: Record<string, string> = {
 
   // Home
   "home.trending": "Trend",
-  "home.endingSoon": "Son Dakika",
+  "home.endingSoon": "Yakında Bitiyor!",
   "home.popular": "Popüler",
   "home.newDeals": "Yeni Fırsatlar",
   "home.emptyTitle": "Henüz fırsat yok",

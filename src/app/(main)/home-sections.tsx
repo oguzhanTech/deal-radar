@@ -106,7 +106,7 @@ export async function HomePopularSection() {
   return (
     <DealSection
       title={t("home.popular")}
-      emoji="💎"
+      emoji="🔥"
       deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=popular"
     />
