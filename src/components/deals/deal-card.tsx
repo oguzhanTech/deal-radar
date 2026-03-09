@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { User2 } from "lucide-react";
+import { ExternalLink, User2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DealCountdown } from "./deal-countdown";
 import { HeatBadge } from "./heat-badge";
@@ -89,7 +89,23 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
               </div>
             </div>
             <div className="flex flex-col items-end justify-center gap-1 shrink-0" onClick={(e) => e.preventDefault()} data-no-skeleton>
-              <SaveRemindButton dealId={deal.id} compact />
+              <div className="flex items-center gap-1.5">
+                {deal.external_url && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.open(deal.external_url!, "_blank", "noopener,noreferrer");
+                    }}
+                    className="p-2 rounded-xl transition cursor-pointer shadow-sm bg-white/90 backdrop-blur-sm text-muted-foreground hover:text-primary"
+                    title={t("deal.viewDeal")}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </button>
+                )}
+                <SaveRemindButton dealId={deal.id} compact />
+              </div>
               <DealCountdown endAt={deal.end_at} compact className="text-[10px]" />
             </div>
           </div>
@@ -151,10 +167,24 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
             </div>
 
             <div
-              className="absolute bottom-2.5 right-2.5"
+              className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5"
               onClick={(e) => e.preventDefault()}
               data-no-skeleton
             >
+              {deal.external_url && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(deal.external_url!, "_blank", "noopener,noreferrer");
+                  }}
+                  className="p-2 rounded-xl transition cursor-pointer shadow-sm bg-white/90 backdrop-blur-sm text-muted-foreground hover:text-primary"
+                  title={t("deal.viewDeal")}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+              )}
               <SaveRemindButton dealId={deal.id} compact />
             </div>
           </div>
