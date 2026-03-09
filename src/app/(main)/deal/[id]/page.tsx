@@ -59,6 +59,14 @@ export default async function DealPage({ params }: PageProps) {
 
     const voteCount = (voteData ?? []).reduce((sum, v) => sum + v.vote, 0);
 
+    const { data: creatorProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", deal.created_by)
+      .maybeSingle();
+
+    const creatorName = creatorProfile?.display_name ?? null;
+
     const { data: similarDeals } = await supabase
       .from("deals")
       .select("*")
@@ -73,6 +81,7 @@ export default async function DealPage({ params }: PageProps) {
     return (
       <DealDetailContent
         deal={deal}
+        creatorName={creatorName}
         comments={comments ?? []}
         voteCount={voteCount}
         saveCount={saveCount ?? 0}

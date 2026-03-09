@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { User2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DealCountdown } from "./deal-countdown";
 import { HeatBadge } from "./heat-badge";
@@ -29,6 +30,10 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
   const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
 
   if (compact) {
+    const creatorName =
+      (deal as any).profile?.display_name ||
+      t("admin.users.unnamed");
+
     return (
       <div
         onMouseEnter={prefetchDetail}
@@ -60,7 +65,10 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
               <h3 className="font-semibold text-[13px] leading-tight line-clamp-1">{deal.title}</h3>
-              <p className="text-[11px] text-muted-foreground">{deal.category || deal.provider}</p>
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <User2 className="h-3 w-3 text-muted-foreground/80" />
+                <span className="truncate">{creatorName}</span>
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 {deal.deal_price != null && deal.original_price != null ? (
                   <>

@@ -13,6 +13,7 @@ import {
   Download,
   Copy,
   Ticket,
+  User2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const ENABLE_DEAL_DOWNLOAD = false;
 
 interface DealDetailContentProps {
   deal: Deal;
+  creatorName?: string | null;
   comments: (DealComment & { profile?: { display_name: string | null; trust_score: number; level?: number } | null })[];
   voteCount: number;
   saveCount: number;
@@ -50,6 +52,7 @@ interface DealDetailContentProps {
 
 export function DealDetailContent({
   deal,
+  creatorName,
   comments: initialComments,
   voteCount: initialVoteCount,
   saveCount,
@@ -69,6 +72,8 @@ export function DealDetailContent({
   const [reporting, setReporting] = useState(false);
 
   const isExpired = new Date(deal.end_at) < new Date();
+  const creator =
+    creatorName ?? t("admin.users.unnamed");
 
   useEffect(() => {
     if (!user?.id) return;
@@ -214,9 +219,15 @@ export function DealDetailContent({
 
       {/* Info */}
       <div className="px-4 pt-4 space-y-4">
-        {/* Tags */}
+        {/* Creator + Tags */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">{deal.category || deal.provider}</Badge>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
+            <span className="font-medium truncate max-w-[160px]">{creator}</span>
+          </div>
+          <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">
+            {deal.category || deal.provider}
+          </Badge>
           <HeatBadge score={deal.heat_score} />
         </div>
 

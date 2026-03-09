@@ -3,6 +3,29 @@ import { DealSection } from "@/components/deals/deal-section";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 
+type HomeDeal = Deal & { profile?: { display_name: string | null } | null };
+
+async function attachCreators(deals: Deal[]): Promise<HomeDeal[]> {
+  if (!deals.length) return [];
+  const supabase = await createAnonClient();
+  const userIds = Array.from(new Set(deals.map((d) => d.created_by)));
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, display_name")
+    .in("user_id", userIds);
+
+  const map =
+    profiles?.reduce<Record<string, string | null>>((acc, p) => {
+      acc[p.user_id] = p.display_name ?? null;
+      return acc;
+    }, {}) ?? {};
+
+  return deals.map((d) => ({
+    ...d,
+    profile: { display_name: map[d.created_by] ?? null },
+  }));
+}
+
 async function fetchTrending() {
   const supabase = await createAnonClient();
   const { data } = await supabase
@@ -13,7 +36,7 @@ async function fetchTrending() {
     .gte("heat_score", 20)
     .order("heat_score", { ascending: false })
     .limit(5);
-  return data ?? [];
+  return attachCreators(data ?? []);
 }
 
 async function fetchEndingSoon() {
@@ -25,7 +48,7 @@ async function fetchEndingSoon() {
     .gt("end_at", new Date().toISOString())
     .order("end_at", { ascending: true })
     .limit(5);
-  return data ?? [];
+  return attachCreators(data ?? []);
 }
 
 async function fetchPopular() {
@@ -37,7 +60,7 @@ async function fetchPopular() {
     .gt("end_at", new Date().toISOString())
     .order("heat_score", { ascending: false })
     .limit(5);
-  return data ?? [];
+  return attachCreators(data ?? []);
 }
 
 async function fetchNewest() {
@@ -48,7 +71,7 @@ async function fetchNewest() {
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(5);
-  return data ?? [];
+  return attachCreators(data ?? []);
 }
 
 export async function HomeTrendingSection() {
@@ -58,7 +81,7 @@ export async function HomeTrendingSection() {
     <DealSection
       title={t("home.trending")}
       emoji="🔥"
-      deals={deals as Deal[]}
+      deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=trending"
     />
   );
@@ -71,7 +94,7 @@ export async function HomeEndingSoonSection() {
     <DealSection
       title={t("home.endingSoon")}
       emoji="⏰"
-      deals={deals as Deal[]}
+      deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=popular"
     />
   );
@@ -84,7 +107,7 @@ export async function HomePopularSection() {
     <DealSection
       title={t("home.popular")}
       emoji="💎"
-      deals={deals as Deal[]}
+      deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=popular"
     />
   );
@@ -97,7 +120,7 @@ export async function HomeNewestSection() {
     <DealSection
       title={t("home.newDeals")}
       emoji="✨"
-      deals={deals as Deal[]}
+      deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=new"
     />
   );
