@@ -50,22 +50,35 @@ export default function ProfilePage() {
   }, [profile]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setMyDeals([]);
+      setMyDealsCount(0);
+      return;
+    }
     const fetchDeals = async () => {
-      const { data } = await supabase
-        .from("deals")
-        .select("*")
-        .eq("created_by", user.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      setMyDeals(data ?? []);
+      try {
+        const { data } = await supabase
+          .from("deals")
+          .select("*")
+          .eq("created_by", user.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        setMyDeals(data ?? []);
 
-      const { count } = await supabase
-        .from("deals")
-        .select("*", { count: "exact", head: true })
-        .eq("created_by", user.id)
-        .eq("status", "approved");
-      setMyDealsCount(count ?? 0);
+        const { count, error } = await supabase
+          .from("deals")
+          .select("id", { count: "exact" })
+          .eq("created_by", user.id)
+          .eq("status", "approved");
+
+        if (error) {
+          setMyDealsCount(0);
+        } else {
+          setMyDealsCount(count ?? 0);
+        }
+      } catch {
+        setMyDealsCount(0);
+      }
     };
     fetchDeals();
   }, [user, supabase]);
