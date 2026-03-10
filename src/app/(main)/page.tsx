@@ -36,16 +36,16 @@ export default async function HomePage() {
         <HomeHero />
       </Suspense>
       <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeTrendingSection />
+        <HomeNewestSection />
       </Suspense>
       <Suspense fallback={<DealSectionSkeleton />}>
         <HomeEndingSoonSection />
       </Suspense>
       <Suspense fallback={<DealSectionSkeleton />}>
-        <HomePopularSection />
+        <HomeTrendingSection />
       </Suspense>
       <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeNewestSection />
+        <HomePopularSection />
       </Suspense>
     </div>
   );
