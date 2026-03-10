@@ -24,14 +24,14 @@ export default async function HomePage() {
 
   if (!hasDeals) {
     return (
-      <div className="space-y-4 py-4">
+      <div className="space-y-4 py-3">
         <HomeEmptyState />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 py-4">
+    <div className="space-y-4 py-3">
       <Suspense fallback={null}>
         <HomeHero />
       </Suspense>

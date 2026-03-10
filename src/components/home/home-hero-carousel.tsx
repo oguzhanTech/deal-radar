@@ -77,7 +77,6 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
   );
 
   const length = slides.length;
-  if (!length) return null;
 
   const goTo = useCallback(
     (next: number) => {
@@ -115,9 +114,11 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
   const sectionLabel = getSectionLabel(active.section);
   const message = getHeroMessage(active.section, active.category || null);
 
+  if (!length) return null;
+
   return (
     <section
-      className="px-4 pt-1.5 md:pt-2"
+      className="px-4 pt-1 md:pt-1.5"
       aria-label="Öne çıkan fırsatlar"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
