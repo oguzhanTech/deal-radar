@@ -97,6 +97,35 @@ export async function getHeroDeals(): Promise<HeroDeal[]> {
       const i = Math.floor(Math.random() * candidates.length);
       const deal = candidates[i] as Deal;
       picks.push({ ...deal, section: "newest" });
+      usedIds.add(deal.id);
+    }
+  }
+
+  // Kalan slotları benzersiz deal'larla 5'e tamamla
+  if (picks.length < 5) {
+    const extras: { deal: Deal; section: HeroDeal["section"] }[] = [];
+
+    for (const d of endingSoon) {
+      if (!usedIds.has(d.id)) extras.push({ deal: d as Deal, section: "endingSoon" });
+    }
+    for (const d of popular) {
+      if (!usedIds.has(d.id)) extras.push({ deal: d as Deal, section: "popular" });
+    }
+    for (const d of newest) {
+      if (!usedIds.has(d.id)) extras.push({ deal: d as Deal, section: "newest" });
+    }
+
+    // Basit shuffle
+    for (let i = extras.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [extras[i], extras[j]] = [extras[j], extras[i]];
+    }
+
+    for (const { deal, section } of extras) {
+      if (picks.length >= 5) break;
+      if (usedIds.has(deal.id)) continue;
+      picks.push({ ...deal, section });
+      usedIds.add(deal.id);
     }
   }
 
