@@ -7,6 +7,7 @@ import {
   HomePopularSection,
   HomeNewestSection,
 } from "./home-sections";
+import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
 
 export const revalidate = 60;
@@ -23,14 +24,17 @@ export default async function HomePage() {
 
   if (!hasDeals) {
     return (
-      <div className="space-y-6 py-5">
+      <div className="space-y-4 py-4">
         <HomeEmptyState />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 py-5">
+    <div className="space-y-4 py-4">
+      <Suspense fallback={null}>
+        <HomeHero />
+      </Suspense>
       <Suspense fallback={<DealSectionSkeleton />}>
         <HomeTrendingSection />
       </Suspense>

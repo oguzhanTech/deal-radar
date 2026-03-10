@@ -2,6 +2,7 @@ import { createAnonClient } from "@/lib/supabase/server";
 import { DealSection } from "@/components/deals/deal-section";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
+import type { HeroDeal } from "@/components/home/home-hero-carousel";
 
 type HomeDeal = Deal & { profile?: { display_name: string | null } | null };
 
@@ -61,6 +62,33 @@ async function fetchPopular() {
     .order("heat_score", { ascending: false })
     .limit(5);
   return attachCreators(data ?? []);
+}
+
+export async function getHeroDeals(): Promise<HeroDeal[]> {
+  const [endingSoon, popular, newest] = await Promise.all([
+    fetchEndingSoon(),
+    fetchPopular(),
+    fetchNewest(),
+  ]);
+
+  const picks: HeroDeal[] = [];
+
+  if (endingSoon.length) {
+    const i = Math.floor(Math.random() * endingSoon.length);
+    picks.push({ ...(endingSoon[i] as Deal), section: "endingSoon" });
+  }
+
+  if (popular.length) {
+    const i = Math.floor(Math.random() * popular.length);
+    picks.push({ ...(popular[i] as Deal), section: "popular" });
+  }
+
+  if (newest.length) {
+    const i = Math.floor(Math.random() * newest.length);
+    picks.push({ ...(newest[i] as Deal), section: "newest" });
+  }
+
+  return picks;
 }
 
 async function fetchNewest() {
