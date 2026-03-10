@@ -5,10 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number, currency: string = "TRY"): string {
+export function formatPrice(price: number, currency: string = "TL"): string {
+  const code = currency === "TL" ? "TRY" : currency;
   return new Intl.NumberFormat("tr-TR", {
     style: "currency",
-    currency,
+    currency: code,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(price);

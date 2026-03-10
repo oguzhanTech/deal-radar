@@ -40,7 +40,7 @@ export default function CreateDealPage() {
     end_at: "",
     original_price: "",
     deal_price: "",
-    currency: "TRY",
+    currency: "TL",
     external_url: "",
     hasCoupon: false,
     couponCode: "",
@@ -230,7 +230,7 @@ export default function CreateDealPage() {
             onClick={() => {
               setSuccess(false);
               setStep(1);
-              setForm({ title: "", description: "", category: "", start_at: "", end_at: "", original_price: "", deal_price: "", currency: "TRY", external_url: "", hasCoupon: false, couponCode: "", couponDescription: "", couponExpiry: "" });
+              setForm({ title: "", description: "", category: "", start_at: "", end_at: "", original_price: "", deal_price: "", currency: "TL", external_url: "", hasCoupon: false, couponCode: "", couponDescription: "", couponExpiry: "" });
               setImageFile(null);
               setImagePreview(null);
             }}

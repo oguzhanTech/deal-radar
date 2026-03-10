@@ -14,7 +14,7 @@ export const DEAL_CATEGORIES = [
   "Hobi & Eğlence",
 ] as const;
 
-export const CURRENCIES = ["TRY", "USD", "EUR"] as const;
+export const CURRENCIES = ["TL", "USD", "EUR"] as const;
 
 export const DEFAULT_REMINDER_SETTINGS = {
   "3d": true,

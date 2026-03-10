@@ -180,10 +180,10 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
                 <>
                   <div className="flex items-baseline gap-2">
                     <span className="text-sm md:text-base line-through text-white/60">
-                      {active.original_price} {active.currency}
+                      {active.original_price} {active.currency === "TRY" ? "TL" : active.currency}
                     </span>
                     <span className="text-2xl md:text-3xl font-extrabold">
-                      {active.deal_price} {active.currency}
+                      {active.deal_price} {active.currency === "TRY" ? "TL" : active.currency}
                     </span>
                   </div>
                   {discount && (
