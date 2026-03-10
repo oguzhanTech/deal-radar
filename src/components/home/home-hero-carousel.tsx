@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback, TouchEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Flame, Clock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -32,29 +33,31 @@ function getSectionLabel(section: HeroDeal["section"]) {
   }
 }
 
-function getHeroMessage(section: HeroDeal["section"], category: string | null) {
-  const base = category || "Fırsat";
+function getHeroMessage(section: HeroDeal["section"]) {
   if (section === "endingSoon") {
     const messages = [
-      `${base} yakında bitiyor, kaçırma!`,
-      `Son saatler: ${base} için hemen harekete geç.`,
-      `${base} az sonra sona erecek, radarına al.`,
+      "Bu fırsat yakında bitiyor, kaçırma.",
+      "Son saatler, radarına ekleyip unutma.",
+      "Az sonra sona eriyor, hemen göz at.",
+      "Bitmeden yakala, sonra üzülme.",
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   }
   if (section === "popular" || section === "trending") {
     const messages = [
-      `Topluluk bu ${base.toLowerCase()} için heyecanlı!`,
-      `Bu ${base.toLowerCase()} şu an çok konuşuluyor.`,
-      `Avcıların favorisi: ${base}.`,
+      "Topluluk şu an bu fırsat için çok heyecanlı.",
+      "Avcıların gözdesi, elden ele dolaşıyor.",
+      "Trend listesinde hızla yükseliyor.",
+      "Birçok kişi bu fırsatı radarına aldı bile.",
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   }
   // newest
   const messages = [
-    `Taze taze geldi: yeni bir ${base.toLowerCase()} fırsatı.`,
-    `En yeni ${base.toLowerCase()} fırsatlarından biri.`,
-    `Topla'ya yeni düştü, hemen göz at.`,
+    "Topla'ya yeni düştü, ilk sen değerlendir.",
+    "Taze taze gelen bir fırsat, keşfetmeye değer.",
+    "Yeni eklendi, erken yakalayan kazanır.",
+    "Bugünün taze fırsatlarından biri.",
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -112,7 +115,7 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
       : active.discount_percent ?? null;
 
   const sectionLabel = getSectionLabel(active.section);
-  const message = getHeroMessage(active.section, active.category || null);
+  const message = getHeroMessage(active.section);
 
   if (!length) return null;
 
@@ -123,26 +126,33 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div
-        className="relative overflow-hidden rounded-3xl bg-black text-white shadow-xl cursor-pointer h-[190px] md:h-[215px]"
-        onClick={() => router.push(`/deal/${active.id}`)}
-      >
-        <div className="absolute inset-0">
-          {active.image_url && (
-            <Image
-              src={active.image_url}
-              alt={active.title}
-              fill
-              className="object-cover scale-110"
-              sizes="100vw"
-              priority
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/30" />
-        </div>
+      <div className="relative overflow-hidden rounded-3xl bg-black text-white shadow-xl h-[190px] md:h-[215px]">
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            key={active.id}
+            initial={{ x: 40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -40, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 26, mass: 0.7 }}
+            className="absolute inset-0 cursor-pointer"
+            onClick={() => router.push(`/deal/${active.id}`)}
+          >
+            <div className="absolute inset-0">
+              {active.image_url && (
+                <Image
+                  src={active.image_url}
+                  alt={active.title}
+                  fill
+                  className="object-cover scale-110"
+                  sizes="100vw"
+                  priority
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/30" />
+            </div>
 
-        <div className="relative flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 h-full">
-          <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
+            <div className="relative flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 h-full">
+              <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15">
                 {active.section === "endingSoon" ? (
@@ -194,44 +204,46 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
             </div>
           </div>
 
-          <div className="pointer-events-none absolute right-4 bottom-4 flex items-center gap-3 text-[11px] md:text-xs text-white/80">
-            <span className="opacity-75">
-              {index + 1}/{length}
-            </span>
-            <div className="flex items-center gap-2 pointer-events-auto">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prev();
-                }}
-                className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white/90 backdrop-blur hover:bg-black/60 transition",
-                  length <= 1 && "opacity-50 cursor-default"
-                )}
-                aria-label={t("common.previous")}
-                disabled={length <= 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  next();
-                }}
-                className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white/90 backdrop-blur hover:bg-black/60 transition",
-                  length <= 1 && "opacity-50 cursor-default"
-                )}
-                aria-label={t("common.next")}
-                disabled={length <= 1}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              <div className="pointer-events-none absolute right-4 bottom-4 flex items-center gap-3 text-[11px] md:text-xs text-white/80">
+                <span className="opacity-75">
+                  {index + 1}/{length}
+                </span>
+                <div className="flex items-center gap-2 pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prev();
+                    }}
+                    className={cn(
+                      "inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white/90 backdrop-blur hover:bg-black/60 transition",
+                      length <= 1 && "opacity-50 cursor-default"
+                    )}
+                    aria-label={t("common.previous")}
+                    disabled={length <= 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      next();
+                    }}
+                    className={cn(
+                      "inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white/90 backdrop-blur hover:bg-black/60 transition",
+                      length <= 1 && "opacity-50 cursor-default"
+                    )}
+                    aria-label={t("common.next")}
+                    disabled={length <= 1}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );

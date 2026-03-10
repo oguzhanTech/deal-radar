@@ -72,20 +72,32 @@ export async function getHeroDeals(): Promise<HeroDeal[]> {
   ]);
 
   const picks: HeroDeal[] = [];
+  const usedIds = new Set<string>();
 
   if (endingSoon.length) {
     const i = Math.floor(Math.random() * endingSoon.length);
-    picks.push({ ...(endingSoon[i] as Deal), section: "endingSoon" });
+    const deal = endingSoon[i] as Deal;
+    picks.push({ ...deal, section: "endingSoon" });
+    usedIds.add(deal.id);
   }
 
   if (popular.length) {
-    const i = Math.floor(Math.random() * popular.length);
-    picks.push({ ...(popular[i] as Deal), section: "popular" });
+    const candidates = popular.filter((d) => !usedIds.has(d.id));
+    if (candidates.length) {
+      const i = Math.floor(Math.random() * candidates.length);
+      const deal = candidates[i] as Deal;
+      picks.push({ ...deal, section: "popular" });
+      usedIds.add(deal.id);
+    }
   }
 
   if (newest.length) {
-    const i = Math.floor(Math.random() * newest.length);
-    picks.push({ ...(newest[i] as Deal), section: "newest" });
+    const candidates = newest.filter((d) => !usedIds.has(d.id));
+    if (candidates.length) {
+      const i = Math.floor(Math.random() * candidates.length);
+      const deal = candidates[i] as Deal;
+      picks.push({ ...deal, section: "newest" });
+    }
   }
 
   return picks;
