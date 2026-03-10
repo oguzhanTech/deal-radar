@@ -55,6 +55,7 @@ export default function ProfilePage() {
       setMyDealsCount(0);
       return;
     }
+    setMyDealsCount(null);
     const fetchDeals = async () => {
       try {
         const { data } = await supabase
@@ -63,19 +64,10 @@ export default function ProfilePage() {
           .eq("created_by", user.id)
           .order("created_at", { ascending: false })
           .limit(10);
-        setMyDeals(data ?? []);
-
-        const { count, error } = await supabase
-          .from("deals")
-          .select("id", { count: "exact" })
-          .eq("created_by", user.id)
-          .eq("status", "approved");
-
-        if (error) {
-          setMyDealsCount(0);
-        } else {
-          setMyDealsCount(count ?? 0);
-        }
+        const deals = data ?? [];
+        setMyDeals(deals);
+        // Sayaç için ikinci, yavaş count sorgusu yerine mevcut listeden hızlı hesaplama
+        setMyDealsCount(deals.filter((d) => d.status === "approved").length);
       } catch {
         setMyDealsCount(0);
       }
@@ -260,9 +252,7 @@ export default function ProfilePage() {
         </div>
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
           <Package className="h-5 w-5 text-violet-500 mx-auto mb-1.5" />
-          <p className="text-xl font-extrabold">
-            {myDealsCount === null ? "…" : myDealsCount}
-          </p>
+          <p className="text-xl font-extrabold">{myDealsCount === null ? "…" : myDealsCount}</p>
           <p className="text-[10px] text-muted-foreground font-medium">{t("profile.deals")}</p>
         </div>
         <div className="bg-card rounded-2xl p-3.5 shadow-card text-center">
