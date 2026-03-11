@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "online.topla.twa",
+        "sha256_cert_fingerprints": ["6A:8A:39:F5:59:50:43:BA:F5:15:F7:29:81:57:8B:0D:38:AB:E6:EA:A4:CA:1A:A0:DD:03:AD:CF:BB:7A:A2:6C"]
+      }
+    }]
