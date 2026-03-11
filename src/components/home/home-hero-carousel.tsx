@@ -108,7 +108,7 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
   };
 
   const active = slides[index];
-  const isLongTitle = active.title ? active.title.length > 32 : false;
+  const isLongTitle = active.title ? active.title.length > 23 : false;
   const hasPrices = active.deal_price != null && active.original_price != null;
   const discount =
     hasPrices && active.original_price! > 0
