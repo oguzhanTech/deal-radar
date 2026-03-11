@@ -80,6 +80,17 @@ export default function CreateDealPage() {
   const update = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  const handleTitleChange = (value: string) => {
+    const trimmedStart = value.replace(/^\s+/, "");
+    if (!trimmedStart) {
+      update("title", "");
+      return;
+    }
+    const first = trimmedStart.charAt(0).toUpperCase();
+    const rest = trimmedStart.slice(1);
+    update("title", first + rest);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -356,7 +367,12 @@ export default function CreateDealPage() {
             {/* Title */}
             <div>
               <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.title")}</label>
-              <Input value={form.title} onChange={(e) => update("title", e.target.value)} placeholder={t("create.field.titlePlaceholder")} className="rounded-xl h-12" />
+              <Input
+                value={form.title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                placeholder={t("create.field.titlePlaceholder")}
+                className="rounded-xl h-12"
+              />
             </div>
 
             {/* Category */}
@@ -443,11 +459,20 @@ export default function CreateDealPage() {
               <Input value={form.external_url} onChange={(e) => update("external_url", e.target.value)} placeholder="https://..." className="rounded-xl h-12" />
             </div>
 
-            {/* Description */}
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.description")}</label>
-              <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder={t("create.field.descriptionPlaceholder")} className="rounded-xl" rows={3} />
-            </div>
+              {/* Description */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.description")}</label>
+                <Textarea
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                  placeholder={t("create.field.descriptionPlaceholder")}
+                  className="rounded-xl font-normal whitespace-pre-wrap"
+                  rows={4}
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Satır sonları ve • madde işaretleri detay sayfasında aynı şekilde gösterilir.
+                </p>
+              </div>
 
             {/* Coupon Toggle */}
             <div className="bg-card rounded-2xl p-4 shadow-card space-y-3">
@@ -581,7 +606,9 @@ export default function CreateDealPage() {
 
               {/* Description */}
               {form.description && (
-                <p className="text-sm text-muted-foreground border-t pt-3">{form.description}</p>
+                <p className="text-sm text-muted-foreground border-t pt-3 whitespace-pre-wrap">
+                  {form.description}
+                </p>
               )}
 
               {/* URL */}
