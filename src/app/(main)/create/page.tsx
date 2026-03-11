@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { MouseEvent, TouchEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,9 @@ export default function CreateDealPage() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFocusY, setImageFocusY] = useState(0.5); // 0-1 arası, dikey odak noktası
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const [dragStartFocus, setDragStartFocus] = useState(0.5);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -96,6 +100,27 @@ export default function CreateDealPage() {
 
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+    setImageFocusY(0.5);
+  };
+
+  const handleImageDragStart = (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => {
+    if (!imagePreview) return;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    e.preventDefault();
+    setDragStartY(clientY);
+    setDragStartFocus(imageFocusY);
+  };
+
+  const handleImageDragMove = (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => {
+    if (dragStartY == null || !imagePreview) return;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const delta = clientY - dragStartY;
+    const next = Math.min(1, Math.max(0, dragStartFocus + delta / 300)); // 300px ~ tam aralık
+    setImageFocusY(next);
+  };
+
+  const handleImageDragEnd = () => {
+    setDragStartY(null);
   };
 
   const validateStep1 = () => {
@@ -150,8 +175,14 @@ export default function CreateDealPage() {
       let storage_path: string | null = null;
 
       if (imageFile) {
+        let fileToUpload: File = imageFile;
+        try {
+          fileToUpload = await cropImageForDeal(imageFile, imageFocusY);
+        } catch {
+          // Cropping failed, continue with original file
+        }
         const formData = new FormData();
-        formData.append("file", imageFile);
+        formData.append("file", fileToUpload);
         const uploadResult = await uploadDealImage(formData);
         if (uploadResult.error) {
           toast({ title: t("create.error.imageFailed"), description: uploadResult.error, variant: "destructive" });
@@ -280,9 +311,38 @@ export default function CreateDealPage() {
             <div>
               <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.image")}</label>
               {imagePreview ? (
-                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-muted shadow-card">
-                  <Image src={imagePreview} alt="Preview" fill className="object-cover" />
-                  <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-2 right-2 bg-black/60 text-white rounded-xl w-7 h-7 flex items-center justify-center text-xs cursor-pointer">✕</button>
+                <div className="space-y-1.5">
+                  <div
+                    className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-muted shadow-card touch-none select-none cursor-grab active:cursor-grabbing"
+                    onMouseDown={handleImageDragStart}
+                    onMouseMove={handleImageDragMove}
+                    onMouseUp={handleImageDragEnd}
+                    onMouseLeave={handleImageDragEnd}
+                    onTouchStart={handleImageDragStart}
+                    onTouchMove={handleImageDragMove}
+                    onTouchEnd={handleImageDragEnd}
+                  >
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                      style={{ objectPosition: `50% ${imageFocusY * 100}%` }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
+                      className="absolute top-2 right-2 bg-black/60 text-white rounded-xl w-7 h-7 flex items-center justify-center text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Görseli yukarı/aşağı sürükleyerek hangi kısmın görüneceğini ayarlayabilirsin.
+                  </p>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl p-8 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all active:scale-[0.98]">
@@ -456,7 +516,13 @@ export default function CreateDealPage() {
               {/* Image preview */}
               {imagePreview && (
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-muted">
-                  <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                    style={{ objectPosition: `50% ${imageFocusY * 100}%` }}
+                  />
                 </div>
               )}
 
@@ -544,3 +610,67 @@ export default function CreateDealPage() {
     </div>
   );
 }
+
+async function cropImageForDeal(file: File, focusY: number): Promise<File> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = (err) => reject(err);
+      image.src = objectUrl;
+    });
+
+    const width = img.naturalWidth || img.width;
+    const height = img.naturalHeight || img.height;
+    if (!width || !height) return file;
+
+    const targetAspect = 16 / 9;
+    let cropWidth = width;
+    let cropHeight = width / targetAspect;
+    if (cropHeight > height) {
+      cropHeight = height;
+      cropWidth = height * targetAspect;
+    }
+
+    const maxOffsetY = Math.max(0, height - cropHeight);
+    const offsetY = maxOffsetY * focusY;
+    const offsetX = (width - cropWidth) / 2;
+
+    const canvas = document.createElement("canvas");
+    const outputWidth = 1280;
+    const outputHeight = Math.round(outputWidth / targetAspect);
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+
+    ctx.drawImage(
+      img,
+      offsetX,
+      offsetY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      outputWidth,
+      outputHeight
+    );
+
+    const blob: Blob = await new Promise((resolve) => {
+      canvas.toBlob(
+        (b) => resolve(b || file),
+        "image/jpeg",
+        0.9
+      );
+    });
+
+    if (blob instanceof File) return blob;
+    return new File([blob], file.name.replace(/\.\w+$/, "") + "-cropped.jpg", {
+      type: "image/jpeg",
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+

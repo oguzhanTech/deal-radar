@@ -41,6 +41,7 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
   const [showLogin, setShowLogin] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [myDeals, setMyDeals] = useState<Deal[]>(initialDeals);
   const [myDealsCount, setMyDealsCount] = useState<number>(initialDealsCount);
   const [showEdit, setShowEdit] = useState(false);
@@ -92,6 +93,39 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
       toast({ title: t("create.error.failed"), variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user || deleting) return;
+    const confirmed = window.confirm(
+      "Hesabını ve kişisel verilerini silmek istediğinden emin misin? Bu işlem geri alınamaz."
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/profile/delete", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        toast({
+          title: t("create.error.failed"),
+          description: "Hesap silme işlemi sırasında bir hata oluştu.",
+          variant: "destructive",
+        });
+        return;
+      }
+      await signOut();
+      router.push("/");
+    } catch {
+      toast({
+        title: t("create.error.failed"),
+        description: "Hesap silme işlemi sırasında bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -346,7 +380,7 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
       )}
 
       <div className="mx-4 my-6 border-t border-border/60 pt-3">
-        <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground items-center">
           <Link href="/privacy" className="underline-offset-4 hover:underline">
             {t("legal.privacy")}
           </Link>
@@ -358,6 +392,19 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
           <Link href="/contact" className="underline-offset-4 hover:underline">
             {t("legal.contact")}
           </Link>
+          {user && (
+            <>
+              <span className="text-border">•</span>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="underline-offset-4 hover:underline text-destructive disabled:opacity-60"
+              >
+                Hesabımı sil
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

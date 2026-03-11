@@ -34,6 +34,22 @@ export default function TermsPage() {
           olduğunda, uygulama içi duyurular veya güncelleme notları ile bilgilendirme yaparız.
         </p>
       </section>
+      <section className="space-y-1">
+        <h2 className="font-semibold text-foreground text-sm">Reklamlar ve ödemeler</h2>
+        <p>
+          Topla, şu an itibarıyla uygulama içinde üçüncü taraf reklam göstermez ve uygulama içi satın alma (abonelik veya
+          ürün satışı) sunmaz. Gelecekte bu durumda değişiklik olması halinde, şartlar güncellenecek ve kullanıcılar
+          bilgilendirilecektir.
+        </p>
+      </section>
+      <section className="space-y-1">
+        <h2 className="font-semibold text-foreground text-sm">Hesap kapatma</h2>
+        <p>
+          Kullanıcılar, hesaplarının kapatılmasını ve kişisel verilerinin silinmesini talep edebilir. Bunun için gizlilik
+          politikamızda belirtilen iletişim kanalı üzerinden bizimle irtibata geçebilirsiniz. Talebiniz makul bir süre
+          içinde değerlendirilir ve yasal yükümlülükler çerçevesinde hesabınız kapatılır.
+        </p>
+      </section>
     </div>
   );
 }

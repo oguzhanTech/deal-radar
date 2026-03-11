@@ -108,6 +108,7 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
   };
 
   const active = slides[index];
+  const isLongTitle = active.title ? active.title.length > 55 : false;
   const hasPrices = active.deal_price != null && active.original_price != null;
   const discount =
     hasPrices && active.original_price! > 0
@@ -167,7 +168,12 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
               {active.category && <span className="text-white/70">• {active.category}</span>}
             </div>
 
-            <h1 className="text-lg md:text-2xl lg:text-3xl font-extrabold leading-tight line-clamp-1 md:line-clamp-2">
+            <h1
+              className={cn(
+                "font-extrabold leading-tight line-clamp-1 md:line-clamp-2",
+                isLongTitle ? "text-sm md:text-lg lg:text-xl" : "text-lg md:text-2xl lg:text-3xl"
+              )}
+            >
               {active.title}
             </h1>
 
