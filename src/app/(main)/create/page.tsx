@@ -612,10 +612,15 @@ export default function CreateDealPage() {
 }
 
 async function cropImageForDeal(file: File, focusY: number): Promise<File> {
+  if (typeof window === "undefined" || typeof window.Image === "undefined") {
+    // Güvenli taraf: SSR ortamında kırpma yapma, orijinal dosyayı kullan
+    return file;
+  }
+
   const objectUrl = URL.createObjectURL(file);
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
+      const image = new window.Image();
       image.onload = () => resolve(image);
       image.onerror = (err) => reject(err);
       image.src = objectUrl;
