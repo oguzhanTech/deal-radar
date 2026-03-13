@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createAnonClient } from "@/lib/supabase/server";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://topla.online";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

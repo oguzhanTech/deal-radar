@@ -2,7 +2,7 @@
   "name": "Topla",
   "short_name": "Topla",
   "description": "Topluluk destekli fırsat ve indirim platformu",
-  "start_url": "https://topla.online/",
+  "start_url": "https://www.topla.online/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6366f1",
@@ -21,7 +21,7 @@
   ],
   "id": "online.topla.app",
   "dir": "ltr",
-  "scope": "https://topla.online/",
+  "scope": "https://www.topla.online/",
   "lang": "tr",
   "categories": [
     "shopping",

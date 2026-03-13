@@ -36,7 +36,7 @@ CRON_SECRET=a-random-secret-string
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Production’da `NEXT_PUBLIC_APP_URL=https://topla.online` kullanın. Domain, sitemap, Google Search Console ve Supabase ayarları için [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dosyasına bakın.
+Production’da `NEXT_PUBLIC_APP_URL=https://www.topla.online` kullanın. Domain, sitemap, Google Search Console ve Supabase ayarları için [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dosyasına bakın.
 
 ### 3. Set up the database
 

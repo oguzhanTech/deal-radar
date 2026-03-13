@@ -12,7 +12,7 @@ const fontSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://topla.online";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
