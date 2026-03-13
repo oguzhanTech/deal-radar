@@ -63,7 +63,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       onClickCapture={handleLinkCapture}
     >
       <TopHeader />
-      <main className="flex-1 pb-20 min-w-0">
+      <main className="flex-1 pb-20 pt-16 min-w-0">
         {useSkeleton ? getPageSkeleton(pendingPath!) : children}
       </main>
       <BottomNav />

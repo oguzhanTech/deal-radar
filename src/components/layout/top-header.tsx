@@ -16,7 +16,7 @@ export function TopHeader() {
   const avatarLetter = profile?.display_name?.charAt(0)?.toUpperCase() || initial;
 
   return (
-    <header className="sticky top-0 z-40 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-lg backdrop-blur-md bg-opacity-95">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-lg backdrop-blur-md bg-opacity-95">
       <div className="flex items-center justify-between h-16 px-5 max-w-lg mx-auto">
         <Link href="/" prefetch onMouseEnter={() => router.prefetch("/")} onTouchStart={() => router.prefetch("/")} className="flex items-center gap-2.5">
           <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm">
