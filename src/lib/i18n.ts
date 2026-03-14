@@ -120,7 +120,7 @@ const tr: Record<string, string> = {
   "create.field.providerPlaceholder": "Sağlayıcı seç",
   "create.field.endDate": "Bitiş Tarihi *",
   "create.field.endDateUnknown": "Bitiş tarihi belli değil",
-  "create.field.endDateUnknownHint": "İşaretlersen 5 gün sonra admin incelemeye alır; yeni tarih atanabilir veya bitmiş işaretlenebilir.",
+  "create.field.endDateUnknownHint": "İşaretlersen 5 gün sonra fırsatı tekrar incelemeye alırız; yeni tarih atanabilir veya bitmiş işaretlenebilir.",
   "create.field.startDate": "Başlangıç Tarihi",
   "create.field.category": "Kategori",
   "create.field.categoryPlaceholder": "Kategori seç",

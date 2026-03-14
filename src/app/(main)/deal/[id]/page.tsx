@@ -38,11 +38,11 @@ export default async function DealPage({ params }: PageProps) {
   try {
     const supabase = await createClient();
 
-    const [{ data: deal }, { data: comments }, { count: saveCount }, { data: voteData }] = await Promise.all([
+    const [{ data: deal }, { data: commentsRaw }, { count: saveCount }, { data: voteData }] = await Promise.all([
       supabase.from("deals").select("*").eq("id", id).single(),
       supabase
         .from("deal_comments")
-        .select("*, profile:profiles(display_name, trust_score)")
+        .select("*")
         .eq("deal_id", id)
         .order("created_at", { ascending: true }),
       supabase
@@ -58,6 +58,26 @@ export default async function DealPage({ params }: PageProps) {
     if (!deal) notFound();
 
     const voteCount = (voteData ?? []).reduce((sum, v) => sum + v.vote, 0);
+
+    // deal_comments has no FK to profiles; fetch profiles by user_id and attach
+    type CommentRow = { id: string; deal_id: string; user_id: string; content: string; created_at: string };
+    let comments: (CommentRow & { profile: { display_name: string | null; trust_score: number } })[] = [];
+    if (commentsRaw && commentsRaw.length > 0) {
+      const userIds = [...new Set((commentsRaw as { user_id: string }[]).map((c) => c.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, trust_score")
+        .in("user_id", userIds);
+      const profileByUserId =
+        profiles?.reduce<Record<string, { display_name: string | null; trust_score: number }>>((acc, p) => {
+          acc[p.user_id] = { display_name: p.display_name ?? null, trust_score: p.trust_score ?? 0 };
+          return acc;
+        }, {}) ?? {};
+      comments = (commentsRaw as CommentRow[]).map((c) => ({
+        ...c,
+        profile: profileByUserId[c.user_id] ?? { display_name: null, trust_score: 0 },
+      }));
+    }
 
     const { data: creatorProfile } = await supabase
       .from("profiles")
