@@ -38,7 +38,7 @@ export default async function AdminDealsPage({
     profile: { display_name: profileMap[d.created_by] ?? null },
   }));
 
-  const validFilters = ["all", "pending", "approved", "rejected"];
+  const validFilters = ["all", "pending", "review_needed", "approved", "rejected"];
   const initialFilter = validFilters.includes(filter ?? "") ? filter! : "all";
 
   return <AdminDealsContent initialDeals={dealsWithProfile} initialFilter={initialFilter} />;

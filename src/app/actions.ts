@@ -317,7 +317,7 @@ export async function adminDeleteDeal(dealId: string) {
   return { success: true };
 }
 
-export async function adminUpdateDeal(dealId: string, payload: { title?: string; end_at?: string; original_price?: number | null; deal_price?: number | null; discount_percent?: number | null }) {
+export async function adminUpdateDeal(dealId: string, payload: { title?: string; end_at?: string; original_price?: number | null; deal_price?: number | null; discount_percent?: number | null; end_date_unknown?: boolean }) {
   const result = await ensureAdmin();
   if ("error" in result) return { error: result.error };
   const clean: Record<string, unknown> = {};
@@ -326,6 +326,7 @@ export async function adminUpdateDeal(dealId: string, payload: { title?: string;
   if (payload.original_price !== undefined) clean.original_price = payload.original_price;
   if (payload.deal_price !== undefined) clean.deal_price = payload.deal_price;
   if (payload.discount_percent !== undefined) clean.discount_percent = payload.discount_percent;
+  if (payload.end_date_unknown !== undefined) clean.end_date_unknown = payload.end_date_unknown;
   const { error } = await result.supabase.from("deals").update(clean).eq("id", dealId);
   if (error) return { error: error.message };
   return { success: true };

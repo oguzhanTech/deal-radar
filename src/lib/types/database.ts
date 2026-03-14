@@ -1,4 +1,4 @@
-export type DealStatus = "pending" | "approved" | "rejected";
+export type DealStatus = "pending" | "approved" | "rejected" | "review_needed";
 export type UserRole = "user" | "admin";
 export type VoteValue = 1 | -1;
 
@@ -35,6 +35,7 @@ export interface Deal {
   coupon_expiry: string | null;
   created_by: string;
   status: DealStatus;
+  end_date_unknown?: boolean;
   heat_score: number;
   view_count: number;
   created_at: string;

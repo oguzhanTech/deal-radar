@@ -53,6 +53,7 @@ export default function CreateDealPage() {
   const [imageFocusY, setImageFocusY] = useState(0.5); // 0-1 arası, dikey odak noktası
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [dragStartFocus, setDragStartFocus] = useState(0.5);
+  const [endDateUnknown, setEndDateUnknown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -147,18 +148,20 @@ export default function CreateDealPage() {
       toast({ title: t("create.error.category"), variant: "destructive" });
       return false;
     }
-    if (!form.end_at) {
-      toast({ title: t("create.error.endDate"), variant: "destructive" });
-      return false;
-    }
-    const endDate = new Date(form.end_at);
-    if (isNaN(endDate.getTime())) {
-      toast({ title: t("create.error.endDateInvalid"), variant: "destructive" });
-      return false;
-    }
-    if (endDate <= new Date()) {
-      toast({ title: t("create.error.endDateFuture"), variant: "destructive" });
-      return false;
+    if (!endDateUnknown) {
+      if (!form.end_at) {
+        toast({ title: t("create.error.endDate"), variant: "destructive" });
+        return false;
+      }
+      const endDate = new Date(form.end_at);
+      if (isNaN(endDate.getTime())) {
+        toast({ title: t("create.error.endDateInvalid"), variant: "destructive" });
+        return false;
+      }
+      if (endDate <= new Date()) {
+        toast({ title: t("create.error.endDateFuture"), variant: "destructive" });
+        return false;
+      }
     }
     return true;
   };
@@ -209,7 +212,9 @@ export default function CreateDealPage() {
         ? Math.round(((parseFloat(form.original_price) - parseFloat(form.deal_price)) / parseFloat(form.original_price)) * 100)
         : null;
 
-      const endAtISO = new Date(form.end_at).toISOString();
+      const endAtISO = endDateUnknown
+        ? new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+        : new Date(form.end_at).toISOString();
       const startAtISO = form.start_at ? new Date(form.start_at).toISOString() : null;
 
       const payload: Record<string, unknown> = {
@@ -219,6 +224,7 @@ export default function CreateDealPage() {
         category: form.category.trim(),
         start_at: startAtISO,
         end_at: endAtISO,
+        ...(endDateUnknown ? { end_date_unknown: true } : {}),
         original_price: form.original_price ? parseFloat(form.original_price) : null,
         deal_price: form.deal_price ? parseFloat(form.deal_price) : null,
         currency: form.currency,
@@ -273,6 +279,7 @@ export default function CreateDealPage() {
               setSuccess(false);
               setStep(1);
               setForm({ title: "", description: "", category: "", start_at: "", end_at: "", original_price: "", deal_price: "", currency: "TL", external_url: "", hasCoupon: false, couponCode: "", couponDescription: "", couponExpiry: "" });
+              setEndDateUnknown(false);
               setImageFile(null);
               setImagePreview(null);
             }}
@@ -381,11 +388,30 @@ export default function CreateDealPage() {
               <Select value={form.category} onChange={(e) => update("category", e.target.value)} placeholder={t("create.field.categoryPlaceholder")} options={DEAL_CATEGORIES.map((c) => ({ value: c, label: c }))} className="rounded-xl h-12" />
             </div>
 
-            {/* End Date */}
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.endDate")}</label>
-              <Input type="datetime-local" value={form.end_at} onChange={(e) => update("end_at", e.target.value)} className="rounded-xl h-12" />
+            {/* End date unknown checkbox */}
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="endDateUnknown"
+                checked={endDateUnknown}
+                onChange={(e) => setEndDateUnknown(e.target.checked)}
+                className="mt-1.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <label htmlFor="endDateUnknown" className="text-sm text-muted-foreground cursor-pointer">
+                {t("create.field.endDateUnknown")}
+              </label>
             </div>
+            {endDateUnknown && (
+              <p className="text-[10px] text-muted-foreground">{t("create.field.endDateUnknownHint")}</p>
+            )}
+
+            {/* End Date */}
+            {!endDateUnknown && (
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t("create.field.endDate")}</label>
+                <Input type="datetime-local" value={form.end_at} onChange={(e) => update("end_at", e.target.value)} className="rounded-xl h-12" />
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-2">

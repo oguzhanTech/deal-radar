@@ -18,7 +18,22 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient();
   const now = Date.now();
+  const nowISO = new Date(now).toISOString();
   let sent = 0;
+
+  // Bitiş tarihi belli olmayan fırsatlar: end_at geçtiyse review_needed yap
+  const { data: toReview } = await supabase
+    .from("deals")
+    .select("id")
+    .eq("end_date_unknown", true)
+    .eq("status", "approved")
+    .lte("end_at", nowISO);
+  if (toReview?.length) {
+    await supabase
+      .from("deals")
+      .update({ status: "review_needed" })
+      .in("id", toReview.map((d) => d.id));
+  }
 
   const { data: saves } = await supabase
     .from("deal_saves")

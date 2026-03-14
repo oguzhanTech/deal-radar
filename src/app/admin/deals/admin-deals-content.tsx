@@ -32,6 +32,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
   const filterLabels: Record<string, string> = {
     all: t("admin.deals.all"),
     pending: t("admin.deals.pending"),
+    review_needed: t("admin.deals.review_needed"),
     approved: t("admin.deals.approved"),
     rejected: t("admin.deals.rejected"),
   };
@@ -86,6 +87,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
       original_price: original,
       deal_price: dealPrice,
       discount_percent: discount,
+      end_date_unknown: editForm.end_at ? false : undefined,
     });
 
     if (error) {
@@ -101,6 +103,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                 original_price: original,
                 deal_price: dealPrice,
                 discount_percent: discount,
+                end_date_unknown: editForm.end_at ? false : d.end_date_unknown,
               }
             : d
         )
@@ -113,6 +116,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
+    review_needed: "bg-amber-100 text-amber-800",
     approved: "bg-green-100 text-green-800",
     rejected: "bg-red-100 text-red-800",
   };
@@ -125,7 +129,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
       </div>
 
       <div className="flex gap-1.5">
-        {["all", "pending", "approved", "rejected"].map((f) => (
+        {["all", "pending", "review_needed", "approved", "rejected"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
