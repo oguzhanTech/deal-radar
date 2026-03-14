@@ -145,6 +145,7 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
                   alt={active.title}
                   fill
                   className="object-cover scale-110"
+                  style={{ objectPosition: "center" }}
                   sizes="100vw"
                   priority
                 />

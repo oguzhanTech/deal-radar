@@ -157,16 +157,24 @@ export default function SearchPage() {
         </div>
       )}
 
-      <div className="px-4 space-y-3">
+      <div className="px-4">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => <DealCardSkeleton key={i} />)
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <DealCardSkeleton key={i} />
+            ))}
+          </div>
         ) : deals.length === 0 ? (
           <div className="text-center py-12">
             <RadarBuddy size="md" mood="thinking" message={t("search.empty")} className="mb-3" />
             <p className="text-sm text-muted-foreground mt-1">{t("search.emptyDesc")}</p>
           </div>
         ) : (
-          deals.map((deal) => <DealCard key={deal.id} deal={deal} />)
+          <div className="grid grid-cols-2 gap-3">
+            {deals.map((deal) => (
+              <DealCard key={deal.id} deal={deal} />
+            ))}
+          </div>
         )}
       </div>
     </div>

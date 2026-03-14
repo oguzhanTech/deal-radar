@@ -136,7 +136,7 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
           {isTrending && (
             <div className="h-[3px] bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400" />
           )}
-          <div className="relative aspect-[16/9] bg-muted overflow-hidden">
+          <div className="relative aspect-square bg-muted overflow-hidden">
             {deal.image_url ? (
               <Image
                 src={deal.image_url}

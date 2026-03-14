@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function DealDetailLoading() {
   return (
     <div className="pb-24">
-      <Skeleton className="aspect-[16/9] w-full rounded-none" />
+      <Skeleton className="aspect-square w-full rounded-none" />
       <div className="px-4 pt-4 space-y-4">
         <div className="flex gap-2">
           <Skeleton className="h-6 w-20 rounded-full" />

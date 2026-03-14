@@ -140,7 +140,7 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
               <div key={save.deal_id} className="mb-2">
                 <div className="flex gap-3 items-center rounded-2xl p-3 bg-card shadow-card">
                   <Link href={`/deal/${d.id}`} className="shrink-0">
-                    <div className="relative w-20 h-14 rounded-xl overflow-hidden bg-muted">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted">
                       {d.image_url && (
                         <Image src={d.image_url} alt={d.title} fill className="object-cover" sizes="80px" />
                       )}

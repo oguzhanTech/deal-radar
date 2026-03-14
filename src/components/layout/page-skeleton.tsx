@@ -96,7 +96,7 @@ function CreateSkeleton() {
         <Skeleton className="h-6 w-40 rounded-lg" />
         <Skeleton className="h-3 w-48 rounded-lg" />
       </div>
-      <Skeleton className="aspect-[16/9] w-full rounded-2xl" />
+      <Skeleton className="aspect-square w-full rounded-2xl" />
       <Skeleton className="h-12 w-full rounded-xl" />
       <Skeleton className="h-12 w-full rounded-xl" />
       <Skeleton className="h-12 w-full rounded-xl" />
@@ -130,7 +130,7 @@ function LeaderboardSkeleton() {
 function DealDetailSkeleton() {
   return (
     <div className="pb-24 animate-in fade-in duration-150">
-      <Skeleton className="aspect-[16/9] w-full rounded-none" />
+      <Skeleton className="aspect-square w-full rounded-none" />
       <div className="px-4 pt-4 space-y-4">
         <div className="flex gap-2">
           <Skeleton className="h-6 w-20 rounded-full" />

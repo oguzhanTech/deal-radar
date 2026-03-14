@@ -56,10 +56,13 @@ export default function CreateDealPage() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFocusY, setImageFocusY] = useState(0.5); // 0-1 arası, dikey odak noktası
-  const [imageZoom, setImageZoom] = useState(1); // 1 = 100%, max IMAGE_ZOOM_MAX
+  const [imageFocusX, setImageFocusX] = useState(0.5); // 0-1 yatay odak
+  const [imageFocusY, setImageFocusY] = useState(0.5); // 0-1 dikey odak
+  const [imageZoom, setImageZoom] = useState(1);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
-  const [dragStartFocus, setDragStartFocus] = useState(0.5);
+  const [dragStartFocusX, setDragStartFocusX] = useState(0.5);
+  const [dragStartFocusY, setDragStartFocusY] = useState(0.5);
   const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
   const [endDateUnknown, setEndDateUnknown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -120,6 +123,7 @@ export default function CreateDealPage() {
 
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+    setImageFocusX(0.5);
     setImageFocusY(0.5);
     setImageZoom(1);
   };
@@ -162,21 +166,28 @@ export default function CreateDealPage() {
 
   const handleImageDragStart = (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => {
     if (!imagePreview) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
     e.preventDefault();
+    setDragStartX(clientX);
     setDragStartY(clientY);
-    setDragStartFocus(imageFocusY);
+    setDragStartFocusX(imageFocusX);
+    setDragStartFocusY(imageFocusY);
   };
 
   const handleImageDragMove = (e: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => {
-    if (dragStartY == null || !imagePreview) return;
+    if (dragStartX == null || dragStartY == null || !imagePreview) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    const delta = clientY - dragStartY;
-    const next = Math.min(1, Math.max(0, dragStartFocus + delta / 300)); // 300px ~ tam aralık
-    setImageFocusY(next);
+    const sens = 300; // px başına 0-1 aralığı
+    const nextX = Math.min(1, Math.max(0, dragStartFocusX + (clientX - dragStartX) / sens));
+    const nextY = Math.min(1, Math.max(0, dragStartFocusY + (clientY - dragStartY) / sens));
+    setImageFocusX(nextX);
+    setImageFocusY(nextY);
   };
 
   const handleImageDragEnd = () => {
+    setDragStartX(null);
     setDragStartY(null);
   };
 
@@ -236,7 +247,7 @@ export default function CreateDealPage() {
       if (imageFile) {
         let fileToUpload: File = imageFile;
         try {
-          fileToUpload = await cropImageForDeal(imageFile, imageFocusY, imageZoom);
+          fileToUpload = await cropImageForDeal(imageFile, imageFocusX, imageFocusY, imageZoom);
         } catch {
           // Cropping failed, continue with original file
         }
@@ -376,7 +387,7 @@ export default function CreateDealPage() {
               {imagePreview ? (
                 <div className="space-y-1.5">
                   <div
-                    className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-muted shadow-card select-none cursor-grab active:cursor-grabbing touch-none"
+                    className="relative aspect-square rounded-2xl overflow-hidden bg-muted shadow-card select-none cursor-grab active:cursor-grabbing touch-none"
                     onMouseDown={handleImageDragStart}
                     onMouseMove={handleImageDragMove}
                     onMouseUp={handleImageDragEnd}
@@ -387,9 +398,9 @@ export default function CreateDealPage() {
                     style={{ touchAction: "none" }}
                   >
                     <div
-                      className="absolute inset-0 origin-center"
+                      className="absolute inset-0 origin-center pointer-events-none"
                       style={{
-                        transform: `scale(${imageZoom})`,
+                        transform: `scale(${imageZoom}) translate(${(0.5 - imageFocusX) * Math.max(0, imageZoom - 1) * 100}%, ${(0.5 - imageFocusY) * Math.max(0, imageZoom - 1) * 100}%)`,
                         transformOrigin: "50% 50%",
                       }}
                     >
@@ -397,17 +408,17 @@ export default function CreateDealPage() {
                         src={imagePreview}
                         alt="Preview"
                         fill
-                        className="object-cover pointer-events-none"
-                        style={{ objectPosition: `50% ${imageFocusY * 100}%` }}
+                        className="object-cover"
+                        style={{ objectPosition: `${imageFocusX * 100}% ${imageFocusY * 100}%` }}
                       />
                     </div>
-                    {/* Zoom controls - desktop */}
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 rounded-xl px-1.5 py-1">
+                    {/* Zoom controls - desktop; wrapper pointer-events-none so drag works over the bar, only buttons capture */}
+                    <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 rounded-xl px-1.5 py-1 pointer-events-none">
                       <button
                         type="button"
                         onClick={() => setImageZoom((z) => Math.max(IMAGE_ZOOM_MIN, z - IMAGE_ZOOM_STEP))}
                         disabled={imageZoom <= IMAGE_ZOOM_MIN}
-                        className="p-1.5 rounded-lg text-white hover:bg-white/20 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        className="p-1.5 rounded-lg text-white hover:bg-white/20 disabled:opacity-40 disabled:pointer-events-none cursor-pointer pointer-events-auto"
                         aria-label="Uzaklaştır"
                       >
                         <ZoomOut className="h-4 w-4" />
@@ -419,7 +430,7 @@ export default function CreateDealPage() {
                         type="button"
                         onClick={() => setImageZoom((z) => Math.min(IMAGE_ZOOM_MAX, z + IMAGE_ZOOM_STEP))}
                         disabled={imageZoom >= IMAGE_ZOOM_MAX}
-                        className="p-1.5 rounded-lg text-white hover:bg-white/20 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        className="p-1.5 rounded-lg text-white hover:bg-white/20 disabled:opacity-40 disabled:pointer-events-none cursor-pointer pointer-events-auto"
                         aria-label="Yakınlaştır"
                       >
                         <ZoomIn className="h-4 w-4" />
@@ -644,17 +655,20 @@ export default function CreateDealPage() {
             <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
               {/* Image preview */}
               {imagePreview && (
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-muted">
+                <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
                   <div
                     className="absolute inset-0 origin-center"
-                    style={{ transform: `scale(${imageZoom})`, transformOrigin: "50% 50%" }}
+                    style={{
+                      transform: `scale(${imageZoom}) translate(${(0.5 - imageFocusX) * Math.max(0, imageZoom - 1) * 100}%, ${(0.5 - imageFocusY) * Math.max(0, imageZoom - 1) * 100}%)`,
+                      transformOrigin: "50% 50%",
+                    }}
                   >
                     <Image
                       src={imagePreview}
                       alt="Preview"
                       fill
                       className="object-cover"
-                      style={{ objectPosition: `50% ${imageFocusY * 100}%` }}
+                      style={{ objectPosition: `${imageFocusX * 100}% ${imageFocusY * 100}%` }}
                     />
                   </div>
                 </div>
@@ -747,7 +761,7 @@ export default function CreateDealPage() {
   );
 }
 
-async function cropImageForDeal(file: File, focusY: number, zoom: number = 1): Promise<File> {
+async function cropImageForDeal(file: File, focusX: number, focusY: number, zoom: number = 1): Promise<File> {
   if (typeof window === "undefined" || typeof window.Image === "undefined") {
     return file;
   }
@@ -765,30 +779,19 @@ async function cropImageForDeal(file: File, focusY: number, zoom: number = 1): P
     const height = img.naturalHeight || img.height;
     if (!width || !height) return file;
 
-    const targetAspect = 16 / 9;
-    let cropWidth = width;
-    let cropHeight = width / targetAspect;
-    if (cropHeight > height) {
-      cropHeight = height;
-      cropWidth = height * targetAspect;
-    }
-
     const zoomFactor = Math.max(1, zoom);
-    const zoomedCropW = cropWidth / zoomFactor;
-    const zoomedCropH = cropHeight / zoomFactor;
+    const cropSize = Math.min(width, height) / zoomFactor;
+    const centerX = focusX * width;
+    const centerY = focusY * height;
+    let offsetX = centerX - cropSize / 2;
+    let offsetY = centerY - cropSize / 2;
+    offsetX = Math.max(0, Math.min(width - cropSize, offsetX));
+    offsetY = Math.max(0, Math.min(height - cropSize, offsetY));
 
-    const maxOffsetY = Math.max(0, height - cropHeight);
-    const centerY = maxOffsetY * focusY + cropHeight / 2;
-    let offsetX = (width - zoomedCropW) / 2;
-    let offsetY = centerY - zoomedCropH / 2;
-    offsetX = Math.max(0, Math.min(width - zoomedCropW, offsetX));
-    offsetY = Math.max(0, Math.min(height - zoomedCropH, offsetY));
-
+    const outputSize = 1280;
     const canvas = document.createElement("canvas");
-    const outputWidth = 1280;
-    const outputHeight = Math.round(outputWidth / targetAspect);
-    canvas.width = outputWidth;
-    canvas.height = outputHeight;
+    canvas.width = outputSize;
+    canvas.height = outputSize;
     const ctx = canvas.getContext("2d");
     if (!ctx) return file;
 
@@ -796,12 +799,12 @@ async function cropImageForDeal(file: File, focusY: number, zoom: number = 1): P
       img,
       offsetX,
       offsetY,
-      zoomedCropW,
-      zoomedCropH,
+      cropSize,
+      cropSize,
       0,
       0,
-      outputWidth,
-      outputHeight
+      outputSize,
+      outputSize
     );
 
     const blob: Blob = await new Promise((resolve) => {

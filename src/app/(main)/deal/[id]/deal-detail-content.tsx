@@ -178,7 +178,7 @@ export function DealDetailContent({
       <AuthModal />
 
       {/* Hero Image */}
-      <div className="relative aspect-[16/9] bg-muted">
+      <div className="relative aspect-square bg-muted">
         {deal.image_url && (
           <Image src={deal.image_url} alt={deal.title} fill className="object-cover" priority />
         )}

@@ -12,7 +12,7 @@ export default function CreateLoading() {
         <Skeleton className="h-6 w-40 rounded-lg" />
         <Skeleton className="h-3 w-48 rounded-lg" />
       </div>
-      <Skeleton className="aspect-[16/9] w-full rounded-2xl" />
+      <Skeleton className="aspect-square w-full rounded-2xl" />
       <Skeleton className="h-12 w-full rounded-xl" />
       <Skeleton className="h-12 w-full rounded-xl" />
       <Skeleton className="h-12 w-full rounded-xl" />

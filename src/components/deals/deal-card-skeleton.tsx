@@ -25,7 +25,7 @@ export function DealCardSkeleton({ horizontal = false, compact = false }: DealCa
   return (
     <div className={horizontal ? "flex-shrink-0 w-[280px]" : "w-full"}>
       <div className="rounded-2xl bg-card overflow-hidden shadow-card">
-        <Skeleton className="aspect-[16/9] rounded-none" />
+        <Skeleton className="aspect-square rounded-none" />
         <div className="p-3.5 space-y-2.5">
           <Skeleton className="h-4 w-3/4 rounded-lg" />
           <div className="flex justify-between">
