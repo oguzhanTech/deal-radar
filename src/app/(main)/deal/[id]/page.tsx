@@ -61,21 +61,26 @@ export default async function DealPage({ params }: PageProps) {
 
     // deal_comments has no FK to profiles; fetch profiles by user_id and attach
     type CommentRow = { id: string; deal_id: string; user_id: string; content: string; created_at: string };
-    let comments: (CommentRow & { profile: { display_name: string | null; trust_score: number } })[] = [];
+    type CommentProfile = { display_name: string | null; trust_score: number; level?: number };
+    let comments: (CommentRow & { profile: CommentProfile })[] = [];
     if (commentsRaw && commentsRaw.length > 0) {
       const userIds = [...new Set((commentsRaw as { user_id: string }[]).map((c) => c.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, trust_score")
+        .select("user_id, display_name, trust_score, level")
         .in("user_id", userIds);
       const profileByUserId =
-        profiles?.reduce<Record<string, { display_name: string | null; trust_score: number }>>((acc, p) => {
-          acc[p.user_id] = { display_name: p.display_name ?? null, trust_score: p.trust_score ?? 0 };
+        profiles?.reduce<Record<string, CommentProfile>>((acc, p) => {
+          acc[p.user_id] = {
+            display_name: p.display_name ?? null,
+            trust_score: p.trust_score ?? 0,
+            level: p.level ?? 1,
+          };
           return acc;
         }, {}) ?? {};
       comments = (commentsRaw as CommentRow[]).map((c) => ({
         ...c,
-        profile: profileByUserId[c.user_id] ?? { display_name: null, trust_score: 0 },
+        profile: profileByUserId[c.user_id] ?? { display_name: null, trust_score: 0, level: 1 },
       }));
     }
 

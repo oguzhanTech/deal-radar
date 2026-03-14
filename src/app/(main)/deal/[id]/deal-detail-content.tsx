@@ -41,10 +41,15 @@ function getLevelLabel(level: number): string {
 
 const ENABLE_DEAL_DOWNLOAD = false;
 
+/** Comment with profile limited to what the UI uses (no full Profile required) */
+type DealCommentWithProfile = Omit<DealComment, "profile"> & {
+  profile?: { display_name: string | null; trust_score: number; level?: number } | null;
+};
+
 interface DealDetailContentProps {
   deal: Deal;
   creatorName?: string | null;
-  comments: (DealComment & { profile?: { display_name: string | null; trust_score: number; level?: number } | null })[];
+  comments: DealCommentWithProfile[];
   voteCount: number;
   saveCount: number;
   similarDeals: Deal[];

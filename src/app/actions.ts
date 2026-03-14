@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -132,14 +133,16 @@ export async function postComment(dealId: string, content: string) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, trust_score")
+    .select("display_name, trust_score, level")
     .eq("user_id", user.id)
     .single();
+
+  revalidatePath(`/deal/${dealId}`);
 
   return {
     data: {
       ...comment,
-      profile: profile ?? { display_name: null, trust_score: 0 },
+      profile: profile ?? { display_name: null, trust_score: 0, level: 1 },
     },
   };
 }
