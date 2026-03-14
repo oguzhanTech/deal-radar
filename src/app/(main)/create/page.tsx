@@ -179,9 +179,9 @@ export default function CreateDealPage() {
     if (dragStartX == null || dragStartY == null || !imagePreview) return;
     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    const sens = 300; // px başına 0-1 aralığı
-    const nextX = Math.min(1, Math.max(0, dragStartFocusX + (clientX - dragStartX) / sens));
-    const nextY = Math.min(1, Math.max(0, dragStartFocusY + (clientY - dragStartY) / sens));
+    const sens = 300; // px başına 0-1 aralığı; ters yön: sürüklediğin yönde içerik kayar
+    const nextX = Math.min(1, Math.max(0, dragStartFocusX - (clientX - dragStartX) / sens));
+    const nextY = Math.min(1, Math.max(0, dragStartFocusY - (clientY - dragStartY) / sens));
     setImageFocusX(nextX);
     setImageFocusY(nextY);
   };
