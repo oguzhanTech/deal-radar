@@ -8,11 +8,14 @@ export function AppLoadingScreen() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-gradient-to-b from-indigo-600/10 via-background to-background px-6">
       <motion.div
-        className="flex flex-col items-center gap-6"
+        className="flex flex-col items-center gap-5"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
+        <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+          {t("app.name")}
+        </h1>
         <motion.div
           className="flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
           animate={{
