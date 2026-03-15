@@ -274,6 +274,9 @@ const tr: Record<string, string> = {
   "admin.deals.setEditorPick": "Editör'ün seçimi yap",
   "admin.deals.removeEditorPick": "Seçimi kaldır",
   "admin.deals.editorPickBadge": "Editörün seçimi",
+  "admin.deals.editorPickQuotePrompt": "Editör yorumu (isteğe bağlı, anasayfada tırnak içinde gösterilir):",
+  "admin.deals.editorPickQuoteLabel": "Editör yorumu",
+  "admin.deals.updateEditorQuote": "Yorumu güncelle",
 
   "admin.users.title": "Kullanıcı Yönetimi",
   "admin.users.makeAdmin": "Admin Yap",

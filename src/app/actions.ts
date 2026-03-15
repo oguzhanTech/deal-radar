@@ -335,17 +335,38 @@ export async function adminUpdateDeal(dealId: string, payload: { title?: string;
   return { success: true };
 }
 
-export async function setEditorPick(dealId: string | null) {
+export async function setEditorPick(dealId: string | null, quote?: string | null) {
   const result = await ensureAdmin();
   if ("error" in result) return { error: result.error };
   const supabase = result.supabase;
-  const { error: clearError } = await supabase.from("deals").update({ is_editor_pick: false }).eq("is_editor_pick", true);
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error: clearError } = await supabase
+      .from("deals")
+      .update({ is_editor_pick: false, editor_pick_quote: null, editor_pick_set_by: null })
+      .eq("is_editor_pick", true);
   if (clearError) return { error: clearError.message };
   if (dealId) {
     const { data: deal } = await supabase.from("deals").select("id, status").eq("id", dealId).single();
     if (!deal || deal.status !== "approved") return { error: "Sadece onaylı fırsat editör seçimi yapılabilir." };
-    const { error: setError } = await supabase.from("deals").update({ is_editor_pick: true }).eq("id", dealId);
+    const { error: setError } = await supabase
+      .from("deals")
+      .update({
+        is_editor_pick: true,
+        editor_pick_quote: quote ?? null,
+        editor_pick_set_by: user?.id ?? null,
+      })
+      .eq("id", dealId);
     if (setError) return { error: setError.message };
   }
+  return { success: true };
+}
+
+export async function updateEditorPickQuote(dealId: string, quote: string | null) {
+  const result = await ensureAdmin();
+  if ("error" in result) return { error: result.error };
+  const { data: deal } = await result.supabase.from("deals").select("id, is_editor_pick").eq("id", dealId).single();
+  if (!deal || !deal.is_editor_pick) return { error: "Sadece mevcut editör seçiminin yorumu güncellenebilir." };
+  const { error } = await result.supabase.from("deals").update({ editor_pick_quote: quote }).eq("id", dealId);
+  if (error) return { error: error.message };
   return { success: true };
 }

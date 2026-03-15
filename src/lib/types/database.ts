@@ -37,6 +37,8 @@ export interface Deal {
   status: DealStatus;
   end_date_unknown?: boolean;
   is_editor_pick?: boolean;
+  editor_pick_quote?: string | null;
+  editor_pick_set_by?: string | null;
   heat_score: number;
   view_count: number;
   created_at: string;

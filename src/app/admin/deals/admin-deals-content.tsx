@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { adminUpdateDealStatus, adminDeleteDeal, adminUpdateDeal, setEditorPick } from "@/app/actions";
+import { adminUpdateDealStatus, adminDeleteDeal, adminUpdateDeal, setEditorPick, updateEditorPickQuote } from "@/app/actions";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { CheckCircle2, XCircle, Trash2, Loader2, Pencil, X, Save, Star } from "lucide-react";
@@ -25,7 +25,13 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: "", end_at: "", original_price: "", deal_price: "" });
+  const editorPickDeal = deals.find((d) => d.is_editor_pick);
+  const [editorQuote, setEditorQuote] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (editorPickDeal) setEditorQuote(editorPickDeal.editor_pick_quote ?? "");
+  }, [editorPickDeal?.id, editorPickDeal?.editor_pick_quote]);
 
   const filtered = filter === "all" ? deals : deals.filter((d) => d.status === filter);
 
@@ -115,13 +121,35 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
   };
 
   const handleSetEditorPick = async (id: string) => {
+    const quote = window.prompt(t("admin.deals.editorPickQuotePrompt"));
+    if (quote === null) return;
     setLoadingId(id);
-    const { error } = await setEditorPick(id);
+    const { error } = await setEditorPick(id, quote.trim() || null);
     if (error) {
       toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
-      setDeals((prev) => prev.map((d) => ({ ...d, is_editor_pick: d.id === id })));
+      setDeals((prev) =>
+        prev.map((d) =>
+          d.id === id ? { ...d, is_editor_pick: true, editor_pick_quote: quote.trim() || null } : { ...d, is_editor_pick: false }
+        )
+      );
+      setEditorQuote(quote.trim() || "");
       toast({ title: t("admin.toast.saved"), description: t("admin.deals.editorPickBadge") });
+    }
+    setLoadingId(null);
+  };
+
+  const handleUpdateEditorQuote = async () => {
+    if (!editorPickDeal) return;
+    setLoadingId(editorPickDeal.id);
+    const { error } = await updateEditorPickQuote(editorPickDeal.id, editorQuote.trim() || null);
+    if (error) {
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
+    } else {
+      setDeals((prev) =>
+        prev.map((d) => (d.id === editorPickDeal.id ? { ...d, editor_pick_quote: editorQuote.trim() || null } : d))
+      );
+      toast({ title: t("admin.toast.saved") });
     }
     setLoadingId(null);
   };
@@ -131,7 +159,8 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
     if (error) {
       toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
-      setDeals((prev) => prev.map((d) => ({ ...d, is_editor_pick: false })));
+      setDeals((prev) => prev.map((d) => ({ ...d, is_editor_pick: false, editor_pick_quote: null, editor_pick_set_by: null })));
+      setEditorQuote("");
       toast({ title: t("admin.toast.saved") });
     }
   };
@@ -231,6 +260,26 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                   </div>
                 </div>
 
+                {deal.is_editor_pick && (
+                  <div className="flex gap-1.5 items-center flex-wrap">
+                    <Input
+                      value={editorQuote}
+                      onChange={(e) => setEditorQuote(e.target.value)}
+                      placeholder={t("admin.deals.editorPickQuoteLabel")}
+                      className="text-sm h-8 max-w-[240px]"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => handleUpdateEditorQuote()}
+                      disabled={loadingId === deal.id}
+                    >
+                      {loadingId === deal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                      {t("admin.deals.updateEditorQuote")}
+                    </Button>
+                  </div>
+                )}
                 <div className="flex gap-1.5">
                   {deal.status !== "approved" && (
                     <Button

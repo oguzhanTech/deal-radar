@@ -222,9 +222,9 @@ export async function HomeBiggestDropsSection() {
   );
 }
 
-async function fetchEditorPick(): Promise<Deal | null> {
+async function fetchEditorPick(): Promise<{ deal: Deal; editorName: string | null } | null> {
   const supabase = await createAnonClient();
-  const { data } = await supabase
+  const { data: deal } = await supabase
     .from("deals")
     .select("*")
     .eq("is_editor_pick", true)
@@ -232,11 +232,22 @@ async function fetchEditorPick(): Promise<Deal | null> {
     .gt("end_at", new Date().toISOString())
     .limit(1)
     .maybeSingle();
-  return data as Deal | null;
+  if (!deal) return null;
+  const d = deal as Deal & { editor_pick_set_by?: string | null };
+  let editorName: string | null = null;
+  if (d.editor_pick_set_by) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", d.editor_pick_set_by)
+      .single();
+    editorName = profile?.display_name ?? null;
+  }
+  return { deal: d, editorName };
 }
 
 export async function HomeEditorPickSection() {
-  const deal = await fetchEditorPick();
-  if (!deal) return null;
-  return <EditorPickWidget deal={deal} />;
+  const result = await fetchEditorPick();
+  if (!result) return null;
+  return <EditorPickWidget deal={result.deal} editorQuote={result.deal.editor_pick_quote ?? null} editorName={result.editorName} />;
 }

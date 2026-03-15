@@ -14,9 +14,11 @@ import type { Deal } from "@/lib/types/database";
 
 interface EditorPickWidgetProps {
   deal: Deal;
+  editorQuote?: string | null;
+  editorName?: string | null;
 }
 
-export function EditorPickWidget({ deal }: EditorPickWidgetProps) {
+export function EditorPickWidget({ deal, editorQuote, editorName }: EditorPickWidgetProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
   const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
@@ -77,6 +79,13 @@ export function EditorPickWidget({ deal }: EditorPickWidgetProps) {
                   <span className="text-sm text-muted-foreground">{t("deal.viewDeal")}</span>
                 )}
               </div>
+              {(editorQuote || editorName) && (
+                <p className="text-xs text-muted-foreground mt-1 italic">
+                  {editorQuote && <span>&quot;{editorQuote}&quot;</span>}
+                  {editorQuote && editorName && " — "}
+                  {editorName && <span>{editorName}</span>}
+                </p>
+              )}
             </div>
             <div className="flex flex-col items-end justify-center gap-1 shrink-0" onClick={(e) => e.preventDefault()} data-no-skeleton>
               <div className="flex items-center gap-1.5">
