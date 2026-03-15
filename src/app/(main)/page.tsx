@@ -6,6 +6,7 @@ import {
   HomeEndingSoonSection,
   HomePopularSection,
   HomeNewestSection,
+  HomeBiggestDropsSection,
 } from "./home-sections";
 import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
@@ -46,6 +47,9 @@ export default async function HomePage() {
       </Suspense>
       <Suspense fallback={<DealSectionSkeleton />}>
         <HomePopularSection />
+      </Suspense>
+      <Suspense fallback={<DealSectionSkeleton />}>
+        <HomeBiggestDropsSection />
       </Suspense>
     </div>
   );

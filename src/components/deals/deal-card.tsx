@@ -20,9 +20,11 @@ interface DealCardProps {
   horizontal?: boolean;
   /** Anasayfa kategorilerinde küçük widget (alt alta liste) */
   compact?: boolean;
+  /** Creator satırını gizle (örn. Keşfet sayfasında başlığa daha fazla yer) */
+  hideCreator?: boolean;
 }
 
-export function DealCard({ deal, horizontal = false, compact = false }: DealCardProps) {
+export function DealCard({ deal, horizontal = false, compact = false, hideCreator = false }: DealCardProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
   const isTrending = deal.heat_score >= HEAT_TRENDING_THRESHOLD;
@@ -65,10 +67,12 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
               <h3 className="font-semibold text-[13px] leading-tight line-clamp-1">{deal.title}</h3>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <User2 className="h-3 w-3 text-muted-foreground/80" />
-                <span className="truncate">{creatorName}</span>
-              </p>
+              {!hideCreator && (
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <User2 className="h-3 w-3 text-muted-foreground/80" />
+                  <span className="truncate">{creatorName}</span>
+                </p>
+              )}
               <div className="flex items-center gap-2 mt-1">
                 {deal.deal_price != null && deal.original_price != null ? (
                   <>
@@ -195,10 +199,12 @@ export function DealCard({ deal, horizontal = false, compact = false }: DealCard
               <h3 className="font-bold text-[15px] leading-tight line-clamp-1 flex-1 min-w-0">
                 {deal.title}
               </h3>
-              <div className="flex items-center gap-1 text-[12px] text-muted-foreground shrink-0 pl-1">
-                <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
-                <span className="max-w-[120px] truncate">{creatorName}</span>
-              </div>
+              {!hideCreator && (
+                <div className="flex items-center gap-1 text-[12px] text-muted-foreground shrink-0 pl-1">
+                  <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
+                  <span className="max-w-[120px] truncate">{creatorName}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-2">

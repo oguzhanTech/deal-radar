@@ -13,7 +13,7 @@ import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 import { useSearchParams } from "next/navigation";
 
-type SortOption = "trending" | "popular" | "new";
+type SortOption = "trending" | "popular" | "new" | "discount";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -60,6 +60,7 @@ export default function SearchPage() {
     { value: "trending", label: t("search.sortTrending") },
     { value: "popular", label: t("search.sortPopular") },
     { value: "new", label: t("search.sortNew") },
+    { value: "discount", label: t("search.sortDiscount") },
   ];
 
   const clearFilters = () => {
@@ -172,7 +173,7 @@ export default function SearchPage() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {deals.map((deal) => (
-              <DealCard key={deal.id} deal={deal} />
+              <DealCard key={deal.id} deal={deal} hideCreator />
             ))}
           </div>
         )}

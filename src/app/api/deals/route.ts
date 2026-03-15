@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAnonClient } from "@/lib/supabase/server";
 
-type SortOption = "trending" | "popular" | "new";
+type SortOption = "trending" | "popular" | "new" | "discount";
 
 export async function GET(request: Request) {
   try {
@@ -34,6 +34,8 @@ export async function GET(request: Request) {
         query = query.gte("created_at", sevenDaysAgo).order("heat_score", { ascending: false });
       } else if (sort === "popular") {
         query = query.order("heat_score", { ascending: false });
+      } else if (sort === "discount") {
+        query = query.gt("end_at", new Date().toISOString()).order("discount_percent", { ascending: false });
       } else {
         query = query.order("created_at", { ascending: false });
       }
@@ -41,7 +43,10 @@ export async function GET(request: Request) {
     }
 
     const { data } = await query;
-    const deals = (data ?? []) as { created_by: string }[];
+    let deals = (data ?? []) as { created_by: string; discount_percent?: number | null }[];
+    if (!idsParam && sort === "discount") {
+      deals = [...deals].sort((a, b) => (b.discount_percent ?? -1) - (a.discount_percent ?? -1)).slice(0, 50);
+    }
 
     if (!deals.length) {
       return NextResponse.json([]);

@@ -143,6 +143,19 @@ async function fetchNewest() {
   return attachCreators(data ?? []);
 }
 
+async function fetchBiggestDrops(): Promise<HomeDeal[]> {
+  const supabase = await createAnonClient();
+  const { data } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("status", "approved")
+    .gt("end_at", new Date().toISOString())
+    .limit(20);
+  const list = (data ?? []) as Deal[];
+  const sorted = [...list].sort((a, b) => (b.discount_percent ?? -1) - (a.discount_percent ?? -1));
+  return attachCreators(sorted.slice(0, 5));
+}
+
 export async function HomeTrendingSection() {
   const deals = await fetchTrending();
   if (deals.length === 0) return null;
@@ -191,6 +204,19 @@ export async function HomeNewestSection() {
       emoji="✨"
       deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=new"
+    />
+  );
+}
+
+export async function HomeBiggestDropsSection() {
+  const deals = await fetchBiggestDrops();
+  if (deals.length === 0) return null;
+  return (
+    <DealSection
+      title={t("home.biggestDrops")}
+      emoji="📉"
+      deals={deals as unknown as Deal[]}
+      seeAllHref="/search?sort=discount"
     />
   );
 }
