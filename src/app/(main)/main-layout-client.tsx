@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { SavedDealIdsProvider } from "@/components/saved-deals/saved-deal-ids-context";
 import { ToastProvider } from "@/components/ui/toast";
 import { TopHeader } from "@/components/layout/top-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { AppLoadingScreen } from "@/components/layout/app-loading-screen";
 import { useRoutePreloader } from "@/hooks/use-route-preloader";
 import { LevelUpModal } from "@/components/rewards/level-up-modal";
 import { getPageSkeleton } from "@/components/layout/page-skeleton";
@@ -14,12 +16,19 @@ import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types/database";
 
 const SKELETON_DELAY_MS = 100;
+const INITIAL_SPLASH_MIN_MS = 2200;
 
 function LayoutShell({ children }: { children: React.ReactNode }) {
   useRoutePreloader();
   const pathname = usePathname();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
+  const [showInitialSplash, setShowInitialSplash] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowInitialSplash(false), INITIAL_SPLASH_MIN_MS);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     setPendingPath(null);
@@ -62,11 +71,33 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       className="flex flex-col min-h-dvh max-w-lg mx-auto bg-background relative overflow-x-hidden"
       onClickCapture={handleLinkCapture}
     >
-      <TopHeader />
-      <main className="flex-1 pb-20 pt-16 min-w-0">
-        {useSkeleton ? getPageSkeleton(pendingPath!) : children}
-      </main>
-      <BottomNav />
+      <AnimatePresence mode="wait">
+        {showInitialSplash ? (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="fixed inset-0 z-50 max-w-lg mx-auto bg-background"
+          >
+            <AppLoadingScreen />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25 }}
+            className="flex flex-col min-h-dvh flex-1"
+          >
+            <TopHeader />
+            <main className="flex-1 pb-20 pt-16 min-w-0">
+              {useSkeleton ? getPageSkeleton(pendingPath!) : children}
+            </main>
+            <BottomNav />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <LevelUpModal />
     </div>
   );
