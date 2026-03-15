@@ -1,5 +1,7 @@
-import { AppLoadingScreen } from "@/components/layout/app-loading-screen";
-
 export default function MainLoading() {
-  return <AppLoadingScreen />;
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
 }
