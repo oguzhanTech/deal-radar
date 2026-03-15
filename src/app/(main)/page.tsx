@@ -13,6 +13,24 @@ import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
 
 export const revalidate = 60;
 
+/** Fisher–Yates shuffle; her sayfa yüklemesinde bölüm sırası rastgele olur */
+function shuffle<T>(array: T[]): T[] {
+  const out = [...array];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+const HOME_SECTIONS = [
+  { id: "newest", Section: HomeNewestSection },
+  { id: "endingSoon", Section: HomeEndingSoonSection },
+  { id: "trending", Section: HomeTrendingSection },
+  { id: "popular", Section: HomePopularSection },
+  { id: "biggestDrops", Section: HomeBiggestDropsSection },
+] as const;
+
 export default async function HomePage() {
   const supabase = await createAnonClient();
   const { data: hasDeals } = await supabase
@@ -31,26 +49,18 @@ export default async function HomePage() {
     );
   }
 
+  const orderedSections = shuffle([...HOME_SECTIONS]);
+
   return (
     <div className="space-y-4 py-3">
       <Suspense fallback={null}>
         <HomeHero />
       </Suspense>
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeNewestSection />
-      </Suspense>
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeEndingSoonSection />
-      </Suspense>
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeTrendingSection />
-      </Suspense>
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <HomePopularSection />
-      </Suspense>
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeBiggestDropsSection />
-      </Suspense>
+      {orderedSections.map(({ id, Section }) => (
+        <Suspense key={id} fallback={<DealSectionSkeleton />}>
+          <Section />
+        </Suspense>
+      ))}
     </div>
   );
 }
