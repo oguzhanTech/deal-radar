@@ -60,23 +60,23 @@ export function EditorPickWidget({ deal, editorQuote, editorName }: EditorPickWi
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
               <h3 className="font-semibold text-base leading-tight line-clamp-2">{deal.title}</h3>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {deal.deal_price != null && deal.original_price != null ? (
                   <>
-                    <span className="text-xs text-muted-foreground line-through">
+                    <span className="text-[11px] md:text-xs text-muted-foreground line-through">
                       {formatPrice(deal.original_price, deal.currency)}
                     </span>
-                    <span className="text-lg font-extrabold text-emerald-600">
+                    <span className="text-sm md:text-lg font-extrabold text-emerald-600">
                       {formatPrice(deal.deal_price, deal.currency)}
                     </span>
                     {deal.discount_percent && (
-                      <Badge className="text-[11px] bg-primary/15 text-primary border-0 px-1.5 py-0 font-semibold">
+                      <Badge className="text-[10px] md:text-[11px] bg-primary/15 text-primary border-0 px-1.5 py-0 font-semibold">
                         %{deal.discount_percent}
                       </Badge>
                     )}
                   </>
                 ) : (
-                  <span className="text-sm text-muted-foreground">{t("deal.viewDeal")}</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">{t("deal.viewDeal")}</span>
                 )}
               </div>
               {(editorQuote || editorName) && (
