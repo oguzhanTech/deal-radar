@@ -17,18 +17,26 @@ import type { Profile } from "@/lib/types/database";
 
 const SKELETON_DELAY_MS = 100;
 const INITIAL_SPLASH_MIN_MS = 2200;
+const SPLASH_SHOWN_KEY = "topla_splash_shown";
 
 function LayoutShell({ children }: { children: React.ReactNode }) {
   useRoutePreloader();
   const pathname = usePathname();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
-  const [showInitialSplash, setShowInitialSplash] = useState(true);
+  const [showInitialSplash, setShowInitialSplash] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !sessionStorage.getItem(SPLASH_SHOWN_KEY);
+  });
 
   useEffect(() => {
-    const t = setTimeout(() => setShowInitialSplash(false), INITIAL_SPLASH_MIN_MS);
+    if (!showInitialSplash) return;
+    const t = setTimeout(() => {
+      sessionStorage.setItem(SPLASH_SHOWN_KEY, "1");
+      setShowInitialSplash(false);
+    }, INITIAL_SPLASH_MIN_MS);
     return () => clearTimeout(t);
-  }, []);
+  }, [showInitialSplash]);
 
   useEffect(() => {
     setPendingPath(null);
