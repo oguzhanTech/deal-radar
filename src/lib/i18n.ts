@@ -45,6 +45,7 @@ const tr: Record<string, string> = {
   "home.popular": "Popüler",
   "home.newDeals": "Yeni Fırsatlar",
   "home.biggestDrops": "En Çok Düşenler",
+  "home.editorPick": "Editör'ün Seçimi",
   "home.emptyTitle": "Henüz fırsat yok",
   "home.leaderboardTitle": "Topla Avcıları",
   "home.leaderboardDesc": "En iyi fırsat avcılarını keşfet",
@@ -270,6 +271,9 @@ const tr: Record<string, string> = {
   "admin.deals.cancel": "İptal",
   "admin.deals.empty": "Fırsat bulunamadı",
   "admin.deals.by": "paylaşan:",
+  "admin.deals.setEditorPick": "Editör'ün seçimi yap",
+  "admin.deals.removeEditorPick": "Seçimi kaldır",
+  "admin.deals.editorPickBadge": "Editörün seçimi",
 
   "admin.users.title": "Kullanıcı Yönetimi",
   "admin.users.makeAdmin": "Admin Yap",

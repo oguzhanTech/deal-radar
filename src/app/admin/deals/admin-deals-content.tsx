@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { adminUpdateDealStatus, adminDeleteDeal, adminUpdateDeal } from "@/app/actions";
+import { adminUpdateDealStatus, adminDeleteDeal, adminUpdateDeal, setEditorPick } from "@/app/actions";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
-import { CheckCircle2, XCircle, Trash2, Loader2, Pencil, X, Save } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Loader2, Pencil, X, Save, Star } from "lucide-react";
 import type { Deal } from "@/lib/types/database";
 
 interface AdminDeal extends Deal {
@@ -114,6 +114,28 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
     setLoadingId(null);
   };
 
+  const handleSetEditorPick = async (id: string) => {
+    setLoadingId(id);
+    const { error } = await setEditorPick(id);
+    if (error) {
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
+    } else {
+      setDeals((prev) => prev.map((d) => ({ ...d, is_editor_pick: d.id === id })));
+      toast({ title: t("admin.toast.saved"), description: t("admin.deals.editorPickBadge") });
+    }
+    setLoadingId(null);
+  };
+
+  const handleRemoveEditorPick = async () => {
+    const { error } = await setEditorPick(null);
+    if (error) {
+      toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
+    } else {
+      setDeals((prev) => prev.map((d) => ({ ...d, is_editor_pick: false })));
+      toast({ title: t("admin.toast.saved") });
+    }
+  };
+
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
     review_needed: "bg-amber-100 text-amber-800",
@@ -196,9 +218,17 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                       {deal.category || deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
                     </p>
                   </div>
-                  <Badge className={`text-[10px] ${statusColors[deal.status]} border-0 shrink-0`}>
-                    {filterLabels[deal.status]}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {deal.is_editor_pick && (
+                      <Badge className="text-[10px] bg-amber-100 text-amber-800 border-0">
+                        <Star className="h-3 w-3 mr-0.5" />
+                        {t("admin.deals.editorPickBadge")}
+                      </Badge>
+                    )}
+                    <Badge className={`text-[10px] ${statusColors[deal.status]} border-0`}>
+                      {filterLabels[deal.status]}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="flex gap-1.5">
@@ -235,6 +265,31 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                     <Pencil className="h-3 w-3" />
                     {t("admin.deals.edit")}
                   </Button>
+                  {deal.status === "approved" && (
+                    deal.is_editor_pick ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1 text-amber-600"
+                        onClick={() => handleRemoveEditorPick()}
+                        disabled={loadingId != null}
+                      >
+                        <Star className="h-3 w-3" />
+                        {t("admin.deals.removeEditorPick")}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => handleSetEditorPick(deal.id)}
+                        disabled={loadingId === deal.id}
+                      >
+                        {loadingId === deal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Star className="h-3 w-3" />}
+                        {t("admin.deals.setEditorPick")}
+                      </Button>
+                    )
+                  )}
                   <Button
                     size="sm"
                     variant="ghost"

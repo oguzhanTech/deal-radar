@@ -7,6 +7,7 @@ import {
   HomePopularSection,
   HomeNewestSection,
   HomeBiggestDropsSection,
+  HomeEditorPickSection,
 } from "./home-sections";
 import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
@@ -50,17 +51,26 @@ export default async function HomePage() {
   }
 
   const orderedSections = shuffle([...HOME_SECTIONS]);
+  const sectionsWithoutLast = orderedSections.slice(0, -1);
+  const lastSection = orderedSections[orderedSections.length - 1];
+  const LastSectionComponent = lastSection.Section;
 
   return (
     <div className="space-y-4 py-3">
       <Suspense fallback={null}>
         <HomeHero />
       </Suspense>
-      {orderedSections.map(({ id, Section }) => (
+      {sectionsWithoutLast.map(({ id, Section }) => (
         <Suspense key={id} fallback={<DealSectionSkeleton />}>
           <Section />
         </Suspense>
       ))}
+      <Suspense fallback={null}>
+        <HomeEditorPickSection />
+      </Suspense>
+      <Suspense key={lastSection.id} fallback={<DealSectionSkeleton />}>
+        <LastSectionComponent />
+      </Suspense>
     </div>
   );
 }

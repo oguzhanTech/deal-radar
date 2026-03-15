@@ -1,5 +1,6 @@
 import { createAnonClient } from "@/lib/supabase/server";
 import { DealSection } from "@/components/deals/deal-section";
+import { EditorPickWidget } from "@/components/home/editor-pick-widget";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 import type { HeroDeal } from "@/components/home/home-hero-carousel";
@@ -219,4 +220,23 @@ export async function HomeBiggestDropsSection() {
       seeAllHref="/search?sort=discount"
     />
   );
+}
+
+async function fetchEditorPick(): Promise<Deal | null> {
+  const supabase = await createAnonClient();
+  const { data } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("is_editor_pick", true)
+    .eq("status", "approved")
+    .gt("end_at", new Date().toISOString())
+    .limit(1)
+    .maybeSingle();
+  return data as Deal | null;
+}
+
+export async function HomeEditorPickSection() {
+  const deal = await fetchEditorPick();
+  if (!deal) return null;
+  return <EditorPickWidget deal={deal} />;
 }

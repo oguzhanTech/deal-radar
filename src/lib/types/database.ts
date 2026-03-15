@@ -36,6 +36,7 @@ export interface Deal {
   created_by: string;
   status: DealStatus;
   end_date_unknown?: boolean;
+  is_editor_pick?: boolean;
   heat_score: number;
   view_count: number;
   created_at: string;
