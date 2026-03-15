@@ -1,11 +1,5 @@
-import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
+import { AppLoadingScreen } from "@/components/layout/app-loading-screen";
 
 export default function MainLoading() {
-  return (
-    <div className="space-y-6 py-5">
-      <DealSectionSkeleton />
-      <DealSectionSkeleton />
-      <DealSectionSkeleton />
-    </div>
-  );
+  return <AppLoadingScreen />;
 }
