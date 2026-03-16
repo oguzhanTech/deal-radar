@@ -13,7 +13,7 @@ import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 import { useSearchParams } from "next/navigation";
 
-type SortOption = "trending" | "popular" | "new" | "discount";
+type SortOption = "trending" | "popular" | "new" | "discount" | "endingSoon";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -21,10 +21,15 @@ export default function SearchPage() {
   const [sort, setSort] = useState<SortOption>(
     (searchParams.get("sort") as SortOption) || "new"
   );
-  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | null>(
+    searchParams.get("category")
+  );
+  const [filterCoupon, setFilterCoupon] = useState<boolean>(
+    searchParams.get("hasCoupon") === "1"
+  );
   const [showFilters, setShowFilters] = useState(false);
 
-  const cacheKey = `search:${query}:${sort}:${filterCategory ?? ""}`;
+  const cacheKey = `search:${query}:${sort}:${filterCategory ?? ""}:${filterCoupon ? "coupon" : ""}`;
   const cache = useFeedCache<Deal[]>(cacheKey);
   const [deals, setDeals] = useState<Deal[]>(() => cache.get() ?? []);
   const [loading, setLoading] = useState(!cache.get());
@@ -41,6 +46,7 @@ export default function SearchPage() {
       const params = new URLSearchParams({ sort });
       if (query.trim()) params.set("q", query.trim());
       if (filterCategory) params.set("category", filterCategory);
+      if (filterCoupon) params.set("hasCoupon", "1");
       const res = await fetch(`/api/deals?${params}`);
       const result = (await res.json()) as Deal[];
       cache.set(result ?? []);
@@ -61,13 +67,15 @@ export default function SearchPage() {
     { value: "popular", label: t("search.sortPopular") },
     { value: "new", label: t("search.sortNew") },
     { value: "discount", label: t("search.sortDiscount") },
+    { value: "endingSoon", label: t("search.sortEndingSoon") },
   ];
 
   const clearFilters = () => {
     setFilterCategory(null);
+    setFilterCoupon(false);
   };
 
-  const hasActiveFilters = !!filterCategory;
+  const hasActiveFilters = !!filterCategory || filterCoupon;
 
   return (
     <div className="space-y-4 py-4">
@@ -139,11 +147,22 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-xs text-primary font-medium cursor-pointer">
-                {t("search.clearFilters")}
+            <div className="flex items-center justify-between">
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs text-primary font-medium cursor-pointer">
+                  {t("search.clearFilters")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setFilterCoupon((v) => !v)}
+                className={`px-2 py-1 text-[11px] font-medium rounded-full border transition cursor-pointer ${
+                  filterCoupon ? "bg-violet-600 text-white border-violet-600" : "bg-background text-foreground"
+                }`}
+              >
+                🎟️ {t("search.filterCoupon")}
               </button>
-            )}
+            </div>
           </div>
         )}
       </div>
@@ -153,6 +172,15 @@ export default function SearchPage() {
           {filterCategory && (
             <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setFilterCategory(null)}>
               {filterCategory} <X className="h-3 w-3" />
+            </Badge>
+          )}
+          {filterCoupon && (
+            <Badge
+              variant="secondary"
+              className="gap-1 cursor-pointer"
+              onClick={() => setFilterCoupon(false)}
+            >
+              🎟️ {t("search.filterCoupon")} <X className="h-3 w-3" />
             </Badge>
           )}
         </div>

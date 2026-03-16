@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ExternalLink, User2 } from "lucide-react";
+import { ExternalLink, Ticket, User2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DealCountdown } from "./deal-countdown";
 import { HeatBadge } from "./heat-badge";
@@ -66,30 +66,43 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
-              <h3 className="font-semibold text-[13px] leading-tight line-clamp-1">{deal.title}</h3>
+              <h3 className="font-semibold text-[13px] leading-tight line-clamp-1">
+                {deal.title}
+              </h3>
               {!hideCreator && (
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                   <User2 className="h-3 w-3 text-muted-foreground/80" />
                   <span className="truncate">{creatorName}</span>
                 </p>
               )}
-              <div className="flex items-center gap-2 mt-1">
-                {deal.deal_price != null && deal.original_price != null ? (
-                  <>
-                    <span className="text-[11px] text-muted-foreground line-through">
-                      {formatPrice(deal.original_price, deal.currency)}
-                    </span>
-                    <span className="text-sm font-bold text-emerald-600">
-                      {formatPrice(deal.deal_price, deal.currency)}
-                    </span>
-                    {deal.discount_percent && (
-                      <Badge className="text-[10px] bg-primary/15 text-primary border-0 px-1.5 py-0 font-semibold">
-                        %{deal.discount_percent}
-                      </Badge>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-xs text-muted-foreground">{t("deal.viewDeal")}</span>
+              <div className="flex items-center gap-2 mt-1 justify-between">
+                <div className="flex items-center gap-2">
+                  {deal.deal_price != null && deal.original_price != null ? (
+                    <>
+                      <span className="text-[11px] text-muted-foreground line-through">
+                        {formatPrice(deal.original_price, deal.currency)}
+                      </span>
+                      <span className="text-sm font-bold text-emerald-600">
+                        {formatPrice(deal.deal_price, deal.currency)}
+                      </span>
+                      {deal.discount_percent && (
+                        <Badge className="text-[10px] bg-primary/15 text-primary border-0 px-1.5 py-0 font-semibold">
+                          %{deal.discount_percent}
+                        </Badge>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">{t("deal.viewDeal")}</span>
+                  )}
+                </div>
+                {deal.coupon_code && (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200 px-1.5 py-[1px] text-[9px] font-semibold shrink-0"
+                    title={t("coupon.title")}
+                  >
+                    <Ticket className="h-2.5 w-2.5" />
+                    {t("coupon.badgeShort")}
+                  </span>
                 )}
               </div>
             </div>
@@ -212,18 +225,29 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
               <HeatBadge score={deal.heat_score} />
             </div>
 
-            <div className="min-h-[20px] flex items-center gap-2">
-              {deal.deal_price != null && deal.original_price != null ? (
-                <>
-                  <span className="text-xs text-muted-foreground line-through">
-                    {formatPrice(deal.original_price, deal.currency)}
-                  </span>
-                  <span className="text-sm font-extrabold text-emerald-600">
-                    {formatPrice(deal.deal_price, deal.currency)}
-                  </span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">{t("deal.viewDeal")}</span>
+            <div className="min-h-[20px] flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2">
+                {deal.deal_price != null && deal.original_price != null ? (
+                  <>
+                    <span className="text-xs text-muted-foreground line-through">
+                      {formatPrice(deal.original_price, deal.currency)}
+                    </span>
+                    <span className="text-sm font-extrabold text-emerald-600">
+                      {formatPrice(deal.deal_price, deal.currency)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs text-muted-foreground">{t("deal.viewDeal")}</span>
+                )}
+              </div>
+              {deal.coupon_code && (
+                <span
+                  className="inline-flex items-center gap-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200 px-1.5 py-[1px] text-[9px] font-semibold shrink-0"
+                  title={t("coupon.title")}
+                >
+                  <Ticket className="h-3 w-3" />
+                  {t("coupon.badgeShort")}
+                </span>
               )}
             </div>
           </div>

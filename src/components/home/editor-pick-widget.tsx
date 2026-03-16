@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Star } from "lucide-react";
+import { ExternalLink, Star, Ticket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SaveRemindButton } from "@/components/deals/save-remind-button";
 import { formatPrice } from "@/lib/utils";
@@ -59,7 +59,20 @@ export function EditorPickWidget({ deal, editorQuote, editorName }: EditorPickWi
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
-              <h3 className="font-semibold text-base leading-tight line-clamp-2">{deal.title}</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-semibold text-base leading-tight line-clamp-2 flex-1 min-w-0">
+                  {deal.title}
+                </h3>
+                {deal.coupon_code && (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200 px-1.5 py-[1px] text-[9px] font-semibold shrink-0"
+                    title={t("coupon.title")}
+                  >
+                    <Ticket className="h-3 w-3" />
+                    {t("coupon.badgeShort")}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {deal.deal_price != null && deal.original_price != null ? (
                   <>

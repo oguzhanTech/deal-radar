@@ -157,6 +157,45 @@ async function fetchBiggestDrops(): Promise<HomeDeal[]> {
   return attachCreators(sorted.slice(0, 5));
 }
 
+async function fetchCouponDeals(): Promise<HomeDeal[]> {
+  const supabase = await createAnonClient();
+  const now = new Date().toISOString();
+  const { data } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("status", "approved")
+    .gt("end_at", now)
+    .not("coupon_code", "is", null)
+    .or(`coupon_expiry.is.null,coupon_expiry.gt.${now}`)
+    .limit(12);
+
+  const list = (data ?? []) as Deal[];
+  // Basit shuffle
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return attachCreators(list.slice(0, 3));
+}
+
+async function fetchInternationalDeals(): Promise<HomeDeal[]> {
+  const supabase = await createAnonClient();
+  const { data } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("status", "approved")
+    .eq("category", "Yurtdışı fırsatları")
+    .gt("end_at", new Date().toISOString())
+    .limit(20);
+  const list = (data ?? []) as Deal[];
+  // Basit shuffle
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return attachCreators(list.slice(0, 5));
+}
+
 export async function HomeTrendingSection() {
   const deals = await fetchTrending();
   if (deals.length === 0) return null;
@@ -178,7 +217,7 @@ export async function HomeEndingSoonSection() {
       title={t("home.endingSoon")}
       emoji="⏰"
       deals={deals as unknown as Deal[]}
-      seeAllHref="/search?sort=popular"
+      seeAllHref="/search?sort=endingSoon"
     />
   );
 }
@@ -218,6 +257,32 @@ export async function HomeBiggestDropsSection() {
       emoji="📉"
       deals={deals as unknown as Deal[]}
       seeAllHref="/search?sort=discount"
+    />
+  );
+}
+
+export async function HomeCouponSection() {
+  const deals = await fetchCouponDeals();
+  if (deals.length === 0) return null;
+  return (
+    <DealSection
+      title={t("home.couponDeals")}
+      emoji="🎟️"
+      deals={deals as unknown as Deal[]}
+      seeAllHref="/search?hasCoupon=1"
+    />
+  );
+}
+
+export async function HomeInternationalSection() {
+  const deals = await fetchInternationalDeals();
+  if (deals.length === 0) return null;
+  return (
+    <DealSection
+      title={t("home.internationalDeals")}
+      emoji="✈️"
+      deals={deals as unknown as Deal[]}
+      seeAllHref={`/search?category=${encodeURIComponent("Yurtdışı fırsatları")}`}
     />
   );
 }

@@ -7,6 +7,8 @@ import {
   HomePopularSection,
   HomeNewestSection,
   HomeBiggestDropsSection,
+  HomeCouponSection,
+  HomeInternationalSection,
   HomeEditorPickSection,
 } from "./home-sections";
 import { HomeHero } from "./home-hero";
@@ -30,6 +32,8 @@ const HOME_SECTIONS = [
   { id: "trending", Section: HomeTrendingSection },
   { id: "popular", Section: HomePopularSection },
   { id: "biggestDrops", Section: HomeBiggestDropsSection },
+  { id: "coupons", Section: HomeCouponSection },
+  { id: "international", Section: HomeInternationalSection },
 ] as const;
 
 export default async function HomePage() {

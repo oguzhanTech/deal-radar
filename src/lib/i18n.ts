@@ -46,6 +46,7 @@ const tr: Record<string, string> = {
   "home.popular": "Popüler",
   "home.newDeals": "Yeni Fırsatlar",
   "home.biggestDrops": "En Çok Düşenler",
+  "home.internationalDeals": "Yurtdışı Fırsatları",
   "home.editorPick": "Editör'ün Seçimi",
   "home.emptyTitle": "Henüz fırsat yok",
   "home.leaderboardTitle": "Topla Avcıları",
@@ -178,6 +179,7 @@ const tr: Record<string, string> = {
   "search.sortPopular": "Popüler",
   "search.sortNew": "En Yeni",
   "search.sortDiscount": "En Çok Düşenler",
+  "search.sortEndingSoon": "Yakında bitenler",
   "search.filterProvider": "Sağlayıcı",
   "search.filterCategory": "Kategoriler",
   "search.clearFilters": "Filtreleri temizle",
@@ -312,6 +314,11 @@ const tr: Record<string, string> = {
   "coupon.copied": "Kupon kodu kopyalandı!",
   "coupon.expires": "Son kullanma:",
   "coupon.title": "Kupon Kodu",
+  "coupon.badgeShort": "Kupon",
+
+  // Coupon deals section & filter
+  "home.couponDeals": "Kuponlu Fırsatlar",
+  "search.filterCoupon": "Kuponlu fırsatlar",
 
   // Legal
   "legal.title": "Yasal",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAnonClient } from "@/lib/supabase/server";
 
-type SortOption = "trending" | "popular" | "new" | "discount";
+type SortOption = "trending" | "popular" | "new" | "discount" | "endingSoon";
 
 export async function GET(request: Request) {
   try {
@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const sort = (searchParams.get("sort") as SortOption) || "new";
     const q = searchParams.get("q")?.trim() ?? "";
     const category = searchParams.get("category");
+    const hasCoupon = searchParams.get("hasCoupon") === "1";
 
     const supabase = await createAnonClient();
     let query = supabase
@@ -27,6 +28,13 @@ export async function GET(request: Request) {
     if (category) {
       query = query.eq("category", category);
     }
+    if (hasCoupon) {
+      const now = new Date().toISOString();
+      query = query
+        .not("coupon_code", "is", null)
+        .gt("end_at", now)
+        .or(`coupon_expiry.is.null,coupon_expiry.gt.${now}`);
+    }
 
     if (!idsParam) {
       if (sort === "trending") {
@@ -34,6 +42,9 @@ export async function GET(request: Request) {
         query = query.gte("created_at", sevenDaysAgo).order("heat_score", { ascending: false });
       } else if (sort === "popular") {
         query = query.order("heat_score", { ascending: false });
+      } else if (sort === "endingSoon") {
+        const now = new Date().toISOString();
+        query = query.gt("end_at", now).order("end_at", { ascending: true });
       } else if (sort === "discount") {
         query = query.gt("end_at", new Date().toISOString()).order("discount_percent", { ascending: false });
       } else {

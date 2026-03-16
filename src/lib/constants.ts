@@ -13,6 +13,7 @@ export const DEAL_CATEGORIES = [
   "Evcil Hayvan",
   "Hobi & Eğlence",
   "Banka kampanyaları",
+  "Yurtdışı fırsatları",
 ] as const;
 
 export const CURRENCIES = ["TL", "USD", "EUR"] as const;
