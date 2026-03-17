@@ -32,7 +32,7 @@ import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Deal, DealComment } from "@/lib/types/database";
 
 function getLevelLabel(level: number): string {
@@ -67,6 +67,7 @@ export function DealDetailContent({
   const { requireAuth, AuthModal } = useAuthGuard();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [comments, setComments] = useState(initialComments);
   const [voteCount, setVoteCount] = useState(initialVoteCount);
@@ -75,10 +76,18 @@ export function DealDetailContent({
   const [voting, setVoting] = useState(false);
   const [commenting, setCommenting] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [tab, setTab] = useState<"details" | "comments" | "similar">(
+    searchParams.get("tab") === "comments" ? "comments" : "details"
+  );
 
   const isExpired = new Date(deal.end_at) < new Date();
   const creator =
     creatorName ?? t("admin.users.unnamed");
+
+  useEffect(() => {
+    const next = searchParams.get("tab") === "comments" ? "comments" : "details";
+    setTab((prev) => (prev === next ? prev : next));
+  }, [searchParams]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -359,7 +368,7 @@ export function DealDetailContent({
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="details">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList>
             <TabsTrigger value="details">{t("tab.details")}</TabsTrigger>
             <TabsTrigger value="comments">{t("tab.comments")} ({comments.length})</TabsTrigger>
