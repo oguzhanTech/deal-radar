@@ -9,6 +9,7 @@ import {
   HomeBiggestDropsSection,
   HomeCouponSection,
   HomeInternationalSection,
+  HomeActivitySection,
   HomeEditorPickSection,
 } from "./home-sections";
 import { HomeHero } from "./home-hero";
@@ -59,12 +60,23 @@ export default async function HomePage() {
   const lastSection = orderedSections[orderedSections.length - 1];
   const LastSectionComponent = lastSection.Section;
 
+  const firstTwo = sectionsWithoutLast.slice(0, 2);
+  const rest = sectionsWithoutLast.slice(2);
+
   return (
     <div className="space-y-4 py-3">
       <Suspense fallback={null}>
         <HomeHero />
       </Suspense>
-      {sectionsWithoutLast.map(({ id, Section }) => (
+      {firstTwo.map(({ id, Section }) => (
+        <Suspense key={id} fallback={<DealSectionSkeleton />}>
+          <Section />
+        </Suspense>
+      ))}
+      <Suspense fallback={null}>
+        <HomeActivitySection />
+      </Suspense>
+      {rest.map(({ id, Section }) => (
         <Suspense key={id} fallback={<DealSectionSkeleton />}>
           <Section />
         </Suspense>

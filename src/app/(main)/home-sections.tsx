@@ -1,9 +1,11 @@
 import { createAnonClient } from "@/lib/supabase/server";
 import { DealSection } from "@/components/deals/deal-section";
 import { EditorPickWidget } from "@/components/home/editor-pick-widget";
+import { ActivityFeedWidget } from "@/components/home/activity-feed-widget";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 import type { HeroDeal } from "@/components/home/home-hero-carousel";
+import type { Activity } from "@/lib/types/database";
 
 type HomeDeal = Deal & { profile?: { display_name: string | null } | null };
 
@@ -26,6 +28,17 @@ async function attachCreators(deals: Deal[]): Promise<HomeDeal[]> {
     ...d,
     profile: { display_name: map[d.created_by] ?? null },
   }));
+}
+
+async function fetchRecentActivities(limit = 5): Promise<Activity[]> {
+  const supabase = await createAnonClient();
+  const { data } = await supabase
+    .from("activities")
+    .select("id,type,user_id,deal_id,comment_id,payload,created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []) as unknown as Activity[];
 }
 
 async function fetchTrending() {
@@ -285,6 +298,12 @@ export async function HomeInternationalSection() {
       seeAllHref={`/search?category=${encodeURIComponent("Yurtdışı fırsatları")}`}
     />
   );
+}
+
+export async function HomeActivitySection() {
+  const activities = await fetchRecentActivities(5);
+  if (activities.length === 0) return null;
+  return <ActivityFeedWidget activities={activities} />;
 }
 
 async function fetchEditorPick(): Promise<{ deal: Deal; editorName: string | null } | null> {

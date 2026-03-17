@@ -4,6 +4,28 @@ export type VoteValue = 1 | -1;
 
 export type BadgeId = "early_hunter" | "trending_hunter" | "community_builder" | "trusted_submitter";
 
+export type ActivityType = "deal_created" | "vote" | "comment" | "save";
+
+export interface ActivityPayload {
+  display_name?: string | null;
+  deal_title?: string;
+  deal_price?: number | null;
+  original_price?: number | null;
+  currency?: string | null;
+  vote?: number;
+  comment_snippet?: string;
+}
+
+export interface Activity {
+  id: string;
+  type: ActivityType;
+  user_id: string;
+  deal_id: string;
+  comment_id: string | null;
+  payload: ActivityPayload;
+  created_at: string;
+}
+
 export interface Profile {
   user_id: string;
   display_name: string | null;

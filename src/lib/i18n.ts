@@ -53,6 +53,18 @@ const tr: Record<string, string> = {
   "home.leaderboardDesc": "En iyi fırsat avcılarını keşfet",
   "home.emptyState": "Henüz fırsat yok. İlk fırsatı sen paylaş! 🎯",
 
+  // Activity feed
+  "activity.title": "Topla’da Neler Oluyor?",
+  "activity.prev": "Önceki",
+  "activity.next": "Sonraki",
+  "activity.ctaDeal": "Fırsata git",
+  "activity.ctaComment": "Yoruma git",
+  "activity.shared": "fırsat paylaştı:",
+  "activity.voted": "fırsata oy verdi:",
+  "activity.commented": "yorum yaptı:",
+  "activity.saved": "radarına ekledi:",
+  "activity.was": "yerine",
+
   // Deal Card
   "deal.noImage": "Görsel yok",
   "deal.viewDeal": "Fırsata bak",
