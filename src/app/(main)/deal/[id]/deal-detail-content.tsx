@@ -368,7 +368,7 @@ export function DealDetailContent({
         </div>
 
         {/* Tabs */}
-        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+        <Tabs defaultValue="details" value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList>
             <TabsTrigger value="details">{t("tab.details")}</TabsTrigger>
             <TabsTrigger value="comments">{t("tab.comments")} ({comments.length})</TabsTrigger>
