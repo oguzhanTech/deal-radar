@@ -30,6 +30,71 @@ export async function uploadDealImage(formData: FormData) {
   return { url: urlData.publicUrl, path };
 }
 
+export async function updateProfileAvatar(profileImageUrl: string | null, profileImagePath: string | null) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Oturum bulunamadı." };
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("profile_image_path")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const oldPath = existing?.profile_image_path ?? null;
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({
+      profile_image_url: profileImageUrl,
+      profile_image_path: profileImagePath,
+    })
+    .eq("user_id", user.id);
+
+  if (updateError) return { error: updateError.message };
+
+  // Remove old object after update (best-effort)
+  if (oldPath && oldPath !== profileImagePath) {
+    try {
+      await supabase.storage.from("profile-images").remove([oldPath]);
+    } catch {
+      // ignore remove errors
+    }
+  }
+
+  return { success: true, url: profileImageUrl, path: profileImagePath };
+}
+
+export async function uploadProfileImage(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Oturum bulunamadı." };
+
+  const file = formData.get("file") as File | null;
+  if (!file?.size) return { error: "Görsel seçilmedi." };
+
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+  if (file.size > MAX_SIZE_BYTES) return { error: "Dosya çok büyük. Max 5MB." };
+
+  const allowed = ["image/jpeg", "image/png"];
+  if (!allowed.includes(file.type)) return { error: "Sadece JPG veya PNG desteklenir." };
+
+  const ext = file.type === "image/png" ? "png" : "jpg";
+  const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+
+  const { error: uploadError } = await supabase.storage
+    .from("profile-images")
+    .upload(path, bytes, { contentType: file.type });
+
+  if (uploadError) return { error: uploadError.message };
+
+  const { data: urlData } = supabase.storage.from("profile-images").getPublicUrl(path);
+  return await updateProfileAvatar(urlData.publicUrl, path);
+}
+
 export async function createDeal(payload: Record<string, unknown>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

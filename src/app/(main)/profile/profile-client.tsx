@@ -12,6 +12,7 @@ import { LoginModal } from "@/components/auth/login-modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import { updateProfile as updateProfileAction } from "@/app/actions";
+import { ProfileAvatarUploader } from "@/components/profile/profile-avatar-uploader";
 import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS, BADGE_INFO } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { formatDistanceToNow } from "date-fns";
@@ -36,7 +37,15 @@ interface ProfileClientProps {
 
 export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClientProps) {
   const router = useRouter();
-  const { user, profile, loading: authLoading, signOut, refreshProfile, setProfileDisplayName } = useAuth();
+  const {
+    user,
+    profile,
+    loading: authLoading,
+    signOut,
+    refreshProfile,
+    setProfileDisplayName,
+    setProfileAvatarUrl,
+  } = useAuth();
   const { toast } = useToast();
   const [showLogin, setShowLogin] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -179,9 +188,11 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
         <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
         <div className="absolute -bottom-14 -left-14 w-48 h-48 rounded-full bg-white/5" />
         <div className="flex items-center gap-4 relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-extrabold shadow-lg">
-            {initial}
-          </div>
+          <ProfileAvatarUploader
+            currentUrl={profile?.profile_image_url ?? null}
+            fallbackLetter={initial}
+            onUploaded={(url, path) => setProfileAvatarUrl(url, path)}
+          />
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold truncate">{profile?.display_name || t("profile.anonymous")}</h2>
             <p className="text-white/60 text-xs truncate">{user?.email}</p>

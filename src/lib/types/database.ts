@@ -29,6 +29,8 @@ export interface Activity {
 export interface Profile {
   user_id: string;
   display_name: string | null;
+  profile_image_url?: string | null;
+  profile_image_path?: string | null;
   role: UserRole;
   trust_score: number;
   points: number;

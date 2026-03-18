@@ -57,6 +57,8 @@ interface AuthContextValue {
   refreshProfile: () => Promise<void>;
   /** Profil ismi güncellendikten hemen sonra UI'ı güncellemek için (sunucudan beklemeden). */
   setProfileDisplayName: (name: string) => void;
+  /** Profil fotoğrafı yüklendikten hemen sonra UI'ı güncellemek için (sunucudan beklemeden). */
+  setProfileAvatarUrl: (url: string | null, path?: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -69,6 +71,7 @@ const AuthContext = createContext<AuthContextValue>({
   signOut: async () => {},
   refreshProfile: async () => {},
   setProfileDisplayName: () => {},
+  setProfileAvatarUrl: () => {},
 });
 
 export function useAuth() {
@@ -167,6 +170,18 @@ export function AuthProvider({ children, initialUser: initialUserProp, initialPr
     setProfile((prev) => (prev ? { ...prev, display_name } : null));
   }, []);
 
+  const setProfileAvatarUrl = useCallback((profile_image_url: string | null, profile_image_path: string | null | undefined) => {
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            profile_image_url,
+            profile_image_path: profile_image_path ?? prev.profile_image_path ?? null,
+          }
+        : null
+    );
+  }, []);
+
   const dismissLevelUp = useCallback(() => setLevelUp(null), []);
 
   useEffect(() => {
@@ -259,7 +274,20 @@ export function AuthProvider({ children, initialUser: initialUserProp, initialPr
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, display, loading, levelUp, dismissLevelUp, signOut, refreshProfile, setProfileDisplayName }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        display,
+        loading,
+        levelUp,
+        dismissLevelUp,
+        signOut,
+        refreshProfile,
+        setProfileDisplayName,
+        setProfileAvatarUrl,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

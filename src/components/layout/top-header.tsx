@@ -3,7 +3,7 @@
 import { Radar, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth, useAuthDisplay } from "@/components/auth/auth-provider";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { t } from "@/lib/i18n";
 import Link from "next/link";
@@ -44,6 +44,7 @@ export function TopHeader() {
           {showAsLoggedIn ? (
             <Link href="/profile" prefetch onMouseEnter={() => router.prefetch("/profile")} onTouchStart={() => router.prefetch("/profile")}>
               <Avatar className="h-9 w-9 border-2 border-white/25 ring-2 ring-white/10">
+                {profile?.profile_image_url && <AvatarImage src={profile.profile_image_url} alt={profile.display_name ?? "Avatar"} />}
                 <AvatarFallback className="bg-white/15 text-white text-xs font-bold">
                   {avatarLetter}
                 </AvatarFallback>
