@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -68,19 +69,19 @@ function SheetContent({ className, children, side = "right" }: SheetContentProps
     bottom: "inset-x-0 bottom-0 w-full",
   };
 
-  return (
+  const content = (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => onOpenChange(false)}
           />
           <motion.div
-            className={cn("fixed z-50 border bg-background p-6 shadow-lg", positionClasses[side], className)}
+            className={cn("fixed z-[100] border bg-background p-6 shadow-lg", positionClasses[side], className)}
             initial={slideVariants[side].initial}
             animate={slideVariants[side].animate}
             exit={slideVariants[side].exit}
@@ -99,6 +100,11 @@ function SheetContent({ className, children, side = "right" }: SheetContentProps
       )}
     </AnimatePresence>
   );
+
+  if (typeof document !== "undefined" && document.body) {
+    return createPortal(content, document.body);
+  }
+  return content;
 }
 
 function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
