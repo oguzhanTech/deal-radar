@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ExternalLink, Ticket, User2 } from "lucide-react";
@@ -36,14 +35,26 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
     (deal as any).profile?.display_name || t("admin.users.unnamed");
   const creatorId = deal.created_by;
 
+  const goToDeal = () => {
+    router.push(`/deal/${deal.id}`);
+  };
+
   if (compact) {
     return (
       <div
         onMouseEnter={prefetchDetail}
         onTouchStart={prefetchDetail}
-        className="w-full hover:opacity-95 active:scale-[0.99] transition-transform"
+        className="w-full hover:opacity-95 active:scale-[0.99] transition-transform cursor-pointer"
+        onClick={goToDeal}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            goToDeal();
+          }
+        }}
       >
-        <Link href={`/deal/${deal.id}`} prefetch={true} className="block">
           <div
             className={cn(
               "rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/40 flex gap-3 p-2.5",
@@ -72,18 +83,20 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
                 {deal.title}
               </h3>
               {!hideCreator && (
-                <button
-                  type="button"
-                  className="text-[11px] text-muted-foreground flex items-center gap-1 hover:text-foreground transition cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (creatorId) openPublicProfileModal(creatorId);
-                  }}
-                >
+                <div className="text-[11px] text-muted-foreground flex items-center gap-1">
                   <User2 className="h-3 w-3 text-muted-foreground/80" />
-                  <span className="truncate">{creatorName}</span>
-                </button>
+                  <button
+                    type="button"
+                    className="truncate hover:text-foreground transition cursor-pointer text-left"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (creatorId) openPublicProfileModal(creatorId);
+                    }}
+                  >
+                    {creatorName}
+                  </button>
+                </div>
               )}
               <div className="flex items-center gap-2 mt-1 justify-between">
                 <div className="flex items-center gap-2">
@@ -116,7 +129,14 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-end justify-center gap-1 shrink-0" onClick={(e) => e.preventDefault()} data-no-skeleton>
+            <div
+              className="flex flex-col items-end justify-center gap-1 shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              data-no-skeleton
+            >
               <div className="flex items-center gap-1.5">
                 {deal.external_url && (
                   <button
@@ -137,7 +157,6 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
               <DealCountdown endAt={deal.end_at} compact className="text-[10px]" />
             </div>
           </div>
-        </Link>
       </div>
     );
   }
@@ -147,11 +166,19 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
       onMouseEnter={prefetchDetail}
       onTouchStart={prefetchDetail}
       className={cn(
-        "hover:-translate-y-[3px] active:scale-[0.97] transition-transform duration-200",
+        "hover:-translate-y-[3px] active:scale-[0.97] transition-transform duration-200 cursor-pointer",
         horizontal ? "flex-shrink-0 w-[280px] snap-start" : "w-full"
       )}
+      onClick={goToDeal}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          goToDeal();
+        }
+      }}
     >
-      <Link href={`/deal/${deal.id}`} prefetch={true} className="block">
         <div
           className={cn(
             "rounded-2xl bg-card overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border border-border/40",
@@ -223,18 +250,20 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
                 {deal.title}
               </h3>
               {!hideCreator && (
-                <button
-                  type="button"
-                  className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground shrink-0 pl-1 transition cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (creatorId) openPublicProfileModal(creatorId);
-                  }}
-                >
+                <div className="flex items-center gap-1 text-[12px] text-muted-foreground shrink-0 pl-1">
                   <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
-                  <span className="max-w-[120px] truncate">{creatorName}</span>
-                </button>
+                  <button
+                    type="button"
+                    className="max-w-[120px] truncate hover:text-foreground transition cursor-pointer text-left"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (creatorId) openPublicProfileModal(creatorId);
+                    }}
+                  >
+                    {creatorName}
+                  </button>
+                </div>
               )}
             </div>
 
@@ -270,7 +299,6 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
             </div>
           </div>
         </div>
-      </Link>
     </div>
   );
 }
