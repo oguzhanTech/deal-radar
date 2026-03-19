@@ -8,7 +8,9 @@ const REMINDER_WINDOWS = [
   { key: "1h", ms: 1 * 60 * 60 * 1000, label: "1 saat" },
 ];
 
-const BUFFER_MS = 20 * 60 * 1000;
+// Hobby Vercel planında cron günde 1 kez çalışabildiği için
+// hatırlatma pencerelerini kaçırmamak adına buffer'ı ~26 saate çıkardık.
+const BUFFER_MS = 26 * 60 * 60 * 1000;
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
