@@ -27,7 +27,7 @@ interface DealCardProps {
 export function DealCard({ deal, horizontal = false, compact = false, hideCreator = false }: DealCardProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
-  const isTrending = deal.heat_score >= HEAT_TRENDING_THRESHOLD;
+  const isTrending = deal.is_trending ?? (deal.heat_score >= HEAT_TRENDING_THRESHOLD);
 
   const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
 
@@ -222,7 +222,7 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
 
             <div className="flex items-center justify-between gap-2">
               <DealCountdown endAt={deal.end_at} compact />
-              <HeatBadge score={deal.heat_score} />
+              <HeatBadge score={deal.heat_score} forceTrending={isTrending} />
             </div>
 
             <div className="min-h-[20px] flex items-center gap-2 justify-between">

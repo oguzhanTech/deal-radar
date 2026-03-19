@@ -51,7 +51,8 @@ async function fetchTrending() {
     .gte("heat_score", 20)
     .order("heat_score", { ascending: false })
     .limit(5);
-  return attachCreators(data ?? []);
+  const deals = await attachCreators(data ?? []);
+  return deals.map((deal) => ({ ...deal, is_trending: true }));
 }
 
 async function fetchEndingSoon() {

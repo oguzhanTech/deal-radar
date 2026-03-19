@@ -8,10 +8,11 @@ import { t } from "@/lib/i18n";
 interface HeatBadgeProps {
   score: number;
   className?: string;
+  forceTrending?: boolean;
 }
 
-export function HeatBadge({ score, className }: HeatBadgeProps) {
-  const isTrending = score >= HEAT_TRENDING_THRESHOLD;
+export function HeatBadge({ score, className, forceTrending = false }: HeatBadgeProps) {
+  const isTrending = forceTrending || score >= HEAT_TRENDING_THRESHOLD;
 
   if (score <= 0) return null;
 

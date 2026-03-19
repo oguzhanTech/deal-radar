@@ -78,6 +78,7 @@ export interface Deal {
   editor_pick_quote?: string | null;
   editor_pick_set_by?: string | null;
   heat_score: number;
+  is_trending?: boolean;
   view_count: number;
   created_at: string;
   updated_at: string;

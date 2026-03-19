@@ -76,8 +76,9 @@ export async function GET(request: Request) {
         return acc;
       }, {}) ?? {};
 
-    const withCreators = deals.map((d) => ({
+    const withCreators = deals.map((d, index) => ({
       ...d,
+      is_trending: sort === "trending" && index < 5,
       profile: { display_name: nameMap[d.created_by] ?? null },
     }));
 
