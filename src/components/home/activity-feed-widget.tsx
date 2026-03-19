@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MessageSquare, ThumbsUp, Radar, Sparkles } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
+import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { t } from "@/lib/i18n";
 import type { Activity } from "@/lib/types/database";
 
@@ -19,7 +20,8 @@ function buildActivityText(a: Activity) {
   if (a.type === "deal_created") {
     return {
       icon: Sparkles,
-      text: `"${name}" ${t("activity.shared")} ${title}`,
+      actorName: name,
+      restText: `${t("activity.shared")} ${title}`,
       href: `/deal/${a.deal_id}`,
       cta: t("activity.ctaDeal"),
     };
@@ -28,7 +30,8 @@ function buildActivityText(a: Activity) {
   if (a.type === "vote") {
     return {
       icon: ThumbsUp,
-      text: `"${name}" ${t("activity.voted")} ${title}`,
+      actorName: name,
+      restText: `${t("activity.voted")} ${title}`,
       href: `/deal/${a.deal_id}`,
       cta: t("activity.ctaDeal"),
     };
@@ -39,7 +42,8 @@ function buildActivityText(a: Activity) {
     const quoted = snippet ? ` "${snippet}${snippet.length >= 120 ? "…" : ""}"` : "";
     return {
       icon: MessageSquare,
-      text: `"${name}" ${t("activity.commented")}${quoted}`,
+      actorName: name,
+      restText: `${t("activity.commented")}${quoted}`,
       href: `/deal/${a.deal_id}?tab=comments`,
       cta: t("activity.ctaComment"),
     };
@@ -48,7 +52,8 @@ function buildActivityText(a: Activity) {
   // save
   return {
     icon: Radar,
-    text: `"${name}" ${t("activity.saved")} ${title}`,
+    actorName: name,
+    restText: `${t("activity.saved")} ${title}`,
     href: `/deal/${a.deal_id}`,
     cta: t("activity.ctaDeal"),
   };
@@ -140,7 +145,16 @@ export function ActivityFeedWidget({ activities }: ActivityFeedWidgetProps) {
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold leading-snug line-clamp-2">{meta.text}</p>
+              <p className="text-sm font-semibold leading-snug line-clamp-2">
+                <button
+                  type="button"
+                  className="hover:text-primary transition cursor-pointer"
+                  onClick={() => openPublicProfileModal(current.user_id)}
+                >
+                  &quot;{meta.actorName}&quot;
+                </button>{" "}
+                {meta.restText}
+              </p>
               {priceLine && (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{priceLine}</p>
               )}

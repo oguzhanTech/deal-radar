@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/layout/sw-registrar";
+import { PublicUserProfileModalHost } from "@/components/profile/public-user-profile-modal";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -86,6 +87,7 @@ export default function RootLayout({
           </>
         )}
         {children}
+        <PublicUserProfileModalHost />
         <ServiceWorkerRegistrar />
       </body>
     </html>

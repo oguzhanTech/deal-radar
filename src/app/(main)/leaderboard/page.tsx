@@ -5,6 +5,7 @@ import { useFeedCache } from "@/hooks/use-feed-cache";
 import { t } from "@/lib/i18n";
 import { Trophy, PlusCircle, Crown, Medal, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 
 interface LeaderboardProfile {
   id: string;
@@ -101,11 +102,20 @@ export default function LeaderboardPage() {
             return (
               <div
                 key={p.id}
-                className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all ${
+                className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all cursor-pointer ${
                   isTop3
-                    ? RANK_STYLES[rank - 1]
-                    : "bg-card border border-border/40 shadow-card"
+                    ? `${RANK_STYLES[rank - 1]} hover:brightness-105`
+                    : "bg-card border border-border/40 shadow-card hover:bg-muted/40"
                 }`}
+                role="button"
+                tabIndex={0}
+                onClick={() => openPublicProfileModal(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openPublicProfileModal(p.id);
+                  }
+                }}
               >
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${

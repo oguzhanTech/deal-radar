@@ -12,6 +12,7 @@ import { formatPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/use-countdown";
 import { cn } from "@/lib/utils";
 import { HEAT_TRENDING_THRESHOLD } from "@/lib/constants";
+import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
 
@@ -33,6 +34,7 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
 
   const creatorName =
     (deal as any).profile?.display_name || t("admin.users.unnamed");
+  const creatorId = deal.created_by;
 
   if (compact) {
     return (
@@ -70,10 +72,18 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
                 {deal.title}
               </h3>
               {!hideCreator && (
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <button
+                  type="button"
+                  className="text-[11px] text-muted-foreground flex items-center gap-1 hover:text-foreground transition cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (creatorId) openPublicProfileModal(creatorId);
+                  }}
+                >
                   <User2 className="h-3 w-3 text-muted-foreground/80" />
                   <span className="truncate">{creatorName}</span>
-                </p>
+                </button>
               )}
               <div className="flex items-center gap-2 mt-1 justify-between">
                 <div className="flex items-center gap-2">
@@ -213,10 +223,18 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
                 {deal.title}
               </h3>
               {!hideCreator && (
-                <div className="flex items-center gap-1 text-[12px] text-muted-foreground shrink-0 pl-1">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground shrink-0 pl-1 transition cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (creatorId) openPublicProfileModal(creatorId);
+                  }}
+                >
                   <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
                   <span className="max-w-[120px] truncate">{creatorName}</span>
-                </div>
+                </button>
               )}
             </div>
 

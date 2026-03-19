@@ -24,6 +24,7 @@ import { DealCountdown } from "@/components/deals/deal-countdown";
 import { HeatBadge } from "@/components/deals/heat-badge";
 import { SaveRemindButton } from "@/components/deals/save-remind-button";
 import { DealCard } from "@/components/deals/deal-card";
+import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useAuthGuard } from "@/components/auth/auth-guard";
 import { useToast } from "@/components/ui/toast";
@@ -239,7 +240,13 @@ export function DealDetailContent({
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <User2 className="h-3.5 w-3.5 text-muted-foreground/80" />
-            <span className="font-medium truncate max-w-[160px]">{creator}</span>
+            <button
+              type="button"
+              className="font-medium truncate max-w-[160px] hover:text-foreground transition cursor-pointer"
+              onClick={() => openPublicProfileModal(deal.created_by)}
+            >
+              {creator}
+            </button>
           </div>
           <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">
             {deal.category || deal.provider}
@@ -402,9 +409,13 @@ export function DealDetailContent({
                         {c.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-semibold">
+                    <button
+                      type="button"
+                      className="text-sm font-semibold hover:text-primary transition cursor-pointer"
+                      onClick={() => openPublicProfileModal(c.user_id)}
+                    >
                       {c.profile?.display_name || t("profile.anonymous")}
-                    </span>
+                    </button>
                     {c.profile && c.profile.trust_score >= TRUSTED_SUBMITTER_THRESHOLD && (
                       <Badge variant="secondary" className="text-[8px] py-0 px-1.5 font-bold">{t("profile.trusted")}</Badge>
                     )}
