@@ -101,5 +101,40 @@ export function usePushSubscribe() {
     }
   }, []);
 
-  return { enablePush, isSupported, permission, isSubscribed, loading, error };
+  const disablePush = useCallback(async () => {
+    if (!isSupported) {
+      setError("Bu cihazda web push bildirimleri desteklenmiyor.");
+      return false;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if ("pushManager" in reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await sub.unsubscribe();
+        }
+      }
+
+      const res = await fetch("/api/push/subscribe", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || res.statusText);
+      }
+
+      setIsSubscribed(false);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bildirimler kapatılamadı.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [isSupported]);
+
+  return { enablePush, disablePush, isSupported, permission, isSubscribed, loading, error };
 }

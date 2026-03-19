@@ -16,7 +16,8 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
-  const { enablePush, isSupported, permission, isSubscribed, loading, error } = usePushSubscribe();
+  const { enablePush, disablePush, isSupported, permission, isSubscribed, loading, error } =
+    usePushSubscribe();
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -89,9 +90,18 @@ export function NotificationBell() {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-3 py-3">
-          {user && !isSubscribed && (
+          {user && (
             <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
-              <p className="text-xs font-medium text-foreground mb-1">Mobil bildirimler</p>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-foreground">Mobil bildirimler</p>
+                <span
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                    isSubscribed ? "bg-green-500/15 text-green-700" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {isSubscribed ? "Açık" : "Kapalı"}
+                </span>
+              </div>
               <p className="text-[11px] text-muted-foreground mb-2">
                 Radarındaki fırsatlar bitmeden hatırlatma al.
               </p>
@@ -103,13 +113,19 @@ export function NotificationBell() {
                 <>
                   <Button
                     size="sm"
-                    variant="default"
+                    variant={isSubscribed ? "outline" : "default"}
                     className="h-8 text-xs rounded-lg gap-1.5"
-                    onClick={() => enablePush()}
+                    onClick={() => (isSubscribed ? disablePush() : enablePush())}
                     disabled={loading}
                   >
                     <BellRing className="h-3.5 w-3.5" />
-                    {loading ? "Açılıyor…" : permission === "granted" ? "Bildirim aboneliğini tamamla" : "Bildirimleri aç"}
+                    {loading
+                      ? "İşleniyor…"
+                      : isSubscribed
+                        ? "Bildirimleri kapat"
+                        : permission === "granted"
+                          ? "Bildirim aboneliğini tamamla"
+                          : "Bildirimleri aç"}
                   </Button>
                   {error && <p className="text-[11px] text-destructive mt-1.5">{error}</p>}
                 </>
