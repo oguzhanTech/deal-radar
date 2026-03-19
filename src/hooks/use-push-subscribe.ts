@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
@@ -18,6 +18,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
 export function usePushSubscribe() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const isSupported =
     typeof window !== "undefined" &&
@@ -28,6 +29,24 @@ export function usePushSubscribe() {
     typeof window !== "undefined" && "Notification" in window
       ? Notification.permission
       : "default";
+
+  useEffect(() => {
+    if (!isSupported) return;
+    let active = true;
+    navigator.serviceWorker.ready
+      .then(async (reg) => {
+        if (!("pushManager" in reg)) return;
+        const currentSub = await reg.pushManager.getSubscription();
+        if (active) setIsSubscribed(!!currentSub);
+      })
+      .catch(() => {
+        if (active) setIsSubscribed(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isSupported]);
 
   const enablePush = useCallback(async () => {
     if (!VAPID_PUBLIC_KEY) {
@@ -51,10 +70,13 @@ export function usePushSubscribe() {
         throw new Error("Push yöneticisi bu ortamda kullanılamıyor.");
       }
       const keyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: keyBytes as unknown as BufferSource,
-      });
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: keyBytes as unknown as BufferSource,
+        });
+      }
       const payload = sub.toJSON();
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
@@ -69,6 +91,7 @@ export function usePushSubscribe() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || res.statusText);
       }
+      setIsSubscribed(true);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Abonelik başarısız.");
@@ -78,5 +101,5 @@ export function usePushSubscribe() {
     }
   }, []);
 
-  return { enablePush, isSupported, permission, loading, error };
+  return { enablePush, isSupported, permission, isSubscribed, loading, error };
 }

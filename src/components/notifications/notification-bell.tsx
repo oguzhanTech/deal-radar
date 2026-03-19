@@ -16,7 +16,7 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
-  const { enablePush, isSupported, permission, loading, error } = usePushSubscribe();
+  const { enablePush, isSupported, permission, isSubscribed, loading, error } = usePushSubscribe();
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export function NotificationBell() {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-3 py-3">
-          {user && permission !== "granted" && (
+          {user && !isSubscribed && (
             <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
               <p className="text-xs font-medium text-foreground mb-1">Mobil bildirimler</p>
               <p className="text-[11px] text-muted-foreground mb-2">
@@ -105,7 +105,7 @@ export function NotificationBell() {
                     disabled={loading}
                   >
                     <BellRing className="h-3.5 w-3.5" />
-                    {loading ? "Açılıyor…" : "Bildirimleri aç"}
+                    {loading ? "Açılıyor…" : permission === "granted" ? "Bildirim aboneliğini tamamla" : "Bildirimleri aç"}
                   </Button>
                   {error && <p className="text-[11px] text-destructive mt-1.5">{error}</p>}
                 </>
