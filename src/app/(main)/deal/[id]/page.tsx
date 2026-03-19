@@ -38,7 +38,7 @@ export default async function DealPage({ params }: PageProps) {
   try {
     const supabase = await createClient();
 
-    const [{ data: deal }, { data: commentsRaw }, { count: saveCount }, { data: voteData }] = await Promise.all([
+    const [{ data: deal }, { data: commentsRaw }, { count: saveCount }, { data: voteData }, { data: trendingTop }] = await Promise.all([
       supabase.from("deals").select("*").eq("id", id).single(),
       supabase
         .from("deal_comments")
@@ -53,6 +53,13 @@ export default async function DealPage({ params }: PageProps) {
         .from("deal_votes")
         .select("vote")
         .eq("deal_id", id),
+      supabase
+        .from("deals")
+        .select("id")
+        .eq("status", "approved")
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order("heat_score", { ascending: false })
+        .limit(5),
     ]);
 
     if (!deal) notFound();
@@ -102,16 +109,23 @@ export default async function DealPage({ params }: PageProps) {
       .gt("end_at", new Date().toISOString())
       .limit(5);
 
+    const trendingIds = new Set((trendingTop ?? []).map((d) => d.id));
+    const dealWithTrend = { ...deal, is_trending: trendingIds.has(deal.id) };
+    const similarWithTrend = (similarDeals ?? []).map((d) => ({
+      ...d,
+      is_trending: trendingIds.has(d.id),
+    }));
+
     try { await supabase.rpc("increment_view_count", { target_deal_id: id }); } catch {}
 
     return (
       <DealDetailContent
-        deal={deal}
+        deal={dealWithTrend}
         creatorName={creatorName}
         comments={comments ?? []}
         voteCount={voteCount}
         saveCount={saveCount ?? 0}
-        similarDeals={similarDeals ?? []}
+        similarDeals={similarWithTrend}
       />
     );
   } catch {

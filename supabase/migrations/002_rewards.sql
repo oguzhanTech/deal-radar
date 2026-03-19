@@ -160,8 +160,40 @@ BEGIN
     SELECT
       target_user_id,
       'badge',
-      'Yeni rozet kazanıldı!',
-      'Tebrikler, yeni bir rozet eklendi.',
+      CASE badge_id
+        WHEN 'early_hunter' THEN 'Yeni rozet: İlk Adım'
+        WHEN 'trending_hunter' THEN 'Yeni rozet: Trend Avcısı'
+        WHEN 'community_builder' THEN 'Yeni rozet: Topluluk Destekçisi'
+        WHEN 'trusted_submitter' THEN 'Yeni rozet: Güvenilir Paylaşımcı'
+        WHEN 'first_commenter' THEN 'Yeni rozet: İlk Yorum'
+        WHEN 'conversation_starter' THEN 'Yeni rozet: Sohbet Başlatan'
+        WHEN 'first_share' THEN 'Yeni rozet: İlk Paylaşım'
+        WHEN 'active_submitter' THEN 'Yeni rozet: Aktif Paylaşımcı'
+        WHEN 'community_master' THEN 'Yeni rozet: Topluluk Ustası'
+        WHEN 'comment_legend' THEN 'Yeni rozet: Yorum Efsanesi'
+        WHEN 'share_legend' THEN 'Yeni rozet: Paylaşım Efsanesi'
+        WHEN 'trend_master' THEN 'Yeni rozet: Trend Ustası'
+        WHEN 'elite_hunter' THEN 'Yeni rozet: Elit Avcı'
+        WHEN 'radar_immortal' THEN 'Yeni rozet: Radar Ölümsüzü'
+        ELSE 'Yeni rozet kazanıldı!'
+      END,
+      CASE badge_id
+        WHEN 'early_hunter' THEN 'İlk onaylı fırsatınla İlk Adım rozeti alındı.'
+        WHEN 'trending_hunter' THEN 'Fırsatın trend oldu, Trend Avcısı rozeti alındı.'
+        WHEN 'community_builder' THEN '10+ onaylı fırsatla Topluluk Destekçisi rozeti alındı.'
+        WHEN 'trusted_submitter' THEN 'Seviye ve onaylı paylaşım şartları tamamlandı, Güvenilir Paylaşımcı rozeti alındı.'
+        WHEN 'first_commenter' THEN 'İlk yorumla İlk Yorum rozeti alındı.'
+        WHEN 'conversation_starter' THEN '10+ yorumla Sohbet Başlatan rozeti alındı.'
+        WHEN 'first_share' THEN 'İlk onaylı paylaşımınla İlk Paylaşım rozeti alındı.'
+        WHEN 'active_submitter' THEN '5+ onaylı fırsatla Aktif Paylaşımcı rozeti alındı.'
+        WHEN 'community_master' THEN 'Onaylı fırsat ve yorum hedefleri tamamlandı, Topluluk Ustası rozeti alındı.'
+        WHEN 'comment_legend' THEN '50+ yorumla Yorum Efsanesi rozeti alındı.'
+        WHEN 'share_legend' THEN '15+ onaylı fırsatla Paylaşım Efsanesi rozeti alındı.'
+        WHEN 'trend_master' THEN '5+ trend fırsatla Trend Ustası rozeti alındı.'
+        WHEN 'elite_hunter' THEN 'Seviye 5 ve 30+ onaylı fırsatla Elit Avcı rozeti alındı.'
+        WHEN 'radar_immortal' THEN '40+ onaylı fırsat ve 75+ yorumla Radar Ölümsüzü rozeti alındı.'
+        ELSE 'Tebrikler, yeni bir rozet eklendi.'
+      END,
       jsonb_build_object('badge_id', badge_id)
     FROM unnest(newly_awarded) AS badge_id;
   END IF;

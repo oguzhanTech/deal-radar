@@ -244,7 +244,7 @@ export function DealDetailContent({
           <Badge className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200 font-semibold">
             {deal.category || deal.provider}
           </Badge>
-          <HeatBadge score={deal.heat_score} />
+          <HeatBadge score={deal.heat_score} forceTrending={!!deal.is_trending} />
         </div>
 
         <h1 className="text-xl font-extrabold leading-tight">{deal.title}</h1>
