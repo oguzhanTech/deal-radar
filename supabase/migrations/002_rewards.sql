@@ -123,6 +123,36 @@ BEGIN
     newly_awarded := array_append(newly_awarded, 'community_master');
   END IF;
 
+  -- comment_legend: 50+ comments
+  IF comment_count >= 50 AND NOT current_badges @> '"comment_legend"'::jsonb THEN
+    new_badges := new_badges || '"comment_legend"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'comment_legend');
+  END IF;
+
+  -- share_legend: 15+ approved deals
+  IF approved_count >= 15 AND NOT current_badges @> '"share_legend"'::jsonb THEN
+    new_badges := new_badges || '"share_legend"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'share_legend');
+  END IF;
+
+  -- trend_master: 5+ trending deals
+  IF trending_count >= 5 AND NOT current_badges @> '"trend_master"'::jsonb THEN
+    new_badges := new_badges || '"trend_master"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'trend_master');
+  END IF;
+
+  -- elite_hunter: level 5+ and 30+ approved deals
+  IF p_record.level >= 5 AND approved_count >= 30 AND NOT current_badges @> '"elite_hunter"'::jsonb THEN
+    new_badges := new_badges || '"elite_hunter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'elite_hunter');
+  END IF;
+
+  -- radar_immortal: 40+ approved deals and 75+ comments
+  IF approved_count >= 40 AND comment_count >= 75 AND NOT current_badges @> '"radar_immortal"'::jsonb THEN
+    new_badges := new_badges || '"radar_immortal"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'radar_immortal');
+  END IF;
+
   IF new_badges != current_badges THEN
     UPDATE public.profiles SET badges = new_badges WHERE user_id = target_user_id;
 

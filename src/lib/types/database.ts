@@ -11,7 +11,12 @@ export type BadgeId =
   | "conversation_starter"
   | "first_share"
   | "active_submitter"
-  | "community_master";
+  | "community_master"
+  | "comment_legend"
+  | "share_legend"
+  | "trend_master"
+  | "elite_hunter"
+  | "radar_immortal";
 
 export type ActivityType = "deal_created" | "vote" | "comment" | "save";
 

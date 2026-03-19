@@ -48,4 +48,9 @@ export const BADGE_INFO: Record<BadgeId, { label: string; emoji: string; descrip
   first_share: { label: "İlk Paylaşım", emoji: "📢", description: "İlk onaylı fırsat paylaşıldı" },
   active_submitter: { label: "Aktif Paylaşımcı", emoji: "🚀", description: "5+ onaylı fırsat paylaşıldı" },
   community_master: { label: "Topluluk Ustası", emoji: "👑", description: "20+ onaylı fırsat ve 25+ yorum" },
+  comment_legend: { label: "Yorum Efsanesi", emoji: "💭", description: "50+ yorum yapıldı" },
+  share_legend: { label: "Paylaşım Efsanesi", emoji: "📦", description: "15+ onaylı fırsat paylaşıldı" },
+  trend_master: { label: "Trend Ustası", emoji: "🌋", description: "5+ fırsat trend oldu" },
+  elite_hunter: { label: "Elit Avcı", emoji: "🏆", description: "Seviye 5 ve 30+ onaylı fırsat" },
+  radar_immortal: { label: "Radar Ölümsüzü", emoji: "🛡️", description: "40+ onaylı fırsat ve 75+ yorum" },
 };
