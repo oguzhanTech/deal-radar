@@ -8,11 +8,16 @@ const REMINDER_WINDOWS = [
   { key: "1h", ms: 1 * 60 * 60 * 1000, label: "1 saat" },
 ];
 
-const BUFFER_MS = 16 * 60 * 1000;
+const BUFFER_MS = 20 * 60 * 1000;
 
 export async function GET(request: Request) {
+  const secret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const url = new URL(request.url);
+  const secretQuery = url.searchParams.get("secret");
+  const isAuthorized =
+    !!secret && (authHeader === `Bearer ${secret}` || secretQuery === secret);
+  if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -20,6 +25,7 @@ export async function GET(request: Request) {
   const now = Date.now();
   const nowISO = new Date(now).toISOString();
   let sent = 0;
+  let invalidSubsRemoved = 0;
 
   // Bitiş tarihi belli olmayan fırsatlar: end_at geçtiyse review_needed yap
   const { data: toReview } = await supabase
@@ -89,8 +95,19 @@ export async function GET(request: Request) {
                   { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
                   { title, body: message, url: dealUrl }
                 );
-              } catch {
-                // Subscription may be invalid; skip
+              } catch (err) {
+                const statusCode =
+                  (err as { statusCode?: number } | null)?.statusCode ??
+                  (err as { status?: number } | null)?.status ??
+                  (err as { status_code?: number } | null)?.status_code;
+
+                if (statusCode === 404 || statusCode === 410) {
+                  await supabase
+                    .from("push_subscriptions")
+                    .delete()
+                    .eq("endpoint", sub.endpoint);
+                  invalidSubsRemoved++;
+                }
               }
             }
           }
@@ -109,5 +126,9 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ sent, timestamp: new Date().toISOString() });
+  return NextResponse.json({
+    sent,
+    invalidSubsRemoved,
+    timestamp: new Date().toISOString(),
+  });
 }
