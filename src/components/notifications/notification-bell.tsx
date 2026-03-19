@@ -95,6 +95,10 @@ export function NotificationBell() {
               <p className="text-[11px] text-muted-foreground mb-2">
                 Radarındaki fırsatlar bitmeden hatırlatma al.
               </p>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Telefon ayarlarından Topla uygulamasının bildirimlerinin açık olduğundan emin ol
+                (Ayarlar → Uygulamalar → Topla → Bildirimler).
+              </p>
               {isSupported ? (
                 <>
                   <Button
