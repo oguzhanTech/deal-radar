@@ -22,7 +22,6 @@ export function usePushSubscribe() {
   const isSupported =
     typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
-    "PushManager" in navigator &&
     "Notification" in window;
 
   const permission =
@@ -31,8 +30,12 @@ export function usePushSubscribe() {
       : "default";
 
   const enablePush = useCallback(async () => {
-    if (!VAPID_PUBLIC_KEY || !isSupported) {
-      setError("Push desteklenmiyor veya ayar eksik.");
+    if (!VAPID_PUBLIC_KEY) {
+      setError("Push ayarları eksik (VAPID anahtarı tanımlı değil).");
+      return false;
+    }
+    if (!isSupported) {
+      setError("Bu cihazda web push bildirimleri desteklenmiyor.");
       return false;
     }
     setLoading(true);
@@ -44,6 +47,9 @@ export function usePushSubscribe() {
         return false;
       }
       const reg = await navigator.serviceWorker.ready;
+      if (!("pushManager" in reg)) {
+        throw new Error("Push yöneticisi bu ortamda kullanılamıyor.");
+      }
       const keyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,

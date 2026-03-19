@@ -89,23 +89,32 @@ export function NotificationBell() {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 px-3 py-3">
-          {user && isSupported && permission !== "granted" && (
+          {user && permission !== "granted" && (
             <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
               <p className="text-xs font-medium text-foreground mb-1">Mobil bildirimler</p>
               <p className="text-[11px] text-muted-foreground mb-2">
                 Radarındaki fırsatlar bitmeden hatırlatma al.
               </p>
-              <Button
-                size="sm"
-                variant="default"
-                className="h-8 text-xs rounded-lg gap-1.5"
-                onClick={() => enablePush()}
-                disabled={loading}
-              >
-                <BellRing className="h-3.5 w-3.5" />
-                {loading ? "Açılıyor…" : "Bildirimleri aç"}
-              </Button>
-              {error && <p className="text-[11px] text-destructive mt-1.5">{error}</p>}
+              {isSupported ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="h-8 text-xs rounded-lg gap-1.5"
+                    onClick={() => enablePush()}
+                    disabled={loading}
+                  >
+                    <BellRing className="h-3.5 w-3.5" />
+                    {loading ? "Açılıyor…" : "Bildirimleri aç"}
+                  </Button>
+                  {error && <p className="text-[11px] text-destructive mt-1.5">{error}</p>}
+                </>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  Bu ortamda web push bildirimleri desteklenmiyor olabilir. Yine de Radar&apos;ındaki
+                  fırsatları buradan görebilirsin.
+                </p>
+              )}
             </div>
           )}
           {notifications.length === 0 ? (
