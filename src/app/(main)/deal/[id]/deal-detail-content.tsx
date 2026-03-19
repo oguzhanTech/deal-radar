@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DealCountdown } from "@/components/deals/deal-countdown";
@@ -43,7 +44,7 @@ const ENABLE_DEAL_DOWNLOAD = false;
 
 /** Comment with profile limited to what the UI uses (no full Profile required) */
 type DealCommentWithProfile = Omit<DealComment, "profile"> & {
-  profile?: { display_name: string | null; trust_score: number; level?: number } | null;
+  profile?: { display_name: string | null; trust_score: number; level?: number; profile_image_url?: string | null } | null;
 };
 
 interface DealDetailContentProps {
@@ -141,6 +142,7 @@ export function DealDetailContent({
           display_name: profile?.display_name ?? null,
           trust_score: profile?.trust_score ?? 0,
           level: profile?.level ?? 1,
+          profile_image_url: profile?.profile_image_url ?? null,
         },
       } as (typeof comments)[number];
       setComments((prev) => [...prev, optimisticComment]);
@@ -390,9 +392,16 @@ export function DealDetailContent({
               {comments.map((c) => (
                 <div key={c.id} className="bg-card rounded-2xl p-3.5 shadow-card space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center text-[10px] font-bold text-indigo-600">
-                      {c.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
-                    </div>
+                    <Avatar className="h-7 w-7 rounded-lg">
+                      <AvatarImage
+                        src={c.profile?.profile_image_url ?? undefined}
+                        alt={c.profile?.display_name ?? "Avatar"}
+                        className="rounded-lg object-cover"
+                      />
+                      <AvatarFallback className="rounded-lg bg-gradient-to-br from-indigo-100 to-violet-100 text-[10px] font-bold text-indigo-600">
+                        {c.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="text-sm font-semibold">
                       {c.profile?.display_name || t("profile.anonymous")}
                     </span>

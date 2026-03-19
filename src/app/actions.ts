@@ -198,7 +198,7 @@ export async function postComment(dealId: string, content: string) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, trust_score, level")
+    .select("display_name, trust_score, level, profile_image_url")
     .eq("user_id", user.id)
     .single();
 
@@ -207,7 +207,7 @@ export async function postComment(dealId: string, content: string) {
   return {
     data: {
       ...comment,
-      profile: profile ?? { display_name: null, trust_score: 0, level: 1 },
+      profile: profile ?? { display_name: null, trust_score: 0, level: 1, profile_image_url: null },
     },
   };
 }
