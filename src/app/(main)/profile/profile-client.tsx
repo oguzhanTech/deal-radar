@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { User, LogOut, Shield, Loader2, Award, Package, Star, ChevronRight, Zap, Trophy, Settings, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DealCard } from "@/components/deals/deal-card";
 import { LoginModal } from "@/components/auth/login-modal";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -14,10 +15,11 @@ import { useToast } from "@/components/ui/toast";
 import { updateProfile as updateProfileAction } from "@/app/actions";
 import { ProfileAvatarUploader } from "@/components/profile/profile-avatar-uploader";
 import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS, BADGE_INFO } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import type { Deal } from "@/lib/types/database";
+import type { BadgeId, Deal } from "@/lib/types/database";
 
 function getLevelInfo(points: number) {
   const current = LEVEL_THRESHOLDS.find(
@@ -47,6 +49,7 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
     setProfileAvatarUrl,
   } = useAuth();
   const { toast } = useToast();
+  const supabase = useMemo(() => createClient(), []);
   const [showLogin, setShowLogin] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -55,6 +58,8 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
   const [myDealsCount, setMyDealsCount] = useState<number>(initialDealsCount);
   const [showEdit, setShowEdit] = useState(false);
   const [showPointsInfo, setShowPointsInfo] = useState(false);
+  const [showBadgesGuide, setShowBadgesGuide] = useState(false);
+  const prevBadgesRef = useRef<BadgeId[] | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -82,6 +87,42 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
     };
     refresh();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("profile-badges")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
+        () => {
+          refreshProfile().catch(() => {});
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, supabase, refreshProfile]);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (!prevBadgesRef.current) {
+      prevBadgesRef.current = profile.badges ?? [];
+      return;
+    }
+    const prev = prevBadgesRef.current;
+    const current = (profile.badges ?? []) as BadgeId[];
+    const newOnes = current.filter((b) => !prev.includes(b));
+    if (newOnes.length > 0) {
+      const labels = newOnes.map((id) => BADGE_INFO[id]?.label ?? id).join(", ");
+      toast({
+        title: "Yeni rozet kazanıldı!",
+        description: labels,
+      });
+    }
+    prevBadgesRef.current = current;
+  }, [profile, toast]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -181,6 +222,7 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
   const level = profile?.level ?? 1;
   const badges = profile?.badges ?? [];
   const levelInfo = getLevelInfo(points);
+  const allBadges = Object.entries(BADGE_INFO) as [BadgeId, (typeof BADGE_INFO)[BadgeId]][];
 
   return (
     <div className="pb-4">
@@ -316,7 +358,16 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
 
       {badges.length > 0 && (
         <div className="mx-4 mt-4">
-          <h3 className="text-sm font-bold mb-2.5 px-0.5">{t("profile.badgesTitle")}</h3>
+          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
+            <h3 className="text-sm font-bold">{t("profile.badgesTitle")}</h3>
+            <button
+              type="button"
+              className="text-[11px] text-primary font-medium hover:underline cursor-pointer"
+              onClick={() => setShowBadgesGuide(true)}
+            >
+              Nasıl kazanılır?
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {badges.map((badge) => {
               const info = BADGE_INFO[badge];
@@ -337,7 +388,19 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
 
       {badges.length === 0 && (
         <div className="mx-4 mt-4">
-          <h3 className="text-sm font-bold mb-2.5 px-0.5">{t("profile.badgesToEarn")}</h3>
+          <div className="mb-2.5 px-0.5">
+            <h3 className="text-sm font-bold">{t("profile.badgesToEarn")}</h3>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Yorum yaparak ve fırsat paylaşarak rozet topla. Rehberden tüm şartları görebilirsin.
+            </p>
+            <button
+              type="button"
+              className="mt-1 text-[11px] text-primary font-medium hover:underline cursor-pointer"
+              onClick={() => setShowBadgesGuide(true)}
+            >
+              Rozet rehberini aç
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(BADGE_INFO).map(([id, info]) => (
               <div key={id} className="bg-card rounded-2xl p-3 shadow-card flex items-center gap-2.5 opacity-40">
@@ -418,6 +481,51 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
           )}
         </div>
       </div>
+
+      <Sheet open={showBadgesGuide} onOpenChange={setShowBadgesGuide}>
+        <SheetContent
+          side="bottom"
+          className="max-w-[min(100vw,42rem)] mx-auto rounded-t-2xl border-x-0 border-b-0 px-4 pt-4 pb-5"
+        >
+          <SheetHeader className="mb-3">
+            <SheetTitle className="text-base">Rozet Rehberi</SheetTitle>
+            <p className="text-xs text-muted-foreground">
+              Rozetler aktifliğine göre otomatik verilir. Aşağıdaki hedefleri tamamla.
+            </p>
+          </SheetHeader>
+
+          <div className="max-h-[65vh] overflow-y-auto pr-1 space-y-2">
+            {allBadges.map(([id, info]) => {
+              const earned = badges.includes(id);
+              return (
+                <div
+                  key={id}
+                  className={`rounded-2xl border p-3 flex items-center gap-2.5 ${
+                    earned ? "bg-primary/5 border-primary/20" : "bg-card border-border/60"
+                  }`}
+                >
+                  <span className={`text-2xl ${earned ? "" : "grayscale opacity-70"}`}>{info.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold truncate">{info.label}</p>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full ${
+                          earned
+                            ? "bg-green-500/15 text-green-700"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {earned ? "Alındı" : "Hedef"}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{info.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

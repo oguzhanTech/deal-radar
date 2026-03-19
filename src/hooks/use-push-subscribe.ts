@@ -99,7 +99,7 @@ export function usePushSubscribe() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isSupported]);
 
   const disablePush = useCallback(async () => {
     if (!isSupported) {

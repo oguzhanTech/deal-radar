@@ -49,8 +49,10 @@ DECLARE
   p_record record;
   approved_count integer;
   trending_count integer;
+  comment_count integer;
   current_badges jsonb;
   new_badges jsonb;
+  newly_awarded text[] := ARRAY[]::text[];
 BEGIN
   SELECT * INTO p_record FROM public.profiles WHERE user_id = target_user_id;
   IF NOT FOUND THEN RETURN; END IF;
@@ -64,31 +66,91 @@ BEGIN
   SELECT count(*) INTO trending_count
     FROM public.deals WHERE created_by = target_user_id AND trending_awarded = true;
 
+  SELECT count(*) INTO comment_count
+    FROM public.deal_comments WHERE user_id = target_user_id;
+
   -- early_hunter: first approved deal
   IF approved_count >= 1 AND NOT current_badges @> '"early_hunter"'::jsonb THEN
     new_badges := new_badges || '"early_hunter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'early_hunter');
   END IF;
 
   -- trending_hunter: first deal reaches trending
   IF trending_count >= 1 AND NOT current_badges @> '"trending_hunter"'::jsonb THEN
     new_badges := new_badges || '"trending_hunter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'trending_hunter');
   END IF;
 
   -- community_builder: 10+ approved deals
   IF approved_count >= 10 AND NOT current_badges @> '"community_builder"'::jsonb THEN
     new_badges := new_badges || '"community_builder"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'community_builder');
   END IF;
 
   -- trusted_submitter: level >= 3 AND 3+ approved deals
   IF p_record.level >= 3 AND approved_count >= 3 AND NOT current_badges @> '"trusted_submitter"'::jsonb THEN
     new_badges := new_badges || '"trusted_submitter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'trusted_submitter');
+  END IF;
+
+  -- first_commenter: first comment created
+  IF comment_count >= 1 AND NOT current_badges @> '"first_commenter"'::jsonb THEN
+    new_badges := new_badges || '"first_commenter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'first_commenter');
+  END IF;
+
+  -- conversation_starter: 10+ comments
+  IF comment_count >= 10 AND NOT current_badges @> '"conversation_starter"'::jsonb THEN
+    new_badges := new_badges || '"conversation_starter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'conversation_starter');
+  END IF;
+
+  -- first_share: first approved shared deal
+  IF approved_count >= 1 AND NOT current_badges @> '"first_share"'::jsonb THEN
+    new_badges := new_badges || '"first_share"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'first_share');
+  END IF;
+
+  -- active_submitter: 5+ approved shared deals
+  IF approved_count >= 5 AND NOT current_badges @> '"active_submitter"'::jsonb THEN
+    new_badges := new_badges || '"active_submitter"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'active_submitter');
+  END IF;
+
+  -- community_master: 20+ approved deals and 25+ comments
+  IF approved_count >= 20 AND comment_count >= 25 AND NOT current_badges @> '"community_master"'::jsonb THEN
+    new_badges := new_badges || '"community_master"'::jsonb;
+    newly_awarded := array_append(newly_awarded, 'community_master');
   END IF;
 
   IF new_badges != current_badges THEN
     UPDATE public.profiles SET badges = new_badges WHERE user_id = target_user_id;
+
+    INSERT INTO public.notifications (user_id, type, title, message, payload)
+    SELECT
+      target_user_id,
+      'badge',
+      'Yeni rozet kazanıldı!',
+      'Tebrikler, yeni bir rozet eklendi.',
+      jsonb_build_object('badge_id', badge_id)
+    FROM unnest(newly_awarded) AS badge_id;
   END IF;
 END;
 $$;
+
+-- Trigger: evaluate comment-related badges on new comment
+CREATE OR REPLACE FUNCTION on_deal_comment_insert()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM check_badges(NEW.user_id);
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_deal_comment_badges ON public.deal_comments;
+CREATE TRIGGER trg_deal_comment_badges
+AFTER INSERT ON public.deal_comments
+FOR EACH ROW EXECUTE FUNCTION on_deal_comment_insert();
 
 -- Update on_deal_save_change to also award points
 CREATE OR REPLACE FUNCTION on_deal_save_change()

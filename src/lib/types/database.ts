@@ -2,7 +2,16 @@ export type DealStatus = "pending" | "approved" | "rejected" | "review_needed";
 export type UserRole = "user" | "admin";
 export type VoteValue = 1 | -1;
 
-export type BadgeId = "early_hunter" | "trending_hunter" | "community_builder" | "trusted_submitter";
+export type BadgeId =
+  | "early_hunter"
+  | "trending_hunter"
+  | "community_builder"
+  | "trusted_submitter"
+  | "first_commenter"
+  | "conversation_starter"
+  | "first_share"
+  | "active_submitter"
+  | "community_master";
 
 export type ActivityType = "deal_created" | "vote" | "comment" | "save";
 

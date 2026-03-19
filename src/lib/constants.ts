@@ -1,3 +1,4 @@
+import type { BadgeId } from "@/lib/types/database";
 /** Fırsat oluştururken ve filtrelerde kullanılan kategoriler. */
 export const DEAL_CATEGORIES = [
   "Teknoloji",
@@ -37,9 +38,14 @@ export const LEVEL_THRESHOLDS = [
   { level: 6, min: 1000, max: Infinity, label: "Efsane" },
 ] as const;
 
-export const BADGE_INFO: Record<string, { label: string; emoji: string; description: string }> = {
+export const BADGE_INFO: Record<BadgeId, { label: string; emoji: string; description: string }> = {
   early_hunter: { label: "İlk Adım", emoji: "🎯", description: "İlk onaylanan fırsat" },
   trending_hunter: { label: "Trend Avcısı", emoji: "🔥", description: "Fırsatı trend oldu" },
   community_builder: { label: "Topluluk Destekçisi", emoji: "🏗️", description: "10+ onaylı fırsat" },
   trusted_submitter: { label: "Güvenilir Paylaşımcı", emoji: "⭐", description: "Seviye 3+ ve 3+ onaylı fırsat" },
+  first_commenter: { label: "İlk Yorum", emoji: "💬", description: "İlk yorum yapıldı" },
+  conversation_starter: { label: "Sohbet Başlatan", emoji: "🗣️", description: "10+ yorum yapıldı" },
+  first_share: { label: "İlk Paylaşım", emoji: "📢", description: "İlk onaylı fırsat paylaşıldı" },
+  active_submitter: { label: "Aktif Paylaşımcı", emoji: "🚀", description: "5+ onaylı fırsat paylaşıldı" },
+  community_master: { label: "Topluluk Ustası", emoji: "👑", description: "20+ onaylı fırsat ve 25+ yorum" },
 };
