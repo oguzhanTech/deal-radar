@@ -448,7 +448,7 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
         <div className="mx-4 mt-6 space-y-3">
           <h3 className="text-lg font-bold px-0.5">{t("profile.myDeals")}</h3>
           {myDeals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} />
+            <DealCard key={deal.id} deal={deal} hideCreator />
           ))}
         </div>
       )}
