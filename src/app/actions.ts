@@ -177,7 +177,7 @@ export async function voteDeal(dealId: string, vote: 1 | -1, currentVote: 1 | -1
   }
 }
 
-export async function postComment(dealId: string, content: string) {
+export async function postComment(dealId: string, content: string, parentCommentId?: string | null) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -187,7 +187,7 @@ export async function postComment(dealId: string, content: string) {
 
   const { data: comment, error } = await supabase
     .from("deal_comments")
-    .insert({ deal_id: dealId, user_id: user.id, content })
+    .insert({ deal_id: dealId, user_id: user.id, content, parent_comment_id: parentCommentId ?? null })
     .select("*")
     .single();
 
@@ -201,6 +201,54 @@ export async function postComment(dealId: string, content: string) {
     .select("display_name, trust_score, level, profile_image_url")
     .eq("user_id", user.id)
     .single();
+
+  if (parentCommentId) {
+    const { data: parentComment } = await supabase
+      .from("deal_comments")
+      .select("id, user_id, deal_id")
+      .eq("id", parentCommentId)
+      .maybeSingle();
+
+    if (parentComment && parentComment.user_id !== user.id && parentComment.deal_id === dealId) {
+      const url = `/deal/${dealId}?tab=comments&comment=${comment.id}`;
+      const title = "Yorumuna yanıt geldi";
+      const message = `${profile?.display_name ?? "Bir kullanıcı"} yorumuna yanıt verdi.`;
+
+      await supabase.from("notifications").insert({
+        user_id: parentComment.user_id,
+        type: "comment_reply",
+        title,
+        message,
+        payload: {
+          deal_id: dealId,
+          comment_id: comment.id,
+          parent_comment_id: parentCommentId,
+          url,
+        },
+      });
+
+      if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+        const { data: subscriptions } = await supabase
+          .from("push_subscriptions")
+          .select("endpoint, p256dh, auth")
+          .eq("user_id", parentComment.user_id);
+
+        if (subscriptions?.length) {
+          const { sendWebPush } = await import("@/lib/push");
+          for (const sub of subscriptions) {
+            try {
+              await sendWebPush(
+                { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+                { title, body: message, url }
+              );
+            } catch {
+              // Best-effort push; ignore failures.
+            }
+          }
+        }
+      }
+    }
+  }
 
   revalidatePath(`/deal/${dealId}`);
 

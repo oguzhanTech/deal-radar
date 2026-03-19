@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
   ThumbsUp,
@@ -75,6 +75,8 @@ export function DealDetailContent({
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [userVote, setUserVote] = useState<1 | -1 | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
+  const [replyToDisplayName, setReplyToDisplayName] = useState<string>("");
   const [voting, setVoting] = useState(false);
   const [commenting, setCommenting] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -85,6 +87,22 @@ export function DealDetailContent({
   const isExpired = new Date(deal.end_at) < new Date();
   const creator =
     creatorName ?? t("admin.users.unnamed");
+  const focusedCommentId = searchParams.get("comment");
+
+  const topLevelComments = useMemo(
+    () => comments.filter((c) => !c.parent_comment_id),
+    [comments]
+  );
+  const repliesByParent = useMemo(() => {
+    const map = new Map<string, DealCommentWithProfile[]>();
+    for (const comment of comments) {
+      if (!comment.parent_comment_id) continue;
+      const list = map.get(comment.parent_comment_id) ?? [];
+      list.push(comment);
+      map.set(comment.parent_comment_id, list);
+    }
+    return map;
+  }, [comments]);
 
   useEffect(() => {
     const next = searchParams.get("tab") === "comments" ? "comments" : "details";
@@ -137,6 +155,7 @@ export function DealDetailContent({
         id: tempId,
         deal_id: deal.id,
         user_id: user!.id,
+        parent_comment_id: replyToCommentId,
         content: text,
         created_at: new Date().toISOString(),
         profile: {
@@ -149,13 +168,15 @@ export function DealDetailContent({
       setComments((prev) => [...prev, optimisticComment]);
       setCommenting(true);
       try {
-        const result = await postComment(deal.id, text);
+        const result = await postComment(deal.id, text, replyToCommentId);
         if (result.error) {
           setComments((prev) => prev.filter((c) => c.id !== tempId));
           toast({ title: t("comment.failed"), variant: "destructive" });
         } else if (result.data) {
           setComments((prev) => prev.map((c) => (c.id === tempId ? result.data : c)));
           toast({ title: t("comment.posted") });
+          setReplyToCommentId(null);
+          setReplyToDisplayName("");
         }
       } catch {
         setComments((prev) => prev.filter((c) => c.id !== tempId));
@@ -164,6 +185,19 @@ export function DealDetailContent({
       setCommenting(false);
     });
   };
+
+  useEffect(() => {
+    if (!focusedCommentId || tab !== "comments") return;
+    const id = `comment-${focusedCommentId}`;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-primary/50");
+    const timer = setTimeout(() => {
+      el.classList.remove("ring-2", "ring-primary/50");
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [focusedCommentId, tab, comments]);
 
   const handleShare = async () => {
     try {
@@ -396,8 +430,8 @@ export function DealDetailContent({
 
           <TabsContent value="comments">
             <div className="space-y-3 py-3">
-              {comments.map((c) => (
-                <div key={c.id} className="bg-card rounded-2xl p-3.5 shadow-card space-y-1.5">
+              {topLevelComments.map((c) => (
+                <div key={c.id} id={`comment-${c.id}`} className="bg-card rounded-2xl p-3.5 shadow-card space-y-1.5 transition">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-7 w-7 rounded-lg">
                       <AvatarImage
@@ -429,6 +463,48 @@ export function DealDetailContent({
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed">{c.content}</p>
+                  <button
+                    type="button"
+                    className="text-[11px] text-primary font-medium hover:underline cursor-pointer"
+                    onClick={() => {
+                      setReplyToCommentId(c.id);
+                      setReplyToDisplayName(c.profile?.display_name || t("profile.anonymous"));
+                    }}
+                  >
+                    Yanıtla
+                  </button>
+
+                  {(repliesByParent.get(c.id) ?? []).map((r) => (
+                    <div
+                      key={r.id}
+                      id={`comment-${r.id}`}
+                      className="ml-6 mt-2 rounded-xl border border-border/60 bg-muted/40 p-2.5 space-y-1 transition"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6 rounded-md">
+                          <AvatarImage
+                            src={r.profile?.profile_image_url ?? undefined}
+                            alt={r.profile?.display_name ?? "Avatar"}
+                            className="rounded-md object-cover"
+                          />
+                          <AvatarFallback className="rounded-md bg-gradient-to-br from-indigo-100 to-violet-100 text-[10px] font-bold text-indigo-600">
+                            {r.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <button
+                          type="button"
+                          className="text-xs font-semibold hover:text-primary transition cursor-pointer"
+                          onClick={() => openPublicProfileModal(r.user_id)}
+                        >
+                          {r.profile?.display_name || t("profile.anonymous")}
+                        </button>
+                        <span className="text-[10px] text-muted-foreground ml-auto">
+                          {formatDistanceToNow(new Date(r.created_at), { addSuffix: true, locale: tr })}
+                        </span>
+                      </div>
+                      <p className="text-xs leading-relaxed">{r.content}</p>
+                    </div>
+                  ))}
                 </div>
               ))}
 
@@ -437,13 +513,32 @@ export function DealDetailContent({
               )}
 
               <form onSubmit={handleComment} className="flex gap-2 mt-4">
-                <Textarea
-                  placeholder={t("comment.placeholder")}
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  className="min-h-[44px] resize-none rounded-xl"
-                  rows={1}
-                />
+                <div className="flex-1">
+                  {replyToCommentId && (
+                    <div className="mb-1.5 flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-2 py-1">
+                      <p className="text-[11px] text-primary">
+                        @{replyToDisplayName} kullanıcısına yanıt yazıyorsun
+                      </p>
+                      <button
+                        type="button"
+                        className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
+                        onClick={() => {
+                          setReplyToCommentId(null);
+                          setReplyToDisplayName("");
+                        }}
+                      >
+                        İptal
+                      </button>
+                    </div>
+                  )}
+                  <Textarea
+                    placeholder={replyToCommentId ? "Yanıtını yaz..." : t("comment.placeholder")}
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    className="min-h-[44px] resize-none rounded-xl"
+                    rows={1}
+                  />
+                </div>
                 <Button type="submit" size="sm" disabled={commenting || !commentText.trim()} className="self-end rounded-xl">
                   {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("comment.post")}
                 </Button>

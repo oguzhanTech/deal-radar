@@ -94,6 +94,7 @@ export interface DealComment {
   id: string;
   deal_id: string;
   user_id: string;
+  parent_comment_id: string | null;
   content: string;
   created_at: string;
   profile?: Profile;

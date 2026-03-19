@@ -67,7 +67,14 @@ export default async function DealPage({ params }: PageProps) {
     const voteCount = (voteData ?? []).reduce((sum, v) => sum + v.vote, 0);
 
     // deal_comments has no FK to profiles; fetch profiles by user_id and attach
-    type CommentRow = { id: string; deal_id: string; user_id: string; content: string; created_at: string };
+    type CommentRow = {
+      id: string;
+      deal_id: string;
+      user_id: string;
+      parent_comment_id: string | null;
+      content: string;
+      created_at: string;
+    };
     type CommentProfile = { display_name: string | null; trust_score: number; level?: number; profile_image_url?: string | null };
     let comments: (CommentRow & { profile: CommentProfile })[] = [];
     if (commentsRaw && commentsRaw.length > 0) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Bell, BellRing } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useRouter } from "next/navigation";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { usePushSubscribe } from "@/hooks/use-push-subscribe";
@@ -13,6 +14,7 @@ import { tr } from "date-fns/locale";
 
 export function NotificationBell() {
   const { user } = useAuth();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
@@ -59,6 +61,20 @@ export function NotificationBell() {
       .eq("user_id", user.id)
       .eq("read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const openNotification = async (notification: Notification) => {
+    const payloadUrl = (notification.payload as { url?: string } | null)?.url;
+    if (payloadUrl) {
+      await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("id", notification.id)
+        .eq("user_id", user?.id ?? "");
+      setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+      setOpen(false);
+      router.push(payloadUrl);
+    }
   };
 
   return (
@@ -146,11 +162,12 @@ export function NotificationBell() {
               {notifications.map((n) => (
                 <div
                   key={n.id}
+                  onClick={() => openNotification(n)}
                   className={`p-3.5 rounded-2xl border shadow-sm min-w-0 break-words transition ${
                     !n.read
                       ? "bg-primary/5 border-primary/20"
                       : "bg-card border-border/60 hover:bg-muted/50"
-                  }`}
+                  } ${(n.payload as { url?: string } | null)?.url ? "cursor-pointer" : ""}`}
                 >
                   <p className="text-sm font-semibold text-foreground break-words leading-snug">
                     {n.title}
