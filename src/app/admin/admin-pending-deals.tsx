@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { CheckCircle2, XCircle, Loader2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminUpdateDealStatus } from "@/app/actions";
@@ -48,6 +49,21 @@ export function AdminPendingDeals({ initialDeals }: AdminPendingDealsProps) {
       <div className="space-y-2">
         {deals.map((deal) => (
           <div key={deal.id} className="border rounded-xl p-3 flex items-center gap-3">
+            <div className="w-14 h-14 rounded-lg overflow-hidden border border-border/50 bg-muted shrink-0 relative">
+              {deal.image_url ? (
+                <Image
+                  src={deal.image_url}
+                  alt={deal.title}
+                  fill
+                  className="object-cover"
+                  sizes="56px"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground text-center px-1">
+                  {deal.category || deal.provider}
+                </div>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold truncate">{deal.title}</h4>
               <p className="text-xs text-muted-foreground truncate">

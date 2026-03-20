@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
@@ -16,7 +17,7 @@ interface Report {
   user_id: string;
   reason: string;
   created_at: string;
-  deal?: { title: string; id: string } | null;
+  deal?: { title: string; id: string; image_url: string | null } | null;
   reporter?: { display_name: string | null } | null;
 }
 
@@ -69,12 +70,29 @@ export function AdminReportsContent({ initialReports }: AdminReportsContentProps
         {reports.map((report) => (
           <div key={report.id} className="border rounded-lg p-3 space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-14 h-14 rounded-lg overflow-hidden border border-border/50 bg-muted shrink-0 relative">
+                  {report.deal?.image_url ? (
+                    <Image
+                      src={report.deal.image_url}
+                      alt={report.deal?.title || t("admin.reports.unknownDeal")}
+                      fill
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground text-center px-1">
+                      {t("admin.reports.unknownDeal")}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
                 <p className="font-medium text-sm">{report.deal?.title || t("admin.reports.unknownDeal")}</p>
                 <p className="text-xs text-muted-foreground">
                   {t("admin.reports.reportedBy")} {report.reporter?.display_name || t("admin.reports.unknownUser")} ·{" "}
                   {formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: tr })}
                 </p>
+                </div>
               </div>
             </div>
 

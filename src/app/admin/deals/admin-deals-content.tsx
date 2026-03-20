@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -241,11 +242,28 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
             ) : (
               <>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-sm truncate">{deal.title}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {deal.category || deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
-                    </p>
+                  <div className="min-w-0 flex-1 flex items-start gap-3">
+                    <div className="w-14 h-14 rounded-lg overflow-hidden border border-border/50 bg-muted shrink-0 relative">
+                      {deal.image_url ? (
+                        <Image
+                          src={deal.image_url}
+                          alt={deal.title}
+                          fill
+                          className="object-cover"
+                          sizes="56px"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground text-center px-1">
+                          {deal.category || deal.provider}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-sm truncate">{deal.title}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {deal.category || deal.provider} · {t("admin.deals.by")} {deal.profile?.display_name || t("admin.users.unnamed")}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {deal.is_editor_pick && (
