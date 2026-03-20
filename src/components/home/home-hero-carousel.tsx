@@ -115,8 +115,13 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
       ? Math.round(((active.original_price! - active.deal_price!) / active.original_price!) * 100)
       : active.discount_percent ?? null;
 
-  const sectionLabel = getSectionLabel(active.section);
-  const message = getHeroMessage(active.section);
+  const sectionLabel = active ? getSectionLabel(active.section) : "";
+  // Mesajı slide başına sabitle: her render'da Math.random() çalışmasın (mobilde dokunma
+  // touchStartX ile yeniden render tetikleyip metni sürekli değiştiriyordu).
+  const message = useMemo(() => {
+    if (!active) return "";
+    return getHeroMessage(active.section);
+  }, [active?.id, active?.section]);
 
   if (!length) return null;
 
