@@ -35,6 +35,7 @@ export default async function ProfilePage() {
     <ProfileClient
       initialDeals={initialDeals}
       initialDealsCount={initialDealsCount}
+      initialUserId={user?.id ?? null}
     />
   );
 }

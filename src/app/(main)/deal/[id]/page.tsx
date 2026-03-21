@@ -14,7 +14,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   try {
     const supabase = await createClient();
-    const { data: deal } = await supabase.from("deals").select("*").eq("id", id).single();
+    const { data: deal } = await supabase
+      .from("deals")
+      .select("title, description, discount_percent, category, provider, image_url")
+      .eq("id", id)
+      .single();
     if (!deal) return { title: "Fırsat bulunamadı" };
     return {
       title: `${deal.title} — Topla`,
@@ -99,22 +103,23 @@ export default async function DealPage({ params }: PageProps) {
       }));
     }
 
-    const { data: creatorProfile } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", deal.created_by)
-      .maybeSingle();
+    const [{ data: creatorProfile }, { data: similarDeals }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", deal.created_by)
+        .maybeSingle(),
+      supabase
+        .from("deals")
+        .select("*")
+        .eq("status", "approved")
+        .eq("provider", deal.provider)
+        .neq("id", deal.id)
+        .gt("end_at", new Date().toISOString())
+        .limit(5),
+    ]);
 
     const creatorName = creatorProfile?.display_name ?? null;
-
-    const { data: similarDeals } = await supabase
-      .from("deals")
-      .select("*")
-      .eq("status", "approved")
-      .eq("provider", deal.provider)
-      .neq("id", deal.id)
-      .gt("end_at", new Date().toISOString())
-      .limit(5);
 
     const trendingIds = new Set((trendingTop ?? []).map((d) => d.id));
     const dealWithTrend = { ...deal, is_trending: trendingIds.has(deal.id) };
@@ -123,7 +128,7 @@ export default async function DealPage({ params }: PageProps) {
       is_trending: trendingIds.has(d.id),
     }));
 
-    try { await supabase.rpc("increment_view_count", { target_deal_id: id }); } catch {}
+    void supabase.rpc("increment_view_count", { target_deal_id: id });
 
     return (
       <DealDetailContent

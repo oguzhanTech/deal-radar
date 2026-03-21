@@ -203,51 +203,59 @@ export async function postComment(dealId: string, content: string, parentComment
     .single();
 
   if (parentCommentId) {
-    const { data: parentComment } = await supabase
-      .from("deal_comments")
-      .select("id, user_id, deal_id")
-      .eq("id", parentCommentId)
-      .maybeSingle();
+    // Reply notification/push is best-effort and should not block comment response.
+    void (async () => {
+      try {
+        const admin = createAdminClient();
+        const { data: parentComment } = await admin
+          .from("deal_comments")
+          .select("id, user_id, deal_id")
+          .eq("id", parentCommentId)
+          .maybeSingle();
 
-    if (parentComment && parentComment.user_id !== user.id && parentComment.deal_id === dealId) {
-      const url = `/deal/${dealId}?tab=comments&comment=${comment.id}`;
-      const title = "Yorumuna yanıt geldi";
-      const message = `${profile?.display_name ?? "Bir kullanıcı"} yorumuna yanıt verdi.`;
+        if (!parentComment || parentComment.user_id === user.id || parentComment.deal_id !== dealId) return;
 
-      await supabase.from("notifications").insert({
-        user_id: parentComment.user_id,
-        type: "comment_reply",
-        title,
-        message,
-        payload: {
-          deal_id: dealId,
-          comment_id: comment.id,
-          parent_comment_id: parentCommentId,
-          url,
-        },
-      });
+        const url = `/deal/${dealId}?tab=comments&comment=${comment.id}`;
+        const title = "Yorumuna yanıt geldi";
+        const message = `${profile?.display_name ?? "Bir kullanıcı"} yorumuna yanıt verdi.`;
 
-      if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-        const { data: subscriptions } = await supabase
-          .from("push_subscriptions")
-          .select("endpoint, p256dh, auth")
-          .eq("user_id", parentComment.user_id);
+        const insertNotification = admin.from("notifications").insert({
+          user_id: parentComment.user_id,
+          type: "comment_reply",
+          title,
+          message,
+          payload: {
+            deal_id: dealId,
+            comment_id: comment.id,
+            parent_comment_id: parentCommentId,
+            url,
+          },
+        });
 
-        if (subscriptions?.length) {
+        const pushTask = (async () => {
+          if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+          const { data: subscriptions } = await admin
+            .from("push_subscriptions")
+            .select("endpoint, p256dh, auth")
+            .eq("user_id", parentComment.user_id);
+          if (!subscriptions?.length) return;
+
           const { sendWebPush } = await import("@/lib/push");
-          for (const sub of subscriptions) {
-            try {
-              await sendWebPush(
+          await Promise.allSettled(
+            subscriptions.map((sub) =>
+              sendWebPush(
                 { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
                 { title, body: message, url }
-              );
-            } catch {
-              // Best-effort push; ignore failures.
-            }
-          }
-        }
+              )
+            )
+          );
+        })();
+
+        await Promise.allSettled([insertNotification, pushTask]);
+      } catch (replyNotificationError) {
+        console.error("[action] postComment reply notification error:", replyNotificationError);
       }
-    }
+    })();
   }
 
   revalidatePath(`/deal/${dealId}`);

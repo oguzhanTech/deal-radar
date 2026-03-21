@@ -8,6 +8,7 @@ import type { HeroDeal } from "@/components/home/home-hero-carousel";
 import type { Activity } from "@/lib/types/database";
 
 type HomeDeal = Deal & { profile?: { display_name: string | null } | null };
+type EditorPickData = { deal: Deal; editorName: string | null } | null;
 
 async function attachCreators(deals: Deal[]): Promise<HomeDeal[]> {
   if (!deals.length) return [];
@@ -79,12 +80,16 @@ async function fetchPopular() {
   return attachCreators(data ?? []);
 }
 
-export async function getHeroDeals(): Promise<HeroDeal[]> {
-  const [endingSoon, popular, newest] = await Promise.all([
-    fetchEndingSoon(),
-    fetchPopular(),
-    fetchNewest(),
-  ]);
+interface HeroDealPools {
+  endingSoon: HomeDeal[];
+  popular: HomeDeal[];
+  newest: HomeDeal[];
+}
+
+export async function getHeroDeals(pools?: HeroDealPools): Promise<HeroDeal[]> {
+  const [endingSoon, popular, newest] = pools
+    ? [pools.endingSoon, pools.popular, pools.newest]
+    : await Promise.all([fetchEndingSoon(), fetchPopular(), fetchNewest()]);
 
   const picks: HeroDeal[] = [];
   const usedIds = new Set<string>();
@@ -210,8 +215,8 @@ async function fetchInternationalDeals(): Promise<HomeDeal[]> {
   return attachCreators(list.slice(0, 5));
 }
 
-export async function HomeTrendingSection() {
-  const deals = await fetchTrending();
+export async function HomeTrendingSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchTrending());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -223,8 +228,12 @@ export async function HomeTrendingSection() {
   );
 }
 
-export async function HomeEndingSoonSection() {
-  const deals = await fetchEndingSoon();
+interface HomeDealsSectionProps {
+  initialDeals?: HomeDeal[];
+}
+
+export async function HomeEndingSoonSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchEndingSoon());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -236,8 +245,8 @@ export async function HomeEndingSoonSection() {
   );
 }
 
-export async function HomePopularSection() {
-  const deals = await fetchPopular();
+export async function HomePopularSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchPopular());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -249,8 +258,8 @@ export async function HomePopularSection() {
   );
 }
 
-export async function HomeNewestSection() {
-  const deals = await fetchNewest();
+export async function HomeNewestSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchNewest());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -262,8 +271,8 @@ export async function HomeNewestSection() {
   );
 }
 
-export async function HomeBiggestDropsSection() {
-  const deals = await fetchBiggestDrops();
+export async function HomeBiggestDropsSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchBiggestDrops());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -275,8 +284,8 @@ export async function HomeBiggestDropsSection() {
   );
 }
 
-export async function HomeCouponSection() {
-  const deals = await fetchCouponDeals();
+export async function HomeCouponSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchCouponDeals());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -288,8 +297,8 @@ export async function HomeCouponSection() {
   );
 }
 
-export async function HomeInternationalSection() {
-  const deals = await fetchInternationalDeals();
+export async function HomeInternationalSection({ initialDeals }: HomeDealsSectionProps = {}) {
+  const deals = initialDeals ?? (await fetchInternationalDeals());
   if (deals.length === 0) return null;
   return (
     <DealSection
@@ -301,13 +310,17 @@ export async function HomeInternationalSection() {
   );
 }
 
-export async function HomeActivitySection() {
-  const activities = await fetchRecentActivities(5);
+interface HomeActivitySectionProps {
+  initialActivities?: Activity[];
+}
+
+export async function HomeActivitySection({ initialActivities }: HomeActivitySectionProps = {}) {
+  const activities = initialActivities ?? (await fetchRecentActivities(5));
   if (activities.length === 0) return null;
   return <ActivityFeedWidget activities={activities} />;
 }
 
-async function fetchEditorPick(): Promise<{ deal: Deal; editorName: string | null } | null> {
+async function fetchEditorPick(): Promise<EditorPickData> {
   const supabase = await createAnonClient();
   const { data: deal } = await supabase
     .from("deals")
@@ -331,8 +344,51 @@ async function fetchEditorPick(): Promise<{ deal: Deal; editorName: string | nul
   return { deal: d, editorName };
 }
 
-export async function HomeEditorPickSection() {
-  const result = await fetchEditorPick();
+interface HomeEditorPickSectionProps {
+  initialResult?: EditorPickData;
+}
+
+export async function HomeEditorPickSection({ initialResult }: HomeEditorPickSectionProps = {}) {
+  const result = initialResult ?? (await fetchEditorPick());
   if (!result) return null;
   return <EditorPickWidget deal={result.deal} editorQuote={result.deal.editor_pick_quote ?? null} editorName={result.editorName} />;
+}
+
+export async function getHomePageData() {
+  const [
+    endingSoon,
+    popular,
+    newest,
+    trending,
+    biggestDrops,
+    couponDeals,
+    internationalDeals,
+    activities,
+    editorPick,
+  ] = await Promise.all([
+    fetchEndingSoon(),
+    fetchPopular(),
+    fetchNewest(),
+    fetchTrending(),
+    fetchBiggestDrops(),
+    fetchCouponDeals(),
+    fetchInternationalDeals(),
+    fetchRecentActivities(5),
+    fetchEditorPick(),
+  ]);
+
+  const heroDeals = await getHeroDeals({ endingSoon, popular, newest });
+
+  return {
+    heroDeals,
+    endingSoon,
+    popular,
+    newest,
+    trending,
+    biggestDrops,
+    couponDeals,
+    internationalDeals,
+    activities,
+    editorPick,
+  };
 }

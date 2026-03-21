@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, Search, PlusCircle, Radar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { prefetchOnce } from "@/lib/prefetch-once";
 
 const tabs = [
   { href: "/", icon: Home, labelKey: "nav.home" },
@@ -31,8 +32,10 @@ export function BottomNav() {
               key={tab.href}
               href={tab.href}
               prefetch={true}
-              onMouseEnter={() => router.prefetch(tab.href)}
-              onTouchStart={() => router.prefetch(tab.href)}
+              onMouseEnter={() => prefetchOnce(router, tab.href)}
+              // Mobilde touchstart sırasında prefetch bazen tap->navigation hissini geciktirebilir.
+              // Alt barda sadece tıklamada hızlı geçişi önceliklendiriyoruz.
+              data-no-skeleton
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative",
                 "active:scale-90 transition-transform"

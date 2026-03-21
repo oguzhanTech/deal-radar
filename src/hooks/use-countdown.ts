@@ -7,16 +7,18 @@ export function useCountdown(endAt: string) {
   const [time, setTime] = useState(() => getTimeRemaining(endAt));
 
   useEffect(() => {
-    if (time.total <= 0) return;
+    const initial = getTimeRemaining(endAt);
+    setTime(initial);
+    if (initial.total <= 0) return;
 
     const interval = setInterval(() => {
       const remaining = getTimeRemaining(endAt);
-      setTime(remaining);
+      setTime((prev) => (prev.total === remaining.total ? prev : remaining));
       if (remaining.total <= 0) clearInterval(interval);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [endAt, time.total]);
+  }, [endAt]);
 
   const isExpired = time.total <= 0;
   const isUrgent = time.total > 0 && time.total <= 6 * 60 * 60 * 1000; // < 6 hours

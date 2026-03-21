@@ -35,9 +35,10 @@ function getLevelInfo(points: number) {
 interface ProfileClientProps {
   initialDeals: Deal[];
   initialDealsCount: number;
+  initialUserId: string | null;
 }
 
-export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClientProps) {
+export function ProfileClient({ initialDeals, initialDealsCount, initialUserId }: ProfileClientProps) {
   const router = useRouter();
   const {
     user,
@@ -56,6 +57,9 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
   const [deleting, setDeleting] = useState(false);
   const [myDeals, setMyDeals] = useState<Deal[]>(initialDeals);
   const [myDealsCount, setMyDealsCount] = useState<number>(initialDealsCount);
+  const [skipInitialRefetch, setSkipInitialRefetch] = useState(
+    () => !!initialUserId
+  );
   const [showEdit, setShowEdit] = useState(false);
   const [showPointsInfo, setShowPointsInfo] = useState(false);
   const [showBadgesGuide, setShowBadgesGuide] = useState(false);
@@ -73,6 +77,10 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
       setMyDealsCount(0);
       return;
     }
+    if (skipInitialRefetch && user.id === initialUserId) {
+      setSkipInitialRefetch(false);
+      return;
+    }
     const refresh = async () => {
       try {
         const res = await fetch("/api/profile/deals", { credentials: "same-origin" });
@@ -86,7 +94,7 @@ export function ProfileClient({ initialDeals, initialDealsCount }: ProfileClient
       }
     };
     refresh();
-  }, [user]);
+  }, [user, skipInitialRefetch, initialUserId]);
 
   useEffect(() => {
     if (!user) return;

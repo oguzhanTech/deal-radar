@@ -65,16 +65,17 @@ export function NotificationBell() {
 
   const openNotification = async (notification: Notification) => {
     const payloadUrl = (notification.payload as { url?: string } | null)?.url;
-    if (payloadUrl) {
-      await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("id", notification.id)
-        .eq("user_id", user?.id ?? "");
-      setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
-      setOpen(false);
-      router.push(payloadUrl);
-    }
+    if (!payloadUrl) return;
+
+    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+    setOpen(false);
+    router.push(payloadUrl);
+
+    void supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("id", notification.id)
+      .eq("user_id", user?.id ?? "");
   };
 
   return (

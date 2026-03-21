@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { createAnonClient } from "@/lib/supabase/server";
 import { HomeEmptyState } from "./home-content";
 import {
+  getHomePageData,
   HomeTrendingSection,
   HomeEndingSoonSection,
   HomePopularSection,
@@ -55,6 +56,8 @@ export default async function HomePage() {
     );
   }
 
+  const homeData = await getHomePageData();
+
   const orderedSections = shuffle([...HOME_SECTIONS]);
   const sectionsWithoutLast = orderedSections.slice(0, -1);
   const lastSection = orderedSections[orderedSections.length - 1];
@@ -66,26 +69,74 @@ export default async function HomePage() {
   return (
     <div className="space-y-4 py-3">
       <Suspense fallback={null}>
-        <HomeHero />
+        <HomeHero deals={homeData.heroDeals} />
       </Suspense>
       {firstTwo.map(({ id, Section }) => (
         <Suspense key={id} fallback={<DealSectionSkeleton />}>
-          <Section />
+          <Section
+            initialDeals={
+              id === "newest"
+                ? homeData.newest
+                : id === "endingSoon"
+                  ? homeData.endingSoon
+                  : id === "trending"
+                    ? homeData.trending
+                    : id === "popular"
+                      ? homeData.popular
+                      : id === "biggestDrops"
+                        ? homeData.biggestDrops
+                        : id === "coupons"
+                          ? homeData.couponDeals
+                          : homeData.internationalDeals
+            }
+          />
         </Suspense>
       ))}
       <Suspense fallback={null}>
-        <HomeActivitySection />
+        <HomeActivitySection initialActivities={homeData.activities} />
       </Suspense>
       {rest.map(({ id, Section }) => (
         <Suspense key={id} fallback={<DealSectionSkeleton />}>
-          <Section />
+          <Section
+            initialDeals={
+              id === "newest"
+                ? homeData.newest
+                : id === "endingSoon"
+                  ? homeData.endingSoon
+                  : id === "trending"
+                    ? homeData.trending
+                    : id === "popular"
+                      ? homeData.popular
+                      : id === "biggestDrops"
+                        ? homeData.biggestDrops
+                        : id === "coupons"
+                          ? homeData.couponDeals
+                          : homeData.internationalDeals
+            }
+          />
         </Suspense>
       ))}
       <Suspense fallback={null}>
-        <HomeEditorPickSection />
+        <HomeEditorPickSection initialResult={homeData.editorPick} />
       </Suspense>
       <Suspense key={lastSection.id} fallback={<DealSectionSkeleton />}>
-        <LastSectionComponent />
+        <LastSectionComponent
+          initialDeals={
+            lastSection.id === "newest"
+              ? homeData.newest
+              : lastSection.id === "endingSoon"
+                ? homeData.endingSoon
+                : lastSection.id === "trending"
+                  ? homeData.trending
+                  : lastSection.id === "popular"
+                    ? homeData.popular
+                    : lastSection.id === "biggestDrops"
+                      ? homeData.biggestDrops
+                      : lastSection.id === "coupons"
+                        ? homeData.couponDeals
+                        : homeData.internationalDeals
+          }
+        />
       </Suspense>
     </div>
   );

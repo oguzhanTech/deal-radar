@@ -34,6 +34,9 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
   const [saves, setSaves] = useState<SavedDealItem[]>(() => initialSaves ?? cache.get() ?? []);
   const [loading, setLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [skipInitialRefetch, setSkipInitialRefetch] = useState(
+    () => !!userId && !needsLogin && initialSaves !== null
+  );
 
   useEffect(() => {
     const list = initialSaves ?? [];
@@ -46,6 +49,10 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
   // Radara ekleme/çıkarma sonrası sayfaya gelince listeyi güncelle (sayfa yenilemeden)
   useEffect(() => {
     if (!userId || needsLogin) return;
+    if (skipInitialRefetch) {
+      setSkipInitialRefetch(false);
+      return;
+    }
     let cancelled = false;
     fetch("/api/my/saves", { credentials: "same-origin", cache: "no-store" })
       .then((r) => r.json())
@@ -61,7 +68,7 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
     return () => {
       cancelled = true;
     };
-  }, [userId, needsLogin, cache]);
+  }, [userId, needsLogin, cache, skipInitialRefetch]);
 
   const handleRemove = useCallback(
     async (dealId: string) => {

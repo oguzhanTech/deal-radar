@@ -16,6 +16,7 @@ import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types/database";
 
 const SKELETON_DELAY_MS = 100;
+const SKELETON_MIN_VISIBLE_MS = 160;
 const INITIAL_SPLASH_MIN_MS = 2200;
 const SPLASH_SHOWN_KEY = "topla_splash_shown";
 
@@ -24,6 +25,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
+  const [skeletonShownAt, setSkeletonShownAt] = useState<number | null>(null);
   const [showInitialSplash, setShowInitialSplash] = useState(() => {
     if (typeof window === "undefined") return true;
     return !sessionStorage.getItem(SPLASH_SHOWN_KEY);
@@ -40,15 +42,36 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setPendingPath(null);
-    setShowSkeleton(false);
-  }, [pathname]);
+    if (!showSkeleton || !skeletonShownAt) {
+      setShowSkeleton(false);
+      setSkeletonShownAt(null);
+      return;
+    }
+
+    const elapsed = Date.now() - skeletonShownAt;
+    if (elapsed >= SKELETON_MIN_VISIBLE_MS) {
+      setShowSkeleton(false);
+      setSkeletonShownAt(null);
+      return;
+    }
+
+    const hideTimer = setTimeout(() => {
+      setShowSkeleton(false);
+      setSkeletonShownAt(null);
+    }, SKELETON_MIN_VISIBLE_MS - elapsed);
+    return () => clearTimeout(hideTimer);
+  }, [pathname, showSkeleton, skeletonShownAt]);
 
   useEffect(() => {
     if (!pendingPath) return;
-    const showTimer = setTimeout(() => setShowSkeleton(true), SKELETON_DELAY_MS);
+    const showTimer = setTimeout(() => {
+      setShowSkeleton(true);
+      setSkeletonShownAt(Date.now());
+    }, SKELETON_DELAY_MS);
     const fallback = setTimeout(() => {
       setPendingPath(null);
       setShowSkeleton(false);
+      setSkeletonShownAt(null);
     }, 4000);
     return () => {
       clearTimeout(showTimer);
@@ -58,16 +81,23 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 
   const handleLinkCapture = useCallback(
     (e: React.MouseEvent) => {
+      if (e.defaultPrevented) return;
+      if ("button" in e && e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const target = e.target as HTMLElement;
       if (target.closest("[data-no-skeleton]")) return;
       const a = target.closest('a[href^="/"]');
       if (!a) return;
+      if (a.hasAttribute("download")) return;
+      if (a.getAttribute("target") === "_blank") return;
       const href = a.getAttribute("href");
       if (!href || href.startsWith("/api") || href.startsWith("/auth")) return;
+      if (href.startsWith("#")) return;
       const path = href.split("?")[0];
       if (path === pathname) return;
       setPendingPath(path);
       setShowSkeleton(false);
+      setSkeletonShownAt(null);
     },
     [pathname]
   );
