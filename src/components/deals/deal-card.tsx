@@ -24,6 +24,8 @@ interface DealCardProps {
   hideCreator?: boolean;
   /** Alt infinite feed için hafif görsel ayrım */
   surface?: "default" | "feed";
+  /** Dar gridlerde (örn. Keşfet) aciliyet etiketini gizleyip taşmayı önler */
+  hideCountdownStatusLabel?: boolean;
 }
 
 export function DealCard({
@@ -32,6 +34,7 @@ export function DealCard({
   compact = false,
   hideCreator = false,
   surface = "default",
+  hideCountdownStatusLabel = false,
 }: DealCardProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
@@ -163,7 +166,12 @@ export function DealCard({
                 )}
                 <SaveRemindButton dealId={deal.id} compact />
               </div>
-              <DealCountdown endAt={deal.end_at} compact className="text-[10px]" />
+              <DealCountdown
+                endAt={deal.end_at}
+                compact
+                showStatusLabel={!hideCountdownStatusLabel}
+                className="text-[10px]"
+              />
             </div>
           </div>
       </div>
@@ -277,7 +285,7 @@ export function DealCard({
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <DealCountdown endAt={deal.end_at} compact />
+              <DealCountdown endAt={deal.end_at} compact showStatusLabel={!hideCountdownStatusLabel} />
               <HeatBadge score={deal.heat_score} forceTrending={isTrending} />
             </div>
 

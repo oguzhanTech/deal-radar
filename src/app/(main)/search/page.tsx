@@ -201,7 +201,7 @@ export default function SearchPage() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {deals.map((deal) => (
-              <DealCard key={deal.id} deal={deal} hideCreator />
+              <DealCard key={deal.id} deal={deal} hideCreator hideCountdownStatusLabel />
             ))}
           </div>
         )}

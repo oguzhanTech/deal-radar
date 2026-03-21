@@ -8,10 +8,16 @@ import { Clock, AlertTriangle } from "lucide-react";
 interface DealCountdownProps {
   endAt: string;
   compact?: boolean;
+  showStatusLabel?: boolean;
   className?: string;
 }
 
-export function DealCountdown({ endAt, compact = false, className }: DealCountdownProps) {
+export function DealCountdown({
+  endAt,
+  compact = false,
+  showStatusLabel = true,
+  className,
+}: DealCountdownProps) {
   const { days, hours, minutes, seconds, isExpired, isUrgent, isVeryUrgent } = useCountdown(endAt);
 
   if (isExpired) {
@@ -47,7 +53,7 @@ export function DealCountdown({ endAt, compact = false, className }: DealCountdo
       ) : (
         <Clock className="h-3 w-3" />
       )}
-      {label && <span className="mr-0.5">{label} ·</span>}
+      {showStatusLabel && label && <span className="mr-0.5">{label} ·</span>}
       {timeString}
     </span>
   );
