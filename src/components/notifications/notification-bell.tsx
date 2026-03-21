@@ -63,8 +63,15 @@ export function NotificationBell() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const resolveNotificationUrl = (notification: Notification) => {
+    const payload = (notification.payload as { url?: string; deal_id?: string } | null) ?? null;
+    if (payload?.url) return payload.url;
+    if (payload?.deal_id) return `/deal/${payload.deal_id}`;
+    return null;
+  };
+
   const openNotification = async (notification: Notification) => {
-    const payloadUrl = (notification.payload as { url?: string } | null)?.url;
+    const payloadUrl = resolveNotificationUrl(notification);
     if (!payloadUrl) return;
 
     setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
@@ -160,7 +167,9 @@ export function NotificationBell() {
             </div>
           ) : (
             <div className="space-y-2">
-              {notifications.map((n) => (
+              {notifications.map((n) => {
+                const targetUrl = resolveNotificationUrl(n);
+                return (
                 <div
                   key={n.id}
                   onClick={() => openNotification(n)}
@@ -168,7 +177,7 @@ export function NotificationBell() {
                     !n.read
                       ? "bg-primary/5 border-primary/20"
                       : "bg-card border-border/60 hover:bg-muted/50"
-                  } ${(n.payload as { url?: string } | null)?.url ? "cursor-pointer" : ""}`}
+                  } ${targetUrl ? "cursor-pointer" : ""}`}
                 >
                   <p className="text-sm font-semibold text-foreground break-words leading-snug">
                     {n.title}
@@ -182,7 +191,8 @@ export function NotificationBell() {
                     {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: tr })}
                   </p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

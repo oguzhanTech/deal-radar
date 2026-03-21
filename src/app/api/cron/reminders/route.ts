@@ -71,7 +71,8 @@ export async function GET(request: Request) {
       const alreadySent = sentReminders[window.key];
 
       if (isEnabled && !alreadySent && timeUntilEnd <= window.ms && timeUntilEnd > (window.ms - BUFFER_MS)) {
-        const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/deal/${deal.id}`;
+        const dealPath = `/deal/${deal.id}`;
+        const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${dealPath}`;
         const title = `"${deal.title}" ${window.label} sonra bitiyor!`;
         const message = "Bu fırsatı kaçırma — süresi dolmadan yakala.";
 
@@ -80,7 +81,7 @@ export async function GET(request: Request) {
           type: "reminder",
           title,
           message,
-          payload: { deal_id: deal.id },
+          payload: { deal_id: deal.id, url: dealPath },
         });
 
         if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
