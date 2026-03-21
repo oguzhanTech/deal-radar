@@ -45,7 +45,10 @@ function LeaderboardSkeleton() {
 }
 
 export default function LeaderboardPage() {
-  const cache = useFeedCache<LeaderboardData>("leaderboard-deals");
+  const cache = useFeedCache<LeaderboardData>("leaderboard-deals", {
+    ttlMs: 120_000,
+    persist: "session",
+  });
   const [data, setData] = useState<LeaderboardData | null>(() => cache.get());
   const [loading, setLoading] = useState(!data);
 

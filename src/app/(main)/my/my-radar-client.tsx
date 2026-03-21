@@ -30,7 +30,10 @@ interface MyRadarClientProps {
 export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClientProps) {
   const { toast } = useToast();
   const savedIds = useSavedDealIds();
-  const cache = useFeedCache<SavedDealItem[]>(`my-saves:${userId ?? "anon"}`);
+  const cache = useFeedCache<SavedDealItem[]>(`my-saves:${userId ?? "anon"}`, {
+    ttlMs: 20_000,
+    persist: "session",
+  });
   const [saves, setSaves] = useState<SavedDealItem[]>(() => initialSaves ?? cache.get() ?? []);
   const [loading, setLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);

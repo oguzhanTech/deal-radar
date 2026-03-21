@@ -30,7 +30,7 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const cacheKey = `search:${query}:${sort}:${filterCategory ?? ""}:${filterCoupon ? "coupon" : ""}`;
-  const cache = useFeedCache<Deal[]>(cacheKey);
+  const cache = useFeedCache<Deal[]>(cacheKey, { ttlMs: 60_000, persist: "session" });
   const [deals, setDeals] = useState<Deal[]>(() => cache.get() ?? []);
   const [loading, setLoading] = useState(!cache.get());
 

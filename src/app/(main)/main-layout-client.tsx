@@ -17,7 +17,7 @@ import type { Profile } from "@/lib/types/database";
 
 const SKELETON_DELAY_MS = 100;
 const SKELETON_MIN_VISIBLE_MS = 160;
-const INITIAL_SPLASH_MIN_MS = 2200;
+const INITIAL_SPLASH_MIN_MS = 800;
 const SPLASH_SHOWN_KEY = "topla_splash_shown";
 
 function LayoutShell({ children }: { children: React.ReactNode }) {

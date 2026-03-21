@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { signOutAction } from "@/app/actions";
+import { clearFeedCacheByPrefix } from "@/hooks/use-feed-cache";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types/database";
 
@@ -229,12 +230,18 @@ export function AuthProvider({ children, initialUser: initialUserProp, initialPr
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        if (userRef.current?.id && userRef.current.id !== session.user.id) {
+          clearFeedCacheByPrefix(`my-saves:${userRef.current.id}`);
+        }
         setUser(session.user);
         setCachedAuth(session.user);
         setCachedDisplay(getCachedAuthSync());
         profileRetryCount.current = 0;
         await fetchProfile(session.user);
       } else if (event === "SIGNED_OUT") {
+        if (userRef.current?.id) {
+          clearFeedCacheByPrefix(`my-saves:${userRef.current.id}`);
+        }
         setUser(null);
         setProfile(null);
         setCachedDisplay(null);
@@ -260,6 +267,9 @@ export function AuthProvider({ children, initialUser: initialUserProp, initialPr
   }, [user, profile, loading, fetchProfile]);
 
   const signOut = async () => {
+    if (userRef.current?.id) {
+      clearFeedCacheByPrefix(`my-saves:${userRef.current.id}`);
+    }
     try {
       await signOutAction();
     } catch {
