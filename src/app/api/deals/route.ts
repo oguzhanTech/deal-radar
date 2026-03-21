@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const q = searchParams.get("q")?.trim() ?? "";
     const category = searchParams.get("category");
     const hasCoupon = searchParams.get("hasCoupon") === "1";
+    const now = new Date().toISOString();
 
     const supabase = await createAnonClient();
     let query = supabase
@@ -29,7 +30,6 @@ export async function GET(request: Request) {
       query = query.eq("category", category);
     }
     if (hasCoupon) {
-      const now = new Date().toISOString();
       query = query
         .not("coupon_code", "is", null)
         .gt("end_at", now)
@@ -37,16 +37,17 @@ export async function GET(request: Request) {
     }
 
     if (!idsParam) {
+      // Keşfet/listing akışlarında süresi biten fırsatları göstermeyelim.
+      query = query.gt("end_at", now);
       if (sort === "trending") {
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         query = query.gte("created_at", sevenDaysAgo).order("heat_score", { ascending: false });
       } else if (sort === "popular") {
         query = query.order("heat_score", { ascending: false });
       } else if (sort === "endingSoon") {
-        const now = new Date().toISOString();
         query = query.gt("end_at", now).order("end_at", { ascending: true });
       } else if (sort === "discount") {
-        query = query.gt("end_at", new Date().toISOString()).order("discount_percent", { ascending: false });
+        query = query.order("discount_percent", { ascending: false });
       } else {
         query = query.order("created_at", { ascending: false });
       }
