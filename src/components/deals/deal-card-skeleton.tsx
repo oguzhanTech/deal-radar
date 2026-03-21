@@ -3,13 +3,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface DealCardSkeletonProps {
   horizontal?: boolean;
   compact?: boolean;
+  surface?: "default" | "feed";
 }
 
-export function DealCardSkeleton({ horizontal = false, compact = false }: DealCardSkeletonProps) {
+export function DealCardSkeleton({ horizontal = false, compact = false, surface = "default" }: DealCardSkeletonProps) {
   if (compact) {
     return (
       <div className="w-full">
-        <div className="rounded-xl bg-card overflow-hidden shadow-sm flex gap-3 p-2.5 border border-border/40">
+        <div
+          className={`rounded-xl bg-card overflow-hidden shadow-sm flex gap-3 p-2.5 border border-border/40 ${
+            surface === "feed" ? "bg-muted/20 border-l-2 border-l-primary/30" : ""
+          }`}
+        >
           <Skeleton className="w-16 h-16 rounded-lg shrink-0" />
           <div className="flex-1 space-y-1.5 py-1">
             <Skeleton className="h-3.5 w-3/4 rounded-lg" />

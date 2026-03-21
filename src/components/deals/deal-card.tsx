@@ -22,9 +22,17 @@ interface DealCardProps {
   compact?: boolean;
   /** Creator satırını gizle (örn. Keşfet sayfasında başlığa daha fazla yer) */
   hideCreator?: boolean;
+  /** Alt infinite feed için hafif görsel ayrım */
+  surface?: "default" | "feed";
 }
 
-export function DealCard({ deal, horizontal = false, compact = false, hideCreator = false }: DealCardProps) {
+export function DealCard({
+  deal,
+  horizontal = false,
+  compact = false,
+  hideCreator = false,
+  surface = "default",
+}: DealCardProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
   const isTrending = deal.is_trending ?? (deal.heat_score >= HEAT_TRENDING_THRESHOLD);
@@ -58,6 +66,7 @@ export function DealCard({ deal, horizontal = false, compact = false, hideCreato
           <div
             className={cn(
               "rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/40 flex gap-3 p-2.5",
+              surface === "feed" && "bg-muted/20 border-l-2 border-l-primary/30",
               isVeryUrgent && "critical-glow",
               isUrgent && !isVeryUrgent && "urgent-glow"
             )}

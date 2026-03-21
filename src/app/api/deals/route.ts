@@ -6,14 +6,71 @@ type SortOption = "trending" | "popular" | "new" | "discount" | "endingSoon";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const feed = searchParams.get("feed");
     const idsParam = searchParams.get("ids"); // comma-separated UUIDs for Radarım
     const sort = (searchParams.get("sort") as SortOption) || "new";
     const q = searchParams.get("q")?.trim() ?? "";
     const category = searchParams.get("category");
     const hasCoupon = searchParams.get("hasCoupon") === "1";
+    const limitParam = Number(searchParams.get("limit") ?? "12");
+    const offsetParam = Number(searchParams.get("offset") ?? "0");
+    const excludeIdsParam = searchParams.get("excludeIds") ?? "";
     const now = new Date().toISOString();
 
     const supabase = await createAnonClient();
+    const requestedLimit = Number.isFinite(limitParam) ? limitParam : 12;
+    const limit = Math.max(1, Math.min(requestedLimit, 24));
+    const requestedOffset = Number.isFinite(offsetParam) ? offsetParam : 0;
+    const offset = Math.max(0, requestedOffset);
+    const excludeIds = excludeIdsParam
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (feed === "home") {
+      let homeQuery = supabase
+        .from("deals")
+        .select("*")
+        .eq("status", "approved")
+        .gt("end_at", now)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (excludeIds.length) {
+        homeQuery = homeQuery.not("id", "in", `(${excludeIds.join(",")})`);
+      }
+
+      const { data: homeDeals } = await homeQuery;
+      const deals = (homeDeals ?? []) as { created_by: string }[];
+
+      if (!deals.length) {
+        return NextResponse.json({ items: [], hasMore: false, nextOffset: offset });
+      }
+
+      const userIds = Array.from(new Set(deals.map((d) => d.created_by)));
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+
+      const nameMap =
+        profiles?.reduce<Record<string, string | null>>((acc, p) => {
+          acc[p.user_id] = p.display_name ?? null;
+          return acc;
+        }, {}) ?? {};
+
+      const items = deals.map((d) => ({
+        ...d,
+        profile: { display_name: nameMap[d.created_by] ?? null },
+      }));
+
+      return NextResponse.json({
+        items,
+        hasMore: items.length === limit,
+        nextOffset: offset + items.length,
+      });
+    }
+
     let query = supabase
       .from("deals")
       .select("*")

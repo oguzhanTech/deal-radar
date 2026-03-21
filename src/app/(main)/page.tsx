@@ -15,6 +15,7 @@ import {
 } from "./home-sections";
 import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
+import { HomeInfiniteBottomFeed } from "@/components/home/home-infinite-bottom-feed";
 
 export const revalidate = 60;
 
@@ -65,6 +66,19 @@ export default async function HomePage() {
 
   const firstTwo = sectionsWithoutLast.slice(0, 2);
   const rest = sectionsWithoutLast.slice(2);
+  const excludeIds = Array.from(
+    new Set([
+      ...homeData.heroDeals.map((d) => d.id),
+      ...homeData.endingSoon.map((d) => d.id),
+      ...homeData.popular.map((d) => d.id),
+      ...homeData.newest.map((d) => d.id),
+      ...homeData.trending.map((d) => d.id),
+      ...homeData.biggestDrops.map((d) => d.id),
+      ...homeData.couponDeals.map((d) => d.id),
+      ...homeData.internationalDeals.map((d) => d.id),
+      homeData.editorPick?.deal.id,
+    ].filter(Boolean) as string[])
+  );
 
   return (
     <div className="space-y-4 py-3">
@@ -138,6 +152,7 @@ export default async function HomePage() {
           }
         />
       </Suspense>
+      <HomeInfiniteBottomFeed excludeIds={excludeIds} />
     </div>
   );
 }
