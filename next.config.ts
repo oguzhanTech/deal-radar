@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: "/internal/deals/import",
+        destination: "/api/internal/deals/import",
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

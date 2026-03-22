@@ -17,6 +17,12 @@ CRON_SECRET=...
 
 - **NEXT_PUBLIC_APP_URL**: Tüm canonical URL’ler, sitemap, robots.txt ve e-posta/redirect linkleri bu adresi kullanır. Production’da mutlaka `https://www.topla.online` yapın.
 
+### Canonical host ve harici servisler (ör. `topla-deal-ingestion`)
+
+- **Production canonical host:** `https://www.topla.online` (www’li adres; Vercel/DNS’te apex `topla.online` genelde buraya yönlendirilir).
+- Harici servislerin **`TOPLA_API_BASE_URL`** değişkeni **sonunda `/` olmadan** bu host olmalıdır, örn. `https://www.topla.online`. İstekler `POST {TOPLA_API_BASE_URL}/internal/deals/import` veya eşdeğer API yoluna gider ([iç import API](INTERNAL_IMPORT.md)).
+- **Staging / preview:** Repoda sabit bir staging URL yok; Vercel **Preview** deployment URL’nizi veya ayrı bir staging domain kullanıyorsanız onu `TOPLA_API_BASE_URL` olarak verin (aynı kurallar geçerli).
+
 ## 2. Supabase Auth redirect URL’leri
 
 Supabase Dashboard → **Authentication** → **URL Configuration**:

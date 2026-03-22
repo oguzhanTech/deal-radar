@@ -34,9 +34,16 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 RESEND_API_KEY=re_xxxxx
 CRON_SECRET=a-random-secret-string
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Harici deal import (topla-deal-ingestion) — repoya asla commit etmeyin
+# TOPLA_IMPORT_API_KEY=...
+# TOPLA_IMPORT_ACTOR_MAP={"topla_trendyol_bot":"<auth.users-uuid>"}
+# veya TOPLA_IMPORT_DEFAULT_BOT_USER_ID + TOPLA_IMPORT_ALLOWED_ACTORS
 ```
 
 Production’da `NEXT_PUBLIC_APP_URL=https://www.topla.online` kullanın. Domain, sitemap, Google Search Console ve Supabase ayarları için [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dosyasına bakın.
+
+Harici servislerin `POST /internal/deals/import` ile deal aktarması için [docs/INTERNAL_IMPORT.md](docs/INTERNAL_IMPORT.md) dosyasına bakın (`TOPLA_IMPORT_API_KEY` ve bot `actorKey` eşlemesi).
 
 ### 3. Set up the database
 
