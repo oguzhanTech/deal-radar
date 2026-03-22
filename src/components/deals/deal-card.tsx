@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { DealCountdown } from "./deal-countdown";
 import { HeatBadge } from "./heat-badge";
 import { SaveRemindButton } from "./save-remind-button";
-import { formatPrice } from "@/lib/utils";
+import { hasStrikethroughOriginal } from "@/lib/deal-price";
+import { cn, formatPrice } from "@/lib/utils";
 import { useCountdown } from "@/hooks/use-countdown";
-import { cn } from "@/lib/utils";
 import { HEAT_TRENDING_THRESHOLD } from "@/lib/constants";
 import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { t } from "@/lib/i18n";
@@ -41,6 +41,11 @@ export function DealCard({
   const isTrending = deal.is_trending ?? (deal.heat_score >= HEAT_TRENDING_THRESHOLD);
 
   const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
+
+  /** İki fiyat var ve farklıysa çizili+yeşil; eşit veya yalnızca deal fiyatıysa tek yeşil. */
+  const showDualPrices = hasStrikethroughOriginal(deal.original_price, deal.deal_price);
+  const showSingleGreenPrice = deal.deal_price != null && !showDualPrices;
+  const showDiscountBadge = !!deal.discount_percent && showDualPrices;
 
   const creatorName =
     (deal as any).profile?.display_name || t("admin.users.unnamed");
@@ -112,15 +117,26 @@ export function DealCard({
               )}
               <div className="flex items-center gap-2 mt-1 justify-between">
                 <div className="flex items-center gap-2">
-                  {deal.deal_price != null && deal.original_price != null ? (
+                  {showDualPrices ? (
                     <>
                       <span className="text-[11px] text-muted-foreground line-through">
-                        {formatPrice(deal.original_price, deal.currency)}
+                        {formatPrice(deal.original_price!, deal.currency)}
                       </span>
                       <span className="text-sm font-bold text-emerald-600">
-                        {formatPrice(deal.deal_price, deal.currency)}
+                        {formatPrice(deal.deal_price!, deal.currency)}
                       </span>
-                      {deal.discount_percent && (
+                      {showDiscountBadge && (
+                        <Badge className="text-[10px] bg-primary/15 text-primary border-0 px-1.5 py-0 font-semibold">
+                          %{deal.discount_percent}
+                        </Badge>
+                      )}
+                    </>
+                  ) : showSingleGreenPrice ? (
+                    <>
+                      <span className="text-sm font-bold text-emerald-600">
+                        {formatPrice(deal.deal_price!, deal.currency)}
+                      </span>
+                      {showDiscountBadge && (
                         <Badge className="text-[10px] bg-primary/15 text-primary border-0 px-1.5 py-0 font-semibold">
                           %{deal.discount_percent}
                         </Badge>
@@ -231,7 +247,7 @@ export function DealCard({
             </div>
 
             <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 items-end">
-              {deal.discount_percent && (
+              {showDiscountBadge && (
                 <Badge className="text-xs bg-emerald-500 text-white border-0 font-bold px-2.5 py-0.5 shadow-sm">
                   -%{deal.discount_percent}
                 </Badge>
@@ -291,15 +307,19 @@ export function DealCard({
 
             <div className="min-h-[20px] flex items-center gap-2 justify-between">
               <div className="flex items-center gap-2">
-                {deal.deal_price != null && deal.original_price != null ? (
+                {showDualPrices ? (
                   <>
                     <span className="text-xs text-muted-foreground line-through">
-                      {formatPrice(deal.original_price, deal.currency)}
+                      {formatPrice(deal.original_price!, deal.currency)}
                     </span>
                     <span className="text-sm font-extrabold text-emerald-600">
-                      {formatPrice(deal.deal_price, deal.currency)}
+                      {formatPrice(deal.deal_price!, deal.currency)}
                     </span>
                   </>
+                ) : showSingleGreenPrice ? (
+                  <span className="text-sm font-extrabold text-emerald-600">
+                    {formatPrice(deal.deal_price!, deal.currency)}
+                  </span>
                 ) : (
                   <span className="text-xs text-muted-foreground">{t("deal.viewDeal")}</span>
                 )}

@@ -29,6 +29,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useAuthGuard } from "@/components/auth/auth-guard";
 import { useToast } from "@/components/ui/toast";
 import { voteDeal, postComment, reportDeal, getUserVote } from "@/app/actions";
+import { hasStrikethroughOriginal } from "@/lib/deal-price";
 import { formatPrice } from "@/lib/utils";
 import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS } from "@/lib/constants";
 import { t } from "@/lib/i18n";
@@ -88,6 +89,9 @@ export function DealDetailContent({
   const creator =
     creatorName ?? t("admin.users.unnamed");
   const focusedCommentId = searchParams.get("comment");
+
+  const showStrikeOnDetail = hasStrikethroughOriginal(deal.original_price, deal.deal_price);
+  const showDiscountBadgeOnDetail = !!deal.discount_percent && showStrikeOnDetail;
 
   const topLevelComments = useMemo(
     () => comments.filter((c) => !c.parent_comment_id),
@@ -296,16 +300,16 @@ export function DealDetailContent({
         {deal.deal_price != null && (
           <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-4 flex items-center justify-between">
             <div className="space-y-0.5">
-              {deal.original_price != null && (
+              {showStrikeOnDetail && (
                 <p className="text-sm text-muted-foreground line-through">
-                  {formatPrice(deal.original_price, deal.currency)}
+                  {formatPrice(deal.original_price!, deal.currency)}
                 </p>
               )}
               <p className="text-2xl font-extrabold text-emerald-600">
                 {formatPrice(deal.deal_price, deal.currency)}
               </p>
             </div>
-            {deal.discount_percent && (
+            {showDiscountBadgeOnDetail && (
               <Badge className="bg-emerald-500 text-white border-0 text-base font-extrabold px-3.5 py-1.5 rounded-xl shadow-sm">
                 -%{deal.discount_percent}
               </Badge>
