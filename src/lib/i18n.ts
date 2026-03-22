@@ -142,6 +142,8 @@ const tr: Record<string, string> = {
   "create.field.categoryPlaceholder": "Kategori seç",
   "create.field.originalPrice": "Normal Fiyat",
   "create.field.dealPrice": "İndirimli Fiyat",
+  "create.field.priceHint":
+    "Normal fiyatı bilmiyorsanız bu alanı boş bırakıp yalnızca indirimli fiyatı girebilirsiniz.",
   "create.field.currency": "Para Birimi",
   "create.field.externalUrl": "Fırsat Linki",
   "create.field.description": "Açıklama",

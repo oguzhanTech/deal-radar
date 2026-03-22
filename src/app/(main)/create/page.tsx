@@ -13,6 +13,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import { createDeal, uploadDealImage } from "@/app/actions";
 import { DEAL_CATEGORIES, CURRENCIES, TRUSTED_SUBMITTER_THRESHOLD } from "@/lib/constants";
+import { hasStrikethroughOriginal } from "@/lib/deal-price";
 import { formatPrice } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import {
@@ -31,6 +32,13 @@ import {
 const IMAGE_ZOOM_MIN = 1;
 const IMAGE_ZOOM_MAX = 3;
 const IMAGE_ZOOM_STEP = 0.25;
+
+function parsePriceInput(s: string): number | null {
+  const v = s.trim();
+  if (!v) return null;
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : null;
+}
 
 export default function CreateDealPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -356,6 +364,11 @@ export default function CreateDealPage() {
     ? Math.round(((parseFloat(form.original_price) - parseFloat(form.deal_price)) / parseFloat(form.original_price)) * 100)
     : null;
 
+  const showDualPriceInReview = hasStrikethroughOriginal(
+    parsePriceInput(form.original_price),
+    parsePriceInput(form.deal_price)
+  );
+
   return (
     <div className="py-5 px-4">
       {/* Progress Indicator */}
@@ -552,6 +565,7 @@ export default function CreateDealPage() {
                 <Input type="number" step="0.01" value={form.deal_price} onChange={(e) => update("deal_price", e.target.value)} placeholder="0.00" className="rounded-xl h-12" />
               </div>
             </div>
+            <p className="text-[11px] text-muted-foreground leading-snug -mt-1">{t("create.field.priceHint")}</p>
 
             {computedDiscount !== null && computedDiscount > 0 && (
               <div className="bg-emerald-50 rounded-xl px-4 py-2.5 text-center">
@@ -687,7 +701,7 @@ export default function CreateDealPage() {
                   <p className="text-xs text-muted-foreground">{t("create.review.price")}</p>
                   {form.deal_price ? (
                     <div className="flex items-center gap-2">
-                      {form.original_price && (
+                      {showDualPriceInReview && (
                         <span className="text-sm text-muted-foreground line-through">
                           {formatPrice(parseFloat(form.original_price), form.currency)}
                         </span>
