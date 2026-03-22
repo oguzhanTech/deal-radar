@@ -242,7 +242,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-2 min-w-0">
                   <div className="min-w-0 flex-1 flex items-start gap-3">
                     <div className="w-14 h-14 rounded-lg overflow-hidden border border-border/50 bg-muted shrink-0 relative">
                       {deal.image_url ? (
@@ -299,12 +299,12 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                     </Button>
                   </div>
                 )}
-                <div className="flex gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {deal.status !== "approved" && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-green-600 h-7 text-xs"
+                      className="text-green-600 h-7 text-xs shrink-0"
                       onClick={() => updateStatus(deal.id, "approved")}
                       disabled={loadingId === deal.id}
                     >
@@ -316,7 +316,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-red-600 h-7 text-xs"
+                      className="text-red-600 h-7 text-xs shrink-0"
                       onClick={() => updateStatus(deal.id, "rejected")}
                       disabled={loadingId === deal.id}
                     >
@@ -327,7 +327,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 text-xs gap-1"
+                    className="h-7 text-xs gap-1 shrink-0"
                     onClick={() => startEdit(deal)}
                   >
                     <Pencil className="h-3 w-3" />
@@ -338,7 +338,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs gap-1 text-amber-600"
+                        className="h-7 text-xs gap-1 text-amber-600 shrink-0"
                         onClick={() => handleRemoveEditorPick()}
                         disabled={loadingId != null}
                       >
@@ -349,7 +349,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs gap-1"
+                        className="h-7 text-xs gap-1 shrink-0"
                         onClick={() => handleSetEditorPick(deal.id)}
                         disabled={loadingId === deal.id}
                       >
@@ -361,7 +361,7 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-destructive border-destructive/35 hover:bg-destructive/10 h-7 text-xs gap-1 ml-auto shrink-0"
+                    className="text-destructive border-destructive/35 hover:bg-destructive/10 h-8 min-h-8 text-xs gap-1 w-full justify-center sm:w-auto sm:ml-auto sm:justify-start shrink-0"
                     onClick={() => deleteDeal(deal.id, deal.status)}
                     disabled={loadingId === deal.id}
                   >
