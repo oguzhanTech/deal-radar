@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Award, Package, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BADGE_INFO, LEVEL_THRESHOLDS } from "@/lib/constants";
@@ -109,7 +110,7 @@ export function PublicUserProfileModalHost() {
           {loading && (
             <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <Skeleton className="h-12 w-12 rounded-xl" />
+                <Skeleton className="h-12 w-12 rounded-full shrink-0" />
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-3 w-24" />
@@ -135,14 +136,16 @@ export function PublicUserProfileModalHost() {
             <>
               <div className="rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 p-4 text-white shadow-card">
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-white/20 overflow-hidden flex items-center justify-center font-bold">
-                    {summary.profile.profile_image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={summary.profile.profile_image_url} alt={displayName} className="h-full w-full object-cover" />
-                    ) : (
-                      initial
-                    )}
-                  </div>
+                  <Avatar className="h-12 w-12 shrink-0 border-2 border-white/35 shadow-sm ring-2 ring-white/10">
+                    <AvatarImage
+                      src={summary.profile.profile_image_url ?? undefined}
+                      alt={displayName}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="rounded-full bg-white/25 text-lg font-bold text-white">
+                      {initial}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="min-w-0">
                     <p className="text-base font-bold truncate">{displayName}</p>
                     <p className="text-[11px] text-white/80">{getLevelLabel(level)}</p>

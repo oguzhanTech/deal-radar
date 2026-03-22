@@ -294,6 +294,7 @@ const tr: Record<string, string> = {
   "admin.deals.editorPickQuotePrompt": "Editör yorumu (isteğe bağlı, anasayfada tırnak içinde gösterilir):",
   "admin.deals.editorPickQuoteLabel": "Editör yorumu",
   "admin.deals.updateEditorQuote": "Yorumu güncelle",
+  "admin.deals.delete": "Sil",
 
   "admin.users.title": "Kullanıcı Yönetimi",
   "admin.users.makeAdmin": "Admin Yap",
@@ -321,6 +322,8 @@ const tr: Record<string, string> = {
   "admin.toast.error": "İşlem başarısız oldu",
   "admin.confirm.reject": "Bu fırsatı reddetmek istediğinize emin misiniz?",
   "admin.confirm.delete": "Bu fırsatı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+  "admin.confirm.deleteApproved":
+    "Bu onaylı fırsatı kalıcı olarak silmek istediğinize emin misiniz? Uygulamadan hemen kalkar; önce reddetmenize gerek yok.",
   "admin.confirm.takeDown": "Fırsatı kaldırmak istediğinize emin misiniz?",
 
   // Coupon

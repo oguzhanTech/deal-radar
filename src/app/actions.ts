@@ -436,7 +436,9 @@ export async function adminUpdateDealStatus(dealId: string, status: "approved" |
 export async function adminDeleteDeal(dealId: string) {
   const result = await ensureAdmin();
   if ("error" in result) return { error: result.error };
-  const { error } = await result.supabase.from("deals").delete().eq("id", dealId);
+  // Service role: onaylı dahil tüm durumlarda silme RLS’e takılmasın
+  const admin = createAdminClient();
+  const { error } = await admin.from("deals").delete().eq("id", dealId);
   if (error) return { error: error.message };
   return { success: true };
 }

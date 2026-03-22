@@ -57,8 +57,9 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
     setLoadingId(null);
   };
 
-  const deleteDeal = async (id: string) => {
-    if (!window.confirm(t("admin.confirm.delete"))) return;
+  const deleteDeal = async (id: string, status: Deal["status"]) => {
+    const confirmKey = status === "approved" ? "admin.confirm.deleteApproved" : "admin.confirm.delete";
+    if (!window.confirm(t(confirmKey))) return;
     setLoadingId(id);
     const { error } = await adminDeleteDeal(id);
     if (error) {
@@ -359,12 +360,13 @@ export function AdminDealsContent({ initialDeals, initialFilter = "all" }: Admin
                   )}
                   <Button
                     size="sm"
-                    variant="ghost"
-                    className="text-destructive h-7 text-xs ml-auto"
-                    onClick={() => deleteDeal(deal.id)}
+                    variant="outline"
+                    className="text-destructive border-destructive/35 hover:bg-destructive/10 h-7 text-xs gap-1 ml-auto shrink-0"
+                    onClick={() => deleteDeal(deal.id, deal.status)}
                     disabled={loadingId === deal.id}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    {loadingId === deal.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                    {t("admin.deals.delete")}
                   </Button>
                 </div>
               </>
