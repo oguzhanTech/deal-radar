@@ -9,19 +9,9 @@ export function ServiceWorkerRegistrar() {
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     };
-
-    const onLoad = () => {
-      if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(register, { timeout: 1500 });
-      } else {
-        setTimeout(register, 400);
-      }
-    };
-
-    if (document.readyState === "complete") onLoad();
-    else window.addEventListener("load", onLoad, { once: true });
-
-    return () => window.removeEventListener("load", onLoad);
+    // PWABuilder ve offline testlerinde ilk yüklemede SW'nin erken devreye girmesi için
+    // "load/idle" beklemiyoruz; komponent mount olur olmaz kayıt başlatıyoruz.
+    register();
   }, []);
 
   return null;

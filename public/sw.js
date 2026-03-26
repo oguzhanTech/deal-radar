@@ -193,21 +193,43 @@ async function networkFirstNavigation(request) {
     }
     return response;
   } catch {
+    // getFreshCached, install sırasında meta yazılmadıysa null döndürebilir.
+    // Offline/timeout anında doğrudan caches.match ile en azından bir HTML döndürmeye çalışıyoruz.
     const [cachedNav, cachedShell, offline] = await Promise.all([
-      getFreshCached(STATIC_CACHE_NAME, request),
-      getFreshCached(STATIC_CACHE_NAME, APP_SHELL_URL),
+      caches.match(request),
+      caches.match(APP_SHELL_URL),
       caches.match(OFFLINE_URL),
     ]);
-    return cachedNav || cachedShell || offline || fetch(request);
+
+    if (cachedNav) return cachedNav;
+    if (cachedShell) return cachedShell;
+    if (offline) return offline;
+
+    // Son çare: yine fetch deniyoruz ama offline ise bu da fail olur.
+    try {
+      return await fetch(request);
+    } catch {
+      return new Response("", { status: 503, statusText: "Offline" });
+    }
   }
 }
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(STATIC_CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .catch(() => undefined)
+    (async () => {
+      // addAll herhangi bir asset 404/timeout olursa tüm pre-cache’i iptal edebiliyor.
+      // Bu yüzden URL’leri tek tek ekliyoruz; offline.html mutlaka cache’e düşmeli.
+      const cache = await caches.open(STATIC_CACHE_NAME);
+      await Promise.all(
+        PRECACHE_URLS.map(async (u) => {
+          try {
+            await cache.add(u);
+          } catch {
+            // ignore
+          }
+        })
+      );
+    })()
   );
   self.skipWaiting();
 });
