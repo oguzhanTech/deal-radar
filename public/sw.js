@@ -1,9 +1,21 @@
-const CACHE_NAME = "dealradar-v2";
+const CACHE_NAME = "dealradar-v3";
 const API_CACHE_NAME = `${CACHE_NAME}-api`;
 const STATIC_CACHE_NAME = `${CACHE_NAME}-static`;
+const IMAGE_CACHE_NAME = `${CACHE_NAME}-images`;
 const META_CACHE_NAME = `${CACHE_NAME}-meta`;
 const OFFLINE_URL = "/offline.html";
 const STATIC_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const IMAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const NAV_TIMEOUT_MS = 2500;
+const APP_SHELL_URL = "/";
+const PRECACHE_URLS = [
+  OFFLINE_URL,
+  APP_SHELL_URL,
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/splash/splash_topla.png",
+];
 
 const API_TTL_BY_PREFIX = [
   { prefix: "/api/deals", ttlMs: 60 * 1000 },
@@ -39,6 +51,13 @@ function shouldBypassCache(url, method) {
 }
 
 function getApiTtl(url) {
+  if (url.pathname === "/api/deals") {
+    const feed = url.searchParams.get("feed");
+    const q = url.searchParams.get("q");
+    if (feed === "home") return 45 * 1000;
+    if (q) return 20 * 1000;
+    return 60 * 1000;
+  }
   if (url.pathname.startsWith("/api/users/") && url.pathname.endsWith("/summary")) {
     return 300 * 1000;
   }
@@ -55,6 +74,12 @@ function isStaticAsset(url) {
     url.pathname.startsWith("/splash/") ||
     url.pathname.startsWith("/_next/static/")
   );
+}
+
+function isImageRequest(request, url) {
+  if (request.destination === "image") return true;
+  if (url.pathname === "/_next/image") return true;
+  return /\.(png|jpg|jpeg|webp|gif|svg|avif)$/i.test(url.pathname);
 }
 
 async function putWithMeta(cacheName, request, response, ttlMs) {
@@ -130,9 +155,59 @@ async function cacheFirstStatic(request) {
   }
 }
 
+async function cacheFirstImage(request) {
+  const cached = await getFreshCached(IMAGE_CACHE_NAME, request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response?.ok) {
+      await putWithMeta(IMAGE_CACHE_NAME, request, response.clone(), IMAGE_TTL_MS);
+    }
+    return response;
+  } catch {
+    return caches.match(request);
+  }
+}
+
+function fetchWithTimeout(request, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+    fetch(request)
+      .then((response) => {
+        clearTimeout(timeoutId);
+        resolve(response);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
+async function networkFirstNavigation(request) {
+  try {
+    const response = await fetchWithTimeout(request, NAV_TIMEOUT_MS);
+    if (response?.ok) {
+      await putWithMeta(STATIC_CACHE_NAME, request, response.clone(), 5 * 60 * 1000);
+    }
+    return response;
+  } catch {
+    const [cachedNav, cachedShell, offline] = await Promise.all([
+      getFreshCached(STATIC_CACHE_NAME, request),
+      getFreshCached(STATIC_CACHE_NAME, APP_SHELL_URL),
+      caches.match(OFFLINE_URL),
+    ]);
+    return cachedNav || cachedShell || offline || fetch(request);
+  }
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME).then((cache) => cache.add(OFFLINE_URL))
+    caches
+      .open(STATIC_CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .catch(() => undefined)
   );
   self.skipWaiting();
 });
@@ -142,7 +217,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((k) => ![API_CACHE_NAME, STATIC_CACHE_NAME, META_CACHE_NAME].includes(k))
+          .filter((k) => ![API_CACHE_NAME, STATIC_CACHE_NAME, IMAGE_CACHE_NAME, META_CACHE_NAME].includes(k))
           .map((k) => caches.delete(k))
       )
     )
@@ -155,9 +230,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
-    );
+    event.respondWith(networkFirstNavigation(event.request));
     return;
   }
 
@@ -171,6 +244,11 @@ self.addEventListener("fetch", (event) => {
 
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirstStatic(request));
+    return;
+  }
+
+  if (isImageRequest(request, url)) {
+    event.respondWith(cacheFirstImage(request));
   }
 });
 
