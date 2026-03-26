@@ -19,6 +19,36 @@
       "type": "image/png"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Topla ekran görüntüsü 1",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Topla ekran görüntüsü 2",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/3.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Topla ekran görüntüsü 3",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshots/4.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Topla ekran görüntüsü 4",
+      "form_factor": "narrow"
+    }
+  ],
   "id": "online.topla.app",
   "dir": "ltr",
   "scope": "https://www.topla.online/",
