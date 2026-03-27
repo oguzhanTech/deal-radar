@@ -6,7 +6,10 @@ const META_CACHE_NAME = `${CACHE_NAME}-meta`;
 const OFFLINE_URL = "/offline.html";
 const STATIC_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const IMAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const NAV_TIMEOUT_MS = 2500;
+/** İlk navigasyon: APK/WebView soğuk açılışta TLS/DNS gecikmesi 2–3 sn’yi aşabiliyor; kısa timeout yanlış “offline” üretmesin. */
+const NAV_TIMEOUT_MS = 15000;
+/** Kısa deneme zaman aşımı sonrası ikinci şans (yavaş ama çalışan ağ). */
+const NAV_RETRY_TIMEOUT_MS = 60000;
 const APP_SHELL_URL = "/";
 const PRECACHE_URLS = [
   OFFLINE_URL,
@@ -193,23 +196,37 @@ async function networkFirstNavigation(request) {
     }
     return response;
   } catch {
-    // getFreshCached, install sırasında meta yazılmadıysa null döndürebilir.
-    // Offline/timeout anında doğrudan caches.match ile en azından bir HTML döndürmeye çalışıyoruz.
-    const [cachedNav, cachedShell, offline] = await Promise.all([
-      caches.match(request),
-      caches.match(APP_SHELL_URL),
-      caches.match(OFFLINE_URL),
-    ]);
-
-    if (cachedNav) return cachedNav;
-    if (cachedShell) return cachedShell;
-    if (offline) return offline;
-
-    // Son çare: yine fetch deniyoruz ama offline ise bu da fail olur.
+    // Kısa timeout: yavaş ağda hata/timeout; önce uzun süreli gerçek ağ denemesi (offline.html’den önce).
     try {
-      return await fetch(request);
+      const retry = await fetchWithTimeout(request, NAV_RETRY_TIMEOUT_MS);
+      if (retry?.ok) {
+        await putWithMeta(STATIC_CACHE_NAME, request, retry.clone(), 5 * 60 * 1000);
+      }
+      return retry;
     } catch {
-      return new Response("", { status: 503, statusText: "Offline" });
+      const [cachedNav, cachedShell, offline] = await Promise.all([
+        caches.match(request),
+        caches.match(APP_SHELL_URL),
+        caches.match(OFFLINE_URL),
+      ]);
+
+      if (cachedNav) return cachedNav;
+      if (cachedShell) return cachedShell;
+
+      const appearsOffline = !self.navigator || self.navigator.onLine === false;
+      if (appearsOffline && offline) return offline;
+
+      // Çevrimde görünüyorsa: önbellekte shell yokken bile offline.html’i atla; tarayıcı varsayılanıyla son fetch.
+      try {
+        const last = await fetch(request);
+        if (last?.ok) {
+          await putWithMeta(STATIC_CACHE_NAME, request, last.clone(), 5 * 60 * 1000);
+        }
+        return last;
+      } catch {
+        if (offline) return offline;
+        return new Response("", { status: 503, statusText: "Offline" });
+      }
     }
   }
 }

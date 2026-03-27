@@ -137,7 +137,12 @@ Vercel’de **Cron Jobs** kısmına bir job ekleyin; örneğin günde 2–4 kez 
 
 Böylece radar’a eklenen fırsatlar bitişe 3 gün / 1 gün / 6 saat / 1 saat kala kullanıcıya hem uygulama içi bildirim hem de mobil push ile iletilecek.
 
-## 8. Genel kontrol listesi
+## 8. PWA / APK ve service worker (`public/sw.js`)
+
+- **Navigasyon**: Tam sayfa istekleri ağ-öncelikli; ilk denemede makul bir süre (soğuk WebView açılışı) ve başarısızlıkta daha uzun ikinci bir ağ denemesi kullanılır. Böylece yavaş ama çalışan bağlantıda yanlışlıkla `offline.html` gösterilmesi azaltılır.
+- **Doğrulama (manuel)**: Deploy sonrası gerçek cihazda APK/TWA’yı kapatıp soğuk açılış yapın; ilk yüklemede ana sayfanın geldiğini doğrulayın. Sorun devam ederse Chrome uzaktan hata ayıklama ile `Application → Service Workers` üzerinden güncel `sw.js`’in yüklendiğini kontrol edin.
+
+## 9. Genel kontrol listesi
 
 - [ ] Production’da `NEXT_PUBLIC_APP_URL=https://www.topla.online`
 - [ ] Push için: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` ve `VAPID_PRIVATE_KEY` tanımlı, `004_push_subscriptions.sql` çalıştırıldı, cron job ayarlandı
