@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Tag, Users, Flag, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Tag, Users, Flag, ArrowLeft, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { ToastProvider } from "@/components/ui/toast";
@@ -10,6 +10,7 @@ import { ToastProvider } from "@/components/ui/toast";
 const navItems = [
   { href: "/admin", icon: LayoutDashboard, labelKey: "admin.dashboard" },
   { href: "/admin/deals", icon: Tag, labelKey: "admin.deals" },
+  { href: "/admin/hero", icon: Megaphone, labelKey: "admin.hero.nav" },
   { href: "/admin/users", icon: Users, labelKey: "admin.users" },
   { href: "/admin/reports", icon: Flag, labelKey: "admin.reports" },
 ];

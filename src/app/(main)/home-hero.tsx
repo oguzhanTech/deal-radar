@@ -1,14 +1,20 @@
-import { getHeroDeals } from "./home-sections";
+import { buildHeroSlides, fetchHeroAnnouncements, getHeroDeals } from "./home-sections";
 import { HomeHeroCarousel } from "@/components/home/home-hero-carousel";
-import type { HeroDeal } from "@/components/home/home-hero-carousel";
+import type { HeroSlide } from "@/components/home/home-hero-carousel";
 
 interface HomeHeroProps {
-  deals?: HeroDeal[];
+  heroSlides?: HeroSlide[];
 }
 
-export async function HomeHero({ deals: initialDeals }: HomeHeroProps = {}) {
-  const deals = initialDeals ?? (await getHeroDeals());
-  if (!deals.length) return null;
-  return <HomeHeroCarousel deals={deals} />;
+export async function HomeHero({ heroSlides: initialSlides }: HomeHeroProps = {}) {
+  let slides: HeroSlide[];
+  if (initialSlides !== undefined) {
+    slides = initialSlides;
+  } else {
+    const [heroDeals, announcements] = await Promise.all([getHeroDeals(), fetchHeroAnnouncements()]);
+    slides = buildHeroSlides(announcements, heroDeals);
+  }
+  if (!slides.length) return null;
+  return <HomeHeroCarousel slides={slides} />;
 }
 

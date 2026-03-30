@@ -3,8 +3,8 @@ import { DealSection } from "@/components/deals/deal-section";
 import { EditorPickWidget } from "@/components/home/editor-pick-widget";
 import { ActivityFeedWidget } from "@/components/home/activity-feed-widget";
 import { t } from "@/lib/i18n";
-import type { Deal } from "@/lib/types/database";
-import type { HeroDeal } from "@/components/home/home-hero-carousel";
+import type { Deal, HeroAnnouncement } from "@/lib/types/database";
+import type { HeroDeal, HeroSlide } from "@/components/home/home-hero-carousel";
 import type { Activity } from "@/lib/types/database";
 
 type HomeDeal = Deal & { profile?: { display_name: string | null } | null };
@@ -150,6 +150,58 @@ export async function getHeroDeals(pools?: HeroDealPools): Promise<HeroDeal[]> {
   }
 
   return picks;
+}
+
+export function buildHeroSlides(announcements: HeroAnnouncement[], heroDeals: HeroDeal[]): HeroSlide[] {
+  const active = announcements
+    .filter((a) => a.is_active && a.image_url?.trim())
+    .sort((a, b) => {
+      if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  const annSlides: HeroSlide[] = active.map((a) => ({
+    kind: "announcement",
+    id: a.id,
+    title: a.title,
+    body: a.body,
+    image_url: a.image_url,
+    link_url: a.link_url,
+  }));
+  const dealSlides: HeroSlide[] = heroDeals.map((deal) => ({ kind: "deal", deal }));
+  // İstenen ürün davranışı: duyuru(lar) her zaman 2. slayttan itibaren yer alsın.
+  if (annSlides.length === 0) return dealSlides;
+  if (dealSlides.length === 0) return annSlides;
+  return [dealSlides[0], ...annSlides, ...dealSlides.slice(1)];
+}
+
+export async function fetchHeroAnnouncements(): Promise<HeroAnnouncement[]> {
+  const supabase = await createAnonClient();
+  const { data, error } = await supabase
+    .from("hero_announcements")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("[fetchHeroAnnouncements]", error);
+    return [];
+  }
+  return (data ?? []) as HeroAnnouncement[];
+}
+
+export async function hasActiveHeroAnnouncements(): Promise<boolean> {
+  const supabase = await createAnonClient();
+  const { data, error } = await supabase
+    .from("hero_announcements")
+    .select("id")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error("[hasActiveHeroAnnouncements]", error);
+    return false;
+  }
+  return !!data;
 }
 
 async function fetchNewest() {
@@ -365,6 +417,7 @@ export async function getHomePageData() {
     internationalDeals,
     activities,
     editorPick,
+    heroAnnouncements,
   ] = await Promise.all([
     fetchEndingSoon(),
     fetchPopular(),
@@ -375,12 +428,16 @@ export async function getHomePageData() {
     fetchInternationalDeals(),
     fetchRecentActivities(5),
     fetchEditorPick(),
+    fetchHeroAnnouncements(),
   ]);
 
   const heroDeals = await getHeroDeals({ endingSoon, popular, newest });
+  const heroSlides = buildHeroSlides(heroAnnouncements, heroDeals);
 
   return {
     heroDeals,
+    heroAnnouncements,
+    heroSlides,
     endingSoon,
     popular,
     newest,

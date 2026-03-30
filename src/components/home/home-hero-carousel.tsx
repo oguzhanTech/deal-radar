@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback, TouchEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Flame, Clock, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Clock, Sparkles, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
@@ -14,8 +14,19 @@ export interface HeroDeal extends Deal {
   creatorName?: string | null;
 }
 
+export type HeroSlide =
+  | { kind: "deal"; deal: HeroDeal }
+  | {
+      kind: "announcement";
+      id: string;
+      title: string;
+      body: string | null;
+      image_url: string;
+      link_url: string | null;
+    };
+
 interface HomeHeroCarouselProps {
-  deals: HeroDeal[];
+  slides: HeroSlide[];
 }
 
 function getSectionLabel(section: HeroDeal["section"]) {
@@ -52,7 +63,6 @@ function getHeroMessage(section: HeroDeal["section"]) {
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   }
-  // newest
   const messages = [
     "Topla'ya yeni düştü, ilk sen değerlendir.",
     "Taze taze gelen bir fırsat, keşfetmeye değer.",
@@ -62,22 +72,39 @@ function getHeroMessage(section: HeroDeal["section"]) {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
+function slideKey(s: HeroSlide): string {
+  return s.kind === "deal" ? `deal-${s.deal.id}` : `announcement-${s.id}`;
+}
+
+function navigateFromLink(router: ReturnType<typeof useRouter>, linkUrl: string | null) {
+  const u = linkUrl?.trim();
+  if (!u) return;
+  if (u.startsWith("/")) {
+    router.push(u);
+    return;
+  }
+  if (u.startsWith("https://") || u.startsWith("http://")) {
+    window.open(u, "_blank", "noopener,noreferrer");
+  }
+}
+
+export function HomeHeroCarousel({ slides: rawSlides }: HomeHeroCarouselProps) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
-  const slides = useMemo(
-    () =>
-      deals.filter(
-        (d) =>
-          d.status === "approved" &&
-          d.end_at &&
-          new Date(d.end_at) > new Date() &&
-          !!d.image_url
-      ),
-    [deals]
-  );
+  const slides = useMemo(() => {
+    return rawSlides.filter((s) => {
+      if (s.kind === "announcement") return !!s.image_url?.trim();
+      const d = s.deal;
+      return (
+        d.status === "approved" &&
+        d.end_at &&
+        new Date(d.end_at) > new Date() &&
+        !!d.image_url
+      );
+    });
+  }, [rawSlides]);
 
   const length = slides.length;
 
@@ -108,46 +135,91 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
   };
 
   const active = slides[index];
-  const isLongTitle = active.title ? active.title.length > 23 : false;
-  const hasPrices = active.deal_price != null && active.original_price != null;
+
+  const dealMessage = useMemo(() => {
+    if (!active || active.kind !== "deal") return "";
+    return getHeroMessage(active.deal.section);
+  }, [active]);
+
+  if (!length || !active) return null;
+
+  const isDeal = active.kind === "deal";
+  const deal = isDeal ? active.deal : null;
+  const ann = !isDeal ? active : null;
+
+  const isLongTitle = isDeal
+    ? deal!.title.length > 23
+    : (ann!.title?.length ?? 0) > 23;
+
+  const hasPrices =
+    isDeal && deal!.deal_price != null && deal!.original_price != null;
+
   const discount =
-    hasPrices && active.original_price! > 0
-      ? Math.round(((active.original_price! - active.deal_price!) / active.original_price!) * 100)
-      : active.discount_percent ?? null;
+    isDeal && hasPrices && deal!.original_price! > 0
+      ? Math.round(((deal!.original_price! - deal!.deal_price!) / deal!.original_price!) * 100)
+      : isDeal
+        ? deal!.discount_percent ?? null
+        : null;
 
-  const sectionLabel = active ? getSectionLabel(active.section) : "";
-  // Mesajı slide başına sabitle: her render'da Math.random() çalışmasın (mobilde dokunma
-  // touchStartX ile yeniden render tetikleyip metni sürekli değiştiriyordu).
-  const message = useMemo(() => {
-    if (!active) return "";
-    return getHeroMessage(active.section);
-  }, [active?.id, active?.section]);
+  const sectionLabel = isDeal && deal ? getSectionLabel(deal.section) : "";
+  const motionKey = slideKey(active);
 
-  if (!length) return null;
+  const onCardClick = () => {
+    if (isDeal && deal) {
+      router.push(`/deal/${deal.id}`);
+      return;
+    }
+    if (ann) navigateFromLink(router, ann.link_url);
+  };
+
+  const cardClickable = isDeal || !!(ann?.link_url?.trim());
 
   return (
     <section
       className="px-4 pt-1 md:pt-1.5"
-      aria-label="Öne çıkan fırsatlar"
+      aria-label={t("home.heroCarouselAria")}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <div className="relative overflow-hidden rounded-3xl bg-black text-white shadow-xl h-[190px] md:h-[215px]">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
-            key={active.id}
+            key={motionKey}
             initial={{ x: 40, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -40, opacity: 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 26, mass: 0.7 }}
-            className="absolute inset-0 cursor-pointer"
-            onClick={() => router.push(`/deal/${active.id}`)}
+            className={cn("absolute inset-0", cardClickable && "cursor-pointer")}
+            onClick={cardClickable ? onCardClick : undefined}
+            role={cardClickable ? "link" : undefined}
+            tabIndex={cardClickable ? 0 : undefined}
+            onKeyDown={
+              cardClickable
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onCardClick();
+                    }
+                  }
+                : undefined
+            }
           >
             <div className="absolute inset-0">
-              {active.image_url && (
+              {isDeal && deal?.image_url && (
                 <Image
-                  src={active.image_url}
-                  alt={active.title}
+                  src={deal.image_url}
+                  alt={deal.title}
+                  fill
+                  className="object-cover scale-110"
+                  style={{ objectPosition: "center" }}
+                  sizes="100vw"
+                  priority
+                />
+              )}
+              {!isDeal && ann?.image_url && (
+                <Image
+                  src={ann.image_url}
+                  alt={ann.title}
                   fill
                   className="object-cover scale-110"
                   style={{ objectPosition: "center" }}
@@ -160,61 +232,77 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
 
             <div className="relative flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 h-full">
               <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15">
-                {active.section === "endingSoon" ? (
-                  <Clock className="h-3 w-3" />
-                ) : active.section === "popular" || active.section === "trending" ? (
-                  <Flame className="h-3 w-3" />
-                ) : (
-                  <Sparkles className="h-3 w-3" />
-                )}
-              </span>
-              <span className="uppercase tracking-wide">{sectionLabel}</span>
-              {active.category && <span className="text-white/70">• {active.category}</span>}
-            </div>
-
-            <h1
-              className={cn(
-                "font-extrabold leading-tight line-clamp-1 md:line-clamp-2",
-                isLongTitle ? "text-sm md:text-lg lg:text-xl" : "text-lg md:text-2xl lg:text-3xl"
-              )}
-            >
-              {active.title}
-            </h1>
-
-            <p className="text-xs md:text-sm text-white/75 max-w-xl line-clamp-2 md:line-clamp-3">
-              {message}
-            </p>
-
-            <div className="flex items-end gap-4 flex-wrap">
-              {hasPrices ? (
-                <>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm md:text-base line-through text-white/60">
-                      {active.original_price} {active.currency === "TRY" ? "TL" : active.currency}
-                    </span>
-                    <span className="text-2xl md:text-3xl font-extrabold">
-                      {active.deal_price} {active.currency === "TRY" ? "TL" : active.currency}
-                    </span>
-                  </div>
-                  {discount && (
-                    <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold shadow-sm">
-                      <span>-%{discount}</span>
-                    </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-md">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15">
+                    {isDeal && deal ? (
+                      deal.section === "endingSoon" ? (
+                        <Clock className="h-3 w-3" />
+                      ) : deal.section === "popular" || deal.section === "trending" ? (
+                        <Flame className="h-3 w-3" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )
+                    ) : (
+                      <Megaphone className="h-3 w-3" />
+                    )}
+                  </span>
+                  <span className="uppercase tracking-wide">
+                    {isDeal ? sectionLabel : t("home.heroAnnouncement")}
+                  </span>
+                  {isDeal && deal?.category && (
+                    <span className="text-white/70">• {deal.category}</span>
                   )}
-                </>
-              ) : (
-                <span className="text-sm md:text-base text-white/80">{t("deal.viewDeal")}</span>
-              )}
+                </div>
 
-              {active.creatorName && (
-                <span className="text-xs md:text-sm text-white/70">
-                  Paylaşan: <span className="font-semibold">{active.creatorName}</span>
-                </span>
-              )}
-            </div>
-          </div>
+                <h1
+                  className={cn(
+                    "font-extrabold leading-tight line-clamp-1 md:line-clamp-2",
+                    isLongTitle ? "text-sm md:text-lg lg:text-xl" : "text-lg md:text-2xl lg:text-3xl"
+                  )}
+                >
+                  {isDeal && deal ? deal.title : ann!.title}
+                </h1>
+
+                <p className="text-xs md:text-sm text-white/75 max-w-xl line-clamp-2 md:line-clamp-3">
+                  {isDeal && deal ? dealMessage : ann?.body ?? "\u00a0"}
+                </p>
+
+                <div className="flex items-end gap-4 flex-wrap">
+                  {isDeal && deal ? (
+                    <>
+                      {hasPrices ? (
+                        <>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm md:text-base line-through text-white/60">
+                              {deal.original_price} {deal.currency === "TRY" ? "TL" : deal.currency}
+                            </span>
+                            <span className="text-2xl md:text-3xl font-extrabold">
+                              {deal.deal_price} {deal.currency === "TRY" ? "TL" : deal.currency}
+                            </span>
+                          </div>
+                          {discount ? (
+                            <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold shadow-sm">
+                              <span>-%{discount}</span>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <span className="text-sm md:text-base text-white/80">{t("deal.viewDeal")}</span>
+                      )}
+
+                      {deal.creatorName && (
+                        <span className="text-xs md:text-sm text-white/70">
+                          Paylaşan: <span className="font-semibold">{deal.creatorName}</span>
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-sm md:text-base text-white/80">
+                      {ann?.link_url?.trim() ? t("home.heroAnnouncementCta") : "\u00a0"}
+                    </span>
+                  )}
+                </div>
+              </div>
 
               <div className="pointer-events-none absolute right-4 bottom-4 flex items-center gap-3 text-[11px] md:text-xs text-white/80">
                 <span className="opacity-75">
@@ -260,4 +348,3 @@ export function HomeHeroCarousel({ deals }: HomeHeroCarouselProps) {
     </section>
   );
 }
-

@@ -133,6 +133,20 @@ export interface DealReport {
   created_at: string;
 }
 
+export interface HeroAnnouncement {
+  id: string;
+  title: string;
+  body: string | null;
+  image_url: string;
+  image_storage_path: string | null;
+  link_url: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DealWithMeta extends Deal {
   vote_count?: number;
   comment_count?: number;

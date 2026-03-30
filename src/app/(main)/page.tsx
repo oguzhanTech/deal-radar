@@ -3,6 +3,7 @@ import { createAnonClient } from "@/lib/supabase/server";
 import { HomeEmptyState } from "./home-content";
 import {
   getHomePageData,
+  hasActiveHeroAnnouncements,
   pickDesktopRailDeals,
   HomeTrendingSection,
   HomeEndingSoonSection,
@@ -45,15 +46,18 @@ const HOME_SECTIONS = [
 
 export default async function HomePage() {
   const supabase = await createAnonClient();
-  const { data: hasDeals } = await supabase
-    .from("deals")
-    .select("id")
-    .eq("status", "approved")
-    .gt("end_at", new Date().toISOString())
-    .limit(1)
-    .maybeSingle();
+  const [dealsCheck, hasAnnouncements] = await Promise.all([
+    supabase
+      .from("deals")
+      .select("id")
+      .eq("status", "approved")
+      .gt("end_at", new Date().toISOString())
+      .limit(1)
+      .maybeSingle(),
+    hasActiveHeroAnnouncements(),
+  ]);
 
-  if (!hasDeals) {
+  if (!dealsCheck.data && !hasAnnouncements) {
     return (
       <div className="space-y-4 py-3">
         <HomeEmptyState />
@@ -99,7 +103,7 @@ export default async function HomePage() {
         )}
       >
       <Suspense fallback={null}>
-        <HomeHero deals={homeData.heroDeals} />
+        <HomeHero heroSlides={homeData.heroSlides} />
       </Suspense>
       {firstTwo.map(({ id, Section }) => (
         <Suspense key={id} fallback={<DealSectionSkeleton />}>

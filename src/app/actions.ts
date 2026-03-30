@@ -493,3 +493,87 @@ export async function updateEditorPickQuote(dealId: string, quote: string | null
   if (error) return { error: error.message };
   return { success: true };
 }
+
+export async function adminUpsertHeroAnnouncement(payload: {
+  id?: string;
+  title: string;
+  body?: string | null;
+  image_url: string;
+  image_storage_path?: string | null;
+  link_url?: string | null;
+  is_active: boolean;
+  sort_order: number;
+}) {
+  const result = await ensureAdmin();
+  if ("error" in result) return { error: result.error };
+  const supabase = result.supabase;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Oturum bulunamadı." };
+
+  const link = payload.link_url?.trim() || null;
+
+  if (payload.id) {
+    const { data: prev } = await supabase
+      .from("hero_announcements")
+      .select("image_storage_path")
+      .eq("id", payload.id)
+      .maybeSingle();
+
+    const { error } = await supabase
+      .from("hero_announcements")
+      .update({
+        title: payload.title.trim(),
+        body: payload.body?.trim() || null,
+        image_url: payload.image_url,
+        image_storage_path: payload.image_storage_path ?? null,
+        link_url: link,
+        is_active: payload.is_active,
+        sort_order: payload.sort_order,
+      })
+      .eq("id", payload.id);
+    if (error) return { error: error.message };
+
+    if (prev?.image_storage_path && prev.image_storage_path !== payload.image_storage_path) {
+      try {
+        await supabase.storage.from("deal-images").remove([prev.image_storage_path]);
+      } catch {
+        // ignore
+      }
+    }
+  } else {
+    const { error } = await supabase.from("hero_announcements").insert({
+      title: payload.title.trim(),
+      body: payload.body?.trim() || null,
+      image_url: payload.image_url,
+      image_storage_path: payload.image_storage_path ?? null,
+      link_url: link,
+      is_active: payload.is_active,
+      sort_order: payload.sort_order,
+      created_by: user.id,
+    });
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin/hero");
+  return { success: true };
+}
+
+export async function adminDeleteHeroAnnouncement(id: string) {
+  const result = await ensureAdmin();
+  if ("error" in result) return { error: result.error };
+  const supabase = result.supabase;
+  const { data: row } = await supabase.from("hero_announcements").select("image_storage_path").eq("id", id).maybeSingle();
+  const { error } = await supabase.from("hero_announcements").delete().eq("id", id);
+  if (error) return { error: error.message };
+  if (row?.image_storage_path) {
+    try {
+      await supabase.storage.from("deal-images").remove([row.image_storage_path]);
+    } catch {
+      // ignore
+    }
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/hero");
+  return { success: true };
+}
