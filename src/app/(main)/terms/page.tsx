@@ -1,56 +1,57 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Kullanım Şartları — Topla",
+  title: "KullanÄ±m ÅartlarÄ± â€” Topla",
 };
 
 export default function TermsPage() {
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-4 text-sm text-muted-foreground">
-      <h1 className="text-xl font-bold text-foreground">Kullanım Şartları</h1>
+    <div className="max-w-lg lg:max-w-3xl mx-auto px-4 py-6 space-y-4 text-sm text-muted-foreground">
+      <h1 className="text-xl font-bold text-foreground">KullanÄ±m ÅartlarÄ±</h1>
       <p>
-        Topla&apos;yı kullanarak aşağıdaki temel şartları kabul etmiş olursunuz. Amaç, topluluk düzenini korumak ve kötüye
-        kullanımı engellemektir.
+        Topla&apos;yÄ± kullanarak aÅŸaÄŸÄ±daki temel ÅŸartlarÄ± kabul etmiÅŸ olursunuz. AmaÃ§, topluluk dÃ¼zenini korumak ve kÃ¶tÃ¼ye
+        kullanÄ±mÄ± engellemektir.
       </p>
       <section className="space-y-1">
-        <h2 className="font-semibold text-foreground text-sm">Topluluk kuralları</h2>
+        <h2 className="font-semibold text-foreground text-sm">Topluluk kurallarÄ±</h2>
         <ul className="list-disc list-inside space-y-0.5">
-          <li>Yanıltıcı, spam veya zararlı içerik paylaşmayın.</li>
-          <li>Yalnızca herkes için güvenli ve yasal fırsatlar ekleyin.</li>
-          <li>Diğer kullanıcıların gizliliğine ve haklarına saygı gösterin.</li>
+          <li>YanÄ±ltÄ±cÄ±, spam veya zararlÄ± iÃ§erik paylaÅŸmayÄ±n.</li>
+          <li>YalnÄ±zca herkes iÃ§in gÃ¼venli ve yasal fÄ±rsatlar ekleyin.</li>
+          <li>DiÄŸer kullanÄ±cÄ±larÄ±n gizliliÄŸine ve haklarÄ±na saygÄ± gÃ¶sterin.</li>
         </ul>
       </section>
       <section className="space-y-1">
-        <h2 className="font-semibold text-foreground text-sm">Hesap ve içerik</h2>
+        <h2 className="font-semibold text-foreground text-sm">Hesap ve iÃ§erik</h2>
         <p>
-          Hesabınız altında paylaştığınız içeriklerden siz sorumlusunuz. Topla, topluluk kurallarını ihlal eden içerikleri
-          kaldırma ve hesapları sınırlandırma hakkını saklı tutar.
+          HesabÄ±nÄ±z altÄ±nda paylaÅŸtÄ±ÄŸÄ±nÄ±z iÃ§eriklerden siz sorumlusunuz. Topla, topluluk kurallarÄ±nÄ± ihlal eden iÃ§erikleri
+          kaldÄ±rma ve hesaplarÄ± sÄ±nÄ±rlandÄ±rma hakkÄ±nÄ± saklÄ± tutar.
         </p>
       </section>
       <section className="space-y-1">
-        <h2 className="font-semibold text-foreground text-sm">Hizmette değişiklik</h2>
+        <h2 className="font-semibold text-foreground text-sm">Hizmette deÄŸiÅŸiklik</h2>
         <p>
-          Uygulamayı geliştirmek için zaman zaman özellikleri değiştirebilir veya kaldırabiliriz. Önemli değişiklikler
-          olduğunda, uygulama içi duyurular veya güncelleme notları ile bilgilendirme yaparız.
+          UygulamayÄ± geliÅŸtirmek iÃ§in zaman zaman Ã¶zellikleri deÄŸiÅŸtirebilir veya kaldÄ±rabiliriz. Ã–nemli deÄŸiÅŸiklikler
+          olduÄŸunda, uygulama iÃ§i duyurular veya gÃ¼ncelleme notlarÄ± ile bilgilendirme yaparÄ±z.
         </p>
       </section>
       <section className="space-y-1">
-        <h2 className="font-semibold text-foreground text-sm">Reklamlar ve ödemeler</h2>
+        <h2 className="font-semibold text-foreground text-sm">Reklamlar ve Ã¶demeler</h2>
         <p>
-          Topla, şu an itibarıyla uygulama içinde üçüncü taraf reklam göstermez ve uygulama içi satın alma (abonelik veya
-          ürün satışı) sunmaz. Gelecekte bu durumda değişiklik olması halinde, şartlar güncellenecek ve kullanıcılar
+          Topla, ÅŸu an itibarÄ±yla uygulama iÃ§inde Ã¼Ã§Ã¼ncÃ¼ taraf reklam gÃ¶stermez ve uygulama iÃ§i satÄ±n alma (abonelik veya
+          Ã¼rÃ¼n satÄ±ÅŸÄ±) sunmaz. Gelecekte bu durumda deÄŸiÅŸiklik olmasÄ± halinde, ÅŸartlar gÃ¼ncellenecek ve kullanÄ±cÄ±lar
           bilgilendirilecektir.
         </p>
       </section>
       <section className="space-y-1">
         <h2 className="font-semibold text-foreground text-sm">Hesap kapatma</h2>
         <p>
-          Kullanıcılar, hesaplarının kapatılmasını ve kişisel verilerinin silinmesini talep edebilir. Bunun için gizlilik
-          politikamızda belirtilen iletişim kanalı üzerinden bizimle irtibata geçebilirsiniz. Talebiniz makul bir süre
-          içinde değerlendirilir ve yasal yükümlülükler çerçevesinde hesabınız kapatılır.
+          KullanÄ±cÄ±lar, hesaplarÄ±nÄ±n kapatÄ±lmasÄ±nÄ± ve kiÅŸisel verilerinin silinmesini talep edebilir. Bunun iÃ§in gizlilik
+          politikamÄ±zda belirtilen iletiÅŸim kanalÄ± Ã¼zerinden bizimle irtibata geÃ§ebilirsiniz. Talebiniz makul bir sÃ¼re
+          iÃ§inde deÄŸerlendirilir ve yasal yÃ¼kÃ¼mlÃ¼lÃ¼kler Ã§erÃ§evesinde hesabÄ±nÄ±z kapatÄ±lÄ±r.
         </p>
       </section>
     </div>
   );
 }
+
 

@@ -51,7 +51,7 @@ async function fetchTrending() {
     .gt("end_at", new Date().toISOString())
     .gte("heat_score", 20)
     .order("heat_score", { ascending: false })
-    .limit(5);
+    .limit(10);
   const deals = await attachCreators(data ?? []);
   return deals.map((deal) => ({ ...deal, is_trending: true }));
 }
@@ -64,7 +64,7 @@ async function fetchEndingSoon() {
     .eq("status", "approved")
     .gt("end_at", new Date().toISOString())
     .order("end_at", { ascending: true })
-    .limit(5);
+    .limit(10);
   return attachCreators(data ?? []);
 }
 
@@ -76,7 +76,7 @@ async function fetchPopular() {
     .eq("status", "approved")
     .gt("end_at", new Date().toISOString())
     .order("heat_score", { ascending: false })
-    .limit(5);
+    .limit(10);
   return attachCreators(data ?? []);
 }
 
@@ -159,7 +159,7 @@ async function fetchNewest() {
     .select("*")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(10);
   return attachCreators(data ?? []);
 }
 
@@ -391,4 +391,30 @@ export async function getHomePageData() {
     activities,
     editorPick,
   };
+}
+
+/** Masaüstü sağ rail: havuzlardan karışık, editör seçimiyle çakışmayan en fazla 8 fırsat (ek DB yok). */
+export function pickDesktopRailDeals(data: Awaited<ReturnType<typeof getHomePageData>>): Deal[] {
+  const editorId = data.editorPick?.deal.id;
+  const skip = new Set<string>();
+  if (editorId) skip.add(editorId);
+
+  const slices: Deal[] = [
+    ...data.trending.slice(0, 2),
+    ...data.newest.slice(0, 2),
+    ...data.popular.slice(0, 2),
+    ...data.endingSoon.slice(0, 2),
+    ...data.biggestDrops.slice(0, 2),
+  ];
+
+  const seen = new Set<string>();
+  const out: Deal[] = [];
+  for (const d of slices) {
+    if (skip.has(d.id)) continue;
+    if (seen.has(d.id)) continue;
+    seen.add(d.id);
+    out.push(d);
+    if (out.length >= 8) break;
+  }
+  return out;
 }

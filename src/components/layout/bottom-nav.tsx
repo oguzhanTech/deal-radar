@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -20,7 +20,7 @@ export function BottomNav() {
   const router = useRouter();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl shadow-nav pb-safe border-t border-border/50">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl shadow-nav pb-safe border-t border-border/50">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive =
@@ -33,8 +33,8 @@ export function BottomNav() {
               href={tab.href}
               prefetch={true}
               onMouseEnter={() => prefetchOnce(router, tab.href)}
-              // Mobilde touchstart sırasında prefetch bazen tap->navigation hissini geciktirebilir.
-              // Alt barda sadece tıklamada hızlı geçişi önceliklendiriyoruz.
+              // Mobilde touchstart sÄ±rasÄ±nda prefetch bazen tap->navigation hissini geciktirebilir.
+              // Alt barda sadece tÄ±klamada hÄ±zlÄ± geÃ§iÅŸi Ã¶nceliklendiriyoruz.
               data-no-skeleton
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative",
@@ -76,3 +76,5 @@ export function BottomNav() {
     </nav>
   );
 }
+
+

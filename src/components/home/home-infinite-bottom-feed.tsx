@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DealCard } from "@/components/deals/deal-card";
@@ -70,7 +70,7 @@ export function HomeInfiniteBottomFeed({ excludeIds = [] }: HomeInfiniteBottomFe
       setOffset(nextOffset);
       setHasMore(nextHasMore);
     } catch {
-      setError("Daha fazla fırsat yüklenemedi.");
+      setError("Daha fazla fÄ±rsat yÃ¼klenemedi.");
     } finally {
       setLoading(false);
     }
@@ -120,7 +120,7 @@ export function HomeInfiniteBottomFeed({ excludeIds = [] }: HomeInfiniteBottomFe
             <p className="text-sm font-semibold text-foreground">Senin icin daha fazla firsat</p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-2">
             {items.map((deal) => (
               <DealCard key={deal.id} deal={deal} compact surface="feed" />
             ))}
@@ -150,3 +150,4 @@ export function HomeInfiniteBottomFeed({ excludeIds = [] }: HomeInfiniteBottomFe
     </section>
   );
 }
+

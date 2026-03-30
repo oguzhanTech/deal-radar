@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { DealCard } from "./deal-card";
 import { DealCardSkeleton } from "./deal-card-skeleton";
+import { useIsLgUp } from "@/hooks/use-is-lg";
 import { t } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import type { Deal } from "@/lib/types/database";
 
-const HOME_MAX_ITEMS = 5;
+const HOME_MAX_ITEMS_MOBILE = 5;
+const HOME_MAX_ITEMS_DESKTOP = 8;
 
 interface DealSectionProps {
   title: string;
@@ -16,7 +19,7 @@ interface DealSectionProps {
   deals: Deal[];
   loading?: boolean;
   seeAllHref?: string;
-  /** true = alt alta 5 adet küçük widget, false = eski yatay kaydırma (kullanılmıyor) */
+  /** true = alt alta küçük widget, false = eski yatay kaydırma (kullanılmıyor) */
   vertical?: boolean;
 }
 
@@ -29,7 +32,10 @@ export function DealSection({
   vertical = true,
 }: DealSectionProps) {
   const router = useRouter();
-  const displayDeals = vertical ? deals.slice(0, HOME_MAX_ITEMS) : deals;
+  const isLg = useIsLgUp();
+  const maxItems = isLg ? HOME_MAX_ITEMS_DESKTOP : HOME_MAX_ITEMS_MOBILE;
+  const displayDeals = vertical ? deals.slice(0, maxItems) : deals;
+  const skeletonCount = Math.min(maxItems, 8);
 
   return (
     <section className="space-y-3">
@@ -52,9 +58,9 @@ export function DealSection({
         )}
       </div>
 
-      <div className="px-4 space-y-2">
+      <div className={cn("px-4 space-y-2", vertical && "lg:grid lg:grid-cols-2 lg:gap-x-4 lg:gap-y-2 lg:space-y-0 xl:grid-cols-2")}>
         {loading
-          ? Array.from({ length: 3 }).map((_, i) => (
+          ? Array.from({ length: skeletonCount }).map((_, i) => (
               <DealCardSkeleton key={i} compact={vertical} />
             ))
           : displayDeals.map((deal) => (

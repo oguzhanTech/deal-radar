@@ -3,6 +3,7 @@ import { createAnonClient } from "@/lib/supabase/server";
 import { HomeEmptyState } from "./home-content";
 import {
   getHomePageData,
+  pickDesktopRailDeals,
   HomeTrendingSection,
   HomeEndingSoonSection,
   HomePopularSection,
@@ -15,7 +16,10 @@ import {
 } from "./home-sections";
 import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
+import { HomeDesktopSidebar } from "@/components/home/home-desktop-sidebar";
+import { HomeDesktopRail } from "@/components/home/home-desktop-rail";
 import { HomeInfiniteBottomFeed } from "@/components/home/home-infinite-bottom-feed";
+import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
 
@@ -58,6 +62,7 @@ export default async function HomePage() {
   }
 
   const homeData = await getHomePageData();
+  const mixedRailDeals = pickDesktopRailDeals(homeData);
 
   const orderedSections = shuffle([...HOME_SECTIONS]);
   const sectionsWithoutLast = orderedSections.slice(0, -1);
@@ -80,8 +85,19 @@ export default async function HomePage() {
     ].filter(Boolean) as string[])
   );
 
+  const showDesktopRail = !!homeData.editorPick || mixedRailDeals.length > 0;
+
   return (
-    <div className="space-y-4 py-3">
+    <div className="lg:grid lg:grid-cols-12 lg:gap-6 xl:gap-8 lg:items-start">
+      <aside className="hidden lg:block lg:col-span-2 min-w-0 lg:pt-5 lg:border-r lg:border-border/40 lg:pr-5 xl:pr-6">
+        <HomeDesktopSidebar />
+      </aside>
+      <div
+        className={cn(
+          "space-y-4 py-3 lg:py-5 min-w-0",
+          showDesktopRail ? "lg:col-span-7" : "lg:col-span-10"
+        )}
+      >
       <Suspense fallback={null}>
         <HomeHero deals={homeData.heroDeals} />
       </Suspense>
@@ -131,7 +147,9 @@ export default async function HomePage() {
         </Suspense>
       ))}
       <Suspense fallback={null}>
-        <HomeEditorPickSection initialResult={homeData.editorPick} />
+        <div className="lg:hidden">
+          <HomeEditorPickSection initialResult={homeData.editorPick} />
+        </div>
       </Suspense>
       <Suspense key={lastSection.id} fallback={<DealSectionSkeleton />}>
         <LastSectionComponent
@@ -153,6 +171,12 @@ export default async function HomePage() {
         />
       </Suspense>
       <HomeInfiniteBottomFeed excludeIds={excludeIds} />
+      </div>
+      {showDesktopRail ? (
+        <aside className="hidden lg:block lg:col-span-3 min-w-0 max-w-full overflow-x-hidden lg:pt-5 lg:border-l lg:border-border/40 lg:pl-5 xl:pl-6">
+          <HomeDesktopRail editorPick={homeData.editorPick} mixedDeals={mixedRailDeals} />
+        </aside>
+      ) : null}
     </div>
   );
 }

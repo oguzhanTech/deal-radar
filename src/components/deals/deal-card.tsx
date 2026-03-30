@@ -26,6 +26,8 @@ interface DealCardProps {
   surface?: "default" | "feed";
   /** Dar gridlerde (örn. Keşfet) aciliyet etiketini gizleyip taşmayı önler */
   hideCountdownStatusLabel?: boolean;
+  /** Ana sayfa sağ sütun: dikey, kare görsel; taşmayı önler */
+  compactLayout?: "default" | "rail";
 }
 
 export function DealCard({
@@ -35,6 +37,7 @@ export function DealCard({
   hideCreator = false,
   surface = "default",
   hideCountdownStatusLabel = false,
+  compactLayout = "default",
 }: DealCardProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
@@ -55,12 +58,151 @@ export function DealCard({
     router.push(`/deal/${deal.id}`);
   };
 
+  if (compact && compactLayout === "rail") {
+    return (
+      <div
+        onMouseEnter={prefetchDetail}
+        onTouchStart={prefetchDetail}
+        className="w-full min-w-0 max-w-full hover:opacity-95 active:scale-[0.99] transition-transform cursor-pointer"
+        onClick={goToDeal}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            goToDeal();
+          }
+        }}
+      >
+        <div
+          className={cn(
+            "rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/40 flex flex-col gap-2 p-2 max-w-full min-w-0",
+            surface === "feed" && "bg-muted/20 border-l-2 border-l-primary/30",
+            isVeryUrgent && "critical-glow",
+            isUrgent && !isVeryUrgent && "urgent-glow"
+          )}
+        >
+          <div className="relative mx-auto aspect-square w-full max-w-[5.5rem] shrink-0 rounded-lg bg-muted overflow-hidden">
+            {deal.image_url ? (
+              <Image
+                src={deal.image_url}
+                alt={deal.title}
+                fill
+                className="object-cover"
+                sizes="88px"
+                quality={90}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground/40 text-[10px] text-center px-1">
+                {deal.category || deal.provider}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 w-full space-y-1">
+            <h3 className="font-semibold text-[13px] leading-snug line-clamp-2 break-words">
+              {deal.title}
+            </h3>
+            {!hideCreator && (
+              <div className="text-[10px] text-muted-foreground flex items-center gap-1 min-w-0">
+                <User2 className="h-3 w-3 shrink-0 text-muted-foreground/80" />
+                <button
+                  type="button"
+                  className="truncate min-w-0 hover:text-foreground transition cursor-pointer text-left"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (creatorId) openPublicProfileModal(creatorId);
+                  }}
+                >
+                  {creatorName}
+                </button>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0">
+              {showDualPrices ? (
+                <>
+                  <span className="text-[10px] text-muted-foreground line-through">
+                    {formatPrice(deal.original_price!, deal.currency)}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600">
+                    {formatPrice(deal.deal_price!, deal.currency)}
+                  </span>
+                  {showDiscountBadge && (
+                    <Badge className="text-[9px] bg-primary/15 text-primary border-0 px-1 py-0 font-semibold">
+                      %{deal.discount_percent}
+                    </Badge>
+                  )}
+                </>
+              ) : showSingleGreenPrice ? (
+                <>
+                  <span className="text-xs font-bold text-emerald-600">
+                    {formatPrice(deal.deal_price!, deal.currency)}
+                  </span>
+                  {showDiscountBadge && (
+                    <Badge className="text-[9px] bg-primary/15 text-primary border-0 px-1 py-0 font-semibold">
+                      %{deal.discount_percent}
+                    </Badge>
+                  )}
+                </>
+              ) : (
+                <span className="text-[11px] text-muted-foreground">{t("deal.viewDeal")}</span>
+              )}
+              {deal.coupon_code && (
+                <span
+                  className="inline-flex items-center gap-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200 px-1 py-[1px] text-[8px] font-semibold shrink-0"
+                  title={t("coupon.title")}
+                >
+                  <Ticket className="h-2 w-2" />
+                  {t("coupon.badgeShort")}
+                </span>
+              )}
+            </div>
+          </div>
+          <div
+            className="flex items-center justify-between gap-2 pt-1 border-t border-border/50 min-w-0 w-full"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            data-no-skeleton
+          >
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <DealCountdown
+                endAt={deal.end_at}
+                compact
+                showStatusLabel={false}
+                className="text-[9px] leading-tight"
+              />
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              {deal.external_url && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(deal.external_url!, "_blank", "noopener,noreferrer");
+                  }}
+                  className="p-1.5 rounded-lg transition cursor-pointer shadow-sm bg-white/90 backdrop-blur-sm text-muted-foreground hover:text-primary"
+                  title={t("deal.getDeal")}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <SaveRemindButton dealId={deal.id} compact />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (compact) {
     return (
       <div
         onMouseEnter={prefetchDetail}
         onTouchStart={prefetchDetail}
-        className="w-full hover:opacity-95 active:scale-[0.99] transition-transform cursor-pointer"
+        className="w-full min-w-0 max-w-full hover:opacity-95 active:scale-[0.99] transition-transform cursor-pointer"
         onClick={goToDeal}
         role="link"
         tabIndex={0}
@@ -73,7 +215,7 @@ export function DealCard({
       >
           <div
             className={cn(
-              "rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/40 flex gap-3 p-2.5",
+              "rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/40 flex gap-3 p-2.5 min-w-0 max-w-full",
               surface === "feed" && "bg-muted/20 border-l-2 border-l-primary/30",
               isVeryUrgent && "critical-glow",
               isUrgent && !isVeryUrgent && "urgent-glow"
@@ -86,7 +228,7 @@ export function DealCard({
                   alt={deal.title}
                   fill
                   className="object-cover"
-                  sizes="256px"
+                  sizes="64px"
                   quality={90}
                 />
               ) : (

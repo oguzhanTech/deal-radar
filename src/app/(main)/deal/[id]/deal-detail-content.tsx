@@ -224,15 +224,26 @@ export function DealDetailContent({
   };
 
   return (
-    <div className="pb-28 animate-in fade-in duration-200">
+    <div className="pb-28 animate-in fade-in duration-200 lg:pb-10">
       <AuthModal />
 
-      {/* Hero Image */}
-      <div className="relative aspect-square bg-muted">
+      {/* Hero Image — full-bleed square on mobile; constrained card on desktop */}
+      <div
+        className={
+          "relative bg-muted aspect-square w-full overflow-hidden " +
+          "lg:aspect-auto lg:h-[min(22rem,42vh)] lg:max-h-[min(22rem,42vh)] lg:max-w-2xl lg:mx-auto lg:rounded-2xl lg:shadow-sm lg:ring-1 lg:ring-border/60"
+        }
+      >
         {deal.image_url && (
-          <Image src={deal.image_url} alt={deal.title} fill className="object-cover" priority />
+          <Image
+            src={deal.image_url}
+            alt={deal.title}
+            fill
+            className="object-cover lg:object-contain lg:bg-muted"
+            priority
+          />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none lg:from-black/25" />
 
         <button
           onClick={() => router.back()}
@@ -273,7 +284,7 @@ export function DealDetailContent({
       </div>
 
       {/* Info */}
-      <div className="px-4 pt-4 space-y-4">
+      <div className="px-4 pt-4 space-y-4 lg:max-w-3xl lg:mx-auto lg:px-6 lg:pt-6">
         {/* Creator + Tags */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -564,7 +575,7 @@ export function DealDetailContent({
 
       {/* Sticky Bottom Action Bar - above bottom nav with gap (nav h-16, gap 3) */}
       <div className="fixed left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border" style={{ bottom: "calc(4rem + 12px)" }}>
-        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto pb-safe">
+        <div className="flex items-center gap-3 px-4 py-3 max-w-lg lg:max-w-7xl mx-auto w-full pb-safe">
           <SaveRemindButton dealId={deal.id} compact className="h-11 w-11 shrink-0 rounded-xl border border-border bg-muted/80 hover:bg-muted !p-0 flex items-center justify-center" />
           {deal.external_url && (
             <a href={deal.external_url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-0">

@@ -52,6 +52,11 @@ const tr: Record<string, string> = {
   "home.leaderboardTitle": "Topla Avcıları",
   "home.leaderboardDesc": "En iyi fırsat avcılarını keşfet",
   "home.emptyState": "Henüz fırsat yok. İlk fırsatı sen paylaş! 🎯",
+  "home.sidebar.quick": "Hızlı keşif",
+  "home.sidebar.categories": "Kategoriler",
+  "home.sidebar.aria": "Keşif menüsü",
+  "home.rail.aria": "Öne çıkan fırsatlar",
+  "home.rail.discover": "Keşfet",
 
   // Activity feed
   "activity.title": "Topla’da Neler Oluyor?",
@@ -189,6 +194,7 @@ const tr: Record<string, string> = {
 
   // Search
   "search.placeholder": "Fırsat ara...",
+  "search.allResults": "Tüm sonuçları gör",
   "search.sortTrending": "Trend",
   "search.sortPopular": "Popüler",
   "search.sortNew": "En Yeni",

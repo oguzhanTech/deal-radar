@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
@@ -12,6 +12,8 @@ import { AppLoadingScreen } from "@/components/layout/app-loading-screen";
 import { useRoutePreloader } from "@/hooks/use-route-preloader";
 import { LevelUpModal } from "@/components/rewards/level-up-modal";
 import { getPageSkeleton } from "@/components/layout/page-skeleton";
+import { cn } from "@/lib/utils";
+import { APP_SHELL_CLASS } from "@/lib/layout-constants";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types/database";
 
@@ -106,7 +108,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="flex flex-col min-h-dvh max-w-lg mx-auto bg-background relative overflow-x-hidden"
+      className={cn("flex flex-col min-h-dvh bg-background relative overflow-x-hidden", APP_SHELL_CLASS)}
       onClickCapture={handleLinkCapture}
     >
       <AnimatePresence mode="wait">
@@ -116,7 +118,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="fixed inset-0 z-50 max-w-lg mx-auto bg-background"
+            className="fixed inset-0 z-50 bg-background"
           >
             <AppLoadingScreen />
           </motion.div>
@@ -129,7 +131,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
             className="flex flex-col min-h-dvh flex-1"
           >
             <TopHeader />
-            <main className="flex-1 pb-20 pt-16 min-w-0">
+            <main className="flex-1 pb-20 pt-16 min-w-0 lg:pb-8">
               {useSkeleton ? getPageSkeleton(pendingPath!) : children}
             </main>
             <BottomNav />
@@ -164,3 +166,5 @@ export default function MainLayoutClient({
     </AuthProvider>
   );
 }
+
+

@@ -17,6 +17,7 @@ import { ProfileAvatarUploader } from "@/components/profile/profile-avatar-uploa
 import { TRUSTED_SUBMITTER_THRESHOLD, LEVEL_THRESHOLDS, BADGE_INFO } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
+import { useIsLgUp } from "@/hooks/use-is-lg";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import type { BadgeId, Deal } from "@/lib/types/database";
@@ -64,6 +65,7 @@ export function ProfileClient({ initialDeals, initialDealsCount, initialUserId }
   const [showPointsInfo, setShowPointsInfo] = useState(false);
   const [showBadgesGuide, setShowBadgesGuide] = useState(false);
   const prevBadgesRef = useRef<BadgeId[] | null>(null);
+  const isLg = useIsLgUp();
 
   useEffect(() => {
     if (profile) {
@@ -455,9 +457,11 @@ export function ProfileClient({ initialDeals, initialDealsCount, initialUserId }
       {myDeals.length > 0 && (
         <div className="mx-4 mt-6 space-y-3">
           <h3 className="text-lg font-bold px-0.5">{t("profile.myDeals")}</h3>
-          {myDeals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} hideCreator />
-          ))}
+          <div className="grid gap-3 lg:grid-cols-2 lg:gap-3">
+            {myDeals.map((deal) => (
+              <DealCard key={deal.id} deal={deal} hideCreator compact={isLg} />
+            ))}
+          </div>
         </div>
       )}
 
