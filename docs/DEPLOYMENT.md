@@ -54,19 +54,30 @@ SSL Vercel tarafından otomatik verilir.
 3. **Doğrulama**:
    - **DNS kaydı**: Sağlanan TXT kaydını domain DNS’e ekleyin, birkaç dakika sonra “Doğrula” deyin.
    - veya **HTML dosyası**: Verilen dosyayı `public/` içine koyup deploy edin, sonra doğrulayın.
+   - veya **HTML etiketi**: Search Console “HTML etiketi” yönteminde verilen `content` değerini Vercel’de ortam değişkeni `GOOGLE_SITE_VERIFICATION` olarak tanımlayın (yeniden deploy gerekir). Root layout bu değeri `metadata.verification.google` ile yayınlar.
 4. Doğrulama sonrası **Sitemap’ler** bölümüne gidin.
 5. Yeni sitemap ekleyin: `https://www.topla.online/sitemap.xml`
 
+**Sitemap ve yenileme:** Uygulama `/sitemap.xml` üretir; yeni veya güncellenen onaylı fırsat URL’leri bu dosyada yer alır. Google sitemap’i periyodik olarak tekrar tarar; her yeni deal için Search Console’da manuel “gönder” gerekmez (ilk kurulumda sitemap URL’sini bir kez eklemeniz yeterli).
+
 Uygulama zaten şunları üretir:
-- **Sitemap**: `/sitemap.xml` — ana sayfa, keşfet, liderlik tablosu, fırsat sayfaları vb.
+- **Sitemap**: `/sitemap.xml` — ana sayfa, keşfet, liderlik tablosu ve **bitiş tarihi gelmemiş** onaylı fırsat sayfaları (`/deal/[id]`).
 - **robots.txt**: `/robots.txt` — sitemap referansı ve tarama kuralları (admin/auth/api ve /my disallow).
 
 ## 5. SEO özeti (uygulama tarafı)
 
 - **metadataBase**: Root layout’ta `NEXT_PUBLIC_APP_URL` ile ayarlı; tüm Open Graph / Twitter ve canonical URL’ler buna göre üretilir.
-- **Sitemap**: Statik sayfalar + onaylı her deal için `/deal/[id]` otomatik eklenir.
+- **Sitemap**: Statik sayfalar + süresi dolmamış onaylı deal’ler için `/deal/[id]`; süresi dolmuş fırsat sayfaları sitemap’te listelenmez (sayfa yine açılabilir; metadata’da `noindex` uygulanır).
+- **Yapılandırılmış veri**: Fırsat detay sayfalarında schema.org `Offer` JSON-LD (fiyat, para birimi, geçerlilik, stok durumu).
 - **robots.txt**: Tüm botlar için index/follow açık; admin, auth, api ve /my kapalı.
 - **Mobil öncelik**: Viewport, theme-color, manifest ve Apple web app meta’ları mevcut; öncelik mobil, masaüstü de desteklenir.
+
+### PWA (yüklenmiş uygulama) ve masaüstü görünümü
+
+- Tailwind `lg:` sınıfları tarayıcıda **1024px** üzerinde devreye girer (CSS medya sorgusu).
+- Yüklü PWA (`display: standalone`) penceresi varsayılan olarak **1024px’ten dar** açılabilir; bu durumda yalnızca CSS’e bakınca mobil düzen görünür.
+- Uygulama, kabuk davranışı (ör. üst navigasyon / alt menü / rail / `useIsLgUp` kullanan bileşenler) için **`min-width: 1024px` veya (standalone + pencere genişliği ≥ 900px)** kuralını kullanır; böylece masaüstünde yüklenmiş uygulamada geniş ama 1024 altı pencerelerde de masaüstü kabuğu tercih edilir. Telefon genişliği (~390px) bu dalda değildir.
+- Tam masaüstü görünüm için PWA penceresini büyütmek veya siteyi normal tarayıcı sekmesinde açmak yeterlidir.
 
 ## 6. Canlıda oturum / Radarım / profil ismi sorunu
 
@@ -79,6 +90,7 @@ Canlı projede mutlaka tanımlı olsun:
 | Değişken | Değer (canlı) |
 |----------|----------------|
 | `NEXT_PUBLIC_APP_URL` | `https://www.topla.online` |
+| `GOOGLE_SITE_VERIFICATION` | (isteğe bağlı) Search Console HTML etiketi doğrulama `content` değeri |
 | `NEXT_PUBLIC_SUPABASE_URL` | (local’deki ile aynı) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (local’deki ile aynı) |
 | `SUPABASE_SERVICE_ROLE_KEY` | (local’deki ile aynı) |

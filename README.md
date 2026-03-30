@@ -41,7 +41,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # veya TOPLA_IMPORT_DEFAULT_BOT_USER_ID + TOPLA_IMPORT_ALLOWED_ACTORS
 ```
 
-Production’da `NEXT_PUBLIC_APP_URL=https://www.topla.online` kullanın. Domain, sitemap, Google Search Console ve Supabase ayarları için [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dosyasına bakın.
+Production’da `NEXT_PUBLIC_APP_URL=https://www.topla.online` kullanın. Domain, sitemap, Google Search Console ve Supabase ayarları için [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dosyasına bakın. Yüklü PWA’da masaüstü kabuğu ve pencere genişliği için aynı dokümanda **PWA ve masaüstü görünümü** bölümüne bakın.
 
 Harici servislerin `POST /internal/deals/import` ile deal aktarması için [docs/INTERNAL_IMPORT.md](docs/INTERNAL_IMPORT.md) dosyasına bakın (`TOPLA_IMPORT_API_KEY` ve bot `actorKey` eşlemesi).
 

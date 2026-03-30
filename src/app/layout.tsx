@@ -14,9 +14,13 @@ const fontSans = Plus_Jakarta_Sans({
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  ...(googleSiteVerification
+    ? { verification: { google: googleSiteVerification } }
+    : {}),
   title: {
     default: "Topla — En güzel fırsatları kaçırma!",
     template: "%s | Topla",

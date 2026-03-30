@@ -21,7 +21,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const { data: deals } = await supabase
       .from("deals")
       .select("id, updated_at")
-      .eq("status", "approved");
+      .eq("status", "approved")
+      .gt("end_at", new Date().toISOString());
 
     const dealUrls: MetadataRoute.Sitemap = (deals ?? []).map((d) => ({
       url: `${baseUrl}/deal/${d.id}`,

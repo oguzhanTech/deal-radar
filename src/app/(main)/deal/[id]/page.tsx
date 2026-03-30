@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { DealDetailContent } from "./deal-detail-content";
+import { DealJsonLd } from "@/components/seo/deal-json-ld";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -16,20 +17,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const supabase = await createClient();
     const { data: deal } = await supabase
       .from("deals")
-      .select("title, description, discount_percent, category, provider, image_url")
+      .select("title, description, discount_percent, category, provider, image_url, end_at")
       .eq("id", id)
       .single();
     if (!deal) return { title: "Fırsat bulunamadı" };
+
+    const desc =
+      deal.description?.trim() ||
+      (deal.discount_percent != null
+        ? `%${deal.discount_percent} indirim — ${deal.category || deal.provider}`
+        : `${deal.category || deal.provider} — Topla fırsatı`);
+
+    const expired = new Date(deal.end_at) < new Date();
+
     return {
       title: `${deal.title} — Topla`,
-      description: deal.description || `%${deal.discount_percent} indirim — ${deal.category || deal.provider}`,
+      description: desc,
       alternates: { canonical: `/deal/${id}` },
       openGraph: {
+        type: "article",
         title: deal.title,
-        description: deal.description || undefined,
-        images: deal.image_url ? [deal.image_url] : undefined,
+        description: deal.description || desc,
+        images: deal.image_url ? [{ url: deal.image_url }] : undefined,
         url: `/deal/${id}`,
       },
+      twitter: {
+        card: "summary_large_image",
+        title: deal.title,
+        description: deal.description?.slice(0, 200) || desc.slice(0, 200),
+        images: deal.image_url ? [deal.image_url] : undefined,
+      },
+      ...(expired ? { robots: { index: false, follow: true } } : {}),
     };
   } catch {
     return { title: "Fırsat — Topla" };
@@ -131,14 +149,17 @@ export default async function DealPage({ params }: PageProps) {
     void supabase.rpc("increment_view_count", { target_deal_id: id });
 
     return (
-      <DealDetailContent
-        deal={dealWithTrend}
-        creatorName={creatorName}
-        comments={comments ?? []}
-        voteCount={voteCount}
-        saveCount={saveCount ?? 0}
-        similarDeals={similarWithTrend}
-      />
+      <>
+        <DealJsonLd deal={dealWithTrend} />
+        <DealDetailContent
+          deal={dealWithTrend}
+          creatorName={creatorName}
+          comments={comments ?? []}
+          voteCount={voteCount}
+          saveCount={saveCount ?? 0}
+          similarDeals={similarWithTrend}
+        />
+      </>
     );
   } catch {
     notFound();
