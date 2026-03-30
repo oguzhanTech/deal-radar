@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
@@ -10,6 +10,7 @@ import { TopHeader } from "@/components/layout/top-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { AppLoadingScreen } from "@/components/layout/app-loading-screen";
 import { useRoutePreloader } from "@/hooks/use-route-preloader";
+import { useIsLgUp } from "@/hooks/use-is-lg";
 import { LevelUpModal } from "@/components/rewards/level-up-modal";
 import { getPageSkeleton } from "@/components/layout/page-skeleton";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const SPLASH_SHOWN_KEY = "topla_splash_shown";
 function LayoutShell({ children }: { children: React.ReactNode }) {
   useRoutePreloader();
   const pathname = usePathname();
+  const isLg = useIsLgUp();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [skeletonShownAt, setSkeletonShownAt] = useState<number | null>(null);
@@ -41,6 +43,13 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     }, INITIAL_SPLASH_MIN_MS);
     return () => clearTimeout(t);
   }, [showInitialSplash]);
+
+  useEffect(() => {
+    if (!isLg) return;
+    setPendingPath(null);
+    setShowSkeleton(false);
+    setSkeletonShownAt(null);
+  }, [isLg]);
 
   useEffect(() => {
     setPendingPath(null);
@@ -83,6 +92,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 
   const handleLinkCapture = useCallback(
     (e: React.MouseEvent) => {
+      if (isLg) return;
       if (e.defaultPrevented) return;
       if ("button" in e && e.button !== 0) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -101,10 +111,10 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       setShowSkeleton(false);
       setSkeletonShownAt(null);
     },
-    [pathname]
+    [pathname, isLg]
   );
 
-  const useSkeleton = pendingPath && showSkeleton;
+  const useSkeleton = !isLg && !!pendingPath && showSkeleton;
 
   return (
     <div
