@@ -22,6 +22,8 @@ export type ActivityType = "deal_created" | "vote" | "comment" | "save";
 
 export interface ActivityPayload {
   display_name?: string | null;
+  /** Anasayfa aktivite widget’ında; fetch sırasında profiles’tan doldurulur */
+  profile_image_url?: string | null;
   deal_title?: string;
   deal_price?: number | null;
   original_price?: number | null;

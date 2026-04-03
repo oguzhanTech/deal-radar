@@ -3,8 +3,9 @@
 import { useMemo, useState, TouchEvent } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MessageSquare, ThumbsUp, Radar, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { t } from "@/lib/i18n";
 import type { Activity } from "@/lib/types/database";
@@ -19,7 +20,6 @@ function buildActivityText(a: Activity) {
 
   if (a.type === "deal_created") {
     return {
-      icon: Sparkles,
       actorName: name,
       restText: `${t("activity.shared")} ${title}`,
       href: `/deal/${a.deal_id}`,
@@ -29,7 +29,6 @@ function buildActivityText(a: Activity) {
 
   if (a.type === "vote") {
     return {
-      icon: ThumbsUp,
       actorName: name,
       restText: `${t("activity.voted")} ${title}`,
       href: `/deal/${a.deal_id}`,
@@ -41,7 +40,6 @@ function buildActivityText(a: Activity) {
     const snippet = a.payload?.comment_snippet?.trim();
     const quoted = snippet ? ` "${snippet}${snippet.length >= 120 ? "…" : ""}"` : "";
     return {
-      icon: MessageSquare,
       actorName: name,
       restText: `${t("activity.commented")}${quoted}`,
       href: `/deal/${a.deal_id}?tab=comments`,
@@ -51,12 +49,17 @@ function buildActivityText(a: Activity) {
 
   // save
   return {
-    icon: Radar,
     actorName: name,
     restText: `${t("activity.saved")} ${title}`,
     href: `/deal/${a.deal_id}`,
     cta: t("activity.ctaDeal"),
   };
+}
+
+function actorInitial(name: string) {
+  const s = name.trim();
+  if (!s) return "?";
+  return s[0]!.toUpperCase();
 }
 
 export function ActivityFeedWidget({ activities }: ActivityFeedWidgetProps) {
@@ -66,7 +69,7 @@ export function ActivityFeedWidget({ activities }: ActivityFeedWidgetProps) {
 
   const current = list[index]!;
   const meta = buildActivityText(current);
-  const Icon = meta.icon;
+  const profileUrl = current.payload?.profile_image_url?.trim() || null;
 
   const priceLine = useMemo(() => {
     const dealPrice = current.payload?.deal_price ?? null;
@@ -140,9 +143,16 @@ export function ActivityFeedWidget({ activities }: ActivityFeedWidgetProps) {
             className="p-4 flex items-start gap-3"
           >
             <div className="shrink-0">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/15">
-                <Icon className="h-5 w-5" />
-              </div>
+              <Avatar className="h-11 w-11 border-0 shadow-none ring-0">
+                <AvatarImage
+                  src={profileUrl ?? undefined}
+                  alt=""
+                  className="rounded-full object-cover"
+                />
+                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-bold">
+                  {actorInitial(meta.actorName)}
+                </AvatarFallback>
+              </Avatar>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold leading-snug line-clamp-2">

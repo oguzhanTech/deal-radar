@@ -39,7 +39,29 @@ async function fetchRecentActivities(limit = 5): Promise<Activity[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return (data ?? []) as unknown as Activity[];
+  const activities = (data ?? []) as unknown as Activity[];
+  if (activities.length === 0) return activities;
+
+  const userIds = [...new Set(activities.map((a) => a.user_id))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, profile_image_url")
+    .in("user_id", userIds);
+
+  const urlByUser = new Map(
+    (profiles ?? []).map((p: { user_id: string; profile_image_url: string | null }) => [
+      p.user_id,
+      p.profile_image_url ?? null,
+    ])
+  );
+
+  return activities.map((a) => ({
+    ...a,
+    payload: {
+      ...a.payload,
+      profile_image_url: urlByUser.get(a.user_id) ?? a.payload.profile_image_url ?? null,
+    },
+  }));
 }
 
 async function fetchTrending() {

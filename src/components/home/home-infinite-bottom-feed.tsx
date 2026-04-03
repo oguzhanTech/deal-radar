@@ -117,7 +117,7 @@ export function HomeInfiniteBottomFeed({ excludeIds = [] }: HomeInfiniteBottomFe
       {isEnabled && (items.length > 0 || loading || error) ? (
         <div className="space-y-3">
           <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
-            <p className="text-sm font-semibold text-foreground">Senin icin daha fazla firsat</p>
+            <p className="text-sm font-semibold text-foreground">Senin için daha fazla fırsat</p>
           </div>
 
           <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-2">
