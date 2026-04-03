@@ -5,6 +5,7 @@ import {
   verifyImportApiKey,
 } from "@/lib/internal/topla-import";
 import type { DealStatus } from "@/lib/types/database";
+import { ensureUniqueDealSlug } from "@/lib/deal-slug";
 
 export const runtime = "nodejs";
 
@@ -216,12 +217,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const supabase = createAdminClient();
+  const slug = await ensureUniqueDealSlug(supabase, parsed.deal.title as string);
   const insertPayload = {
     ...parsed.deal,
+    slug,
     created_by: userId,
   };
-
-  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("deals")
     .insert(insertPayload)

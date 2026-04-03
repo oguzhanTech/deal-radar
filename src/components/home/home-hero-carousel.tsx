@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Flame, Clock, Sparkles, Megaphone } from "lu
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 export interface HeroDeal extends Deal {
   section: "endingSoon" | "popular" | "newest" | "trending";
@@ -166,7 +167,7 @@ export function HomeHeroCarousel({ slides: rawSlides }: HomeHeroCarouselProps) {
 
   const onCardClick = () => {
     if (isDeal && deal) {
-      router.push(`/deal/${deal.id}`);
+      router.push(dealPath(deal));
       return;
     }
     if (ann) navigateFromLink(router, ann.link_url);

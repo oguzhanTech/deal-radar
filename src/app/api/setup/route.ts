@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureUniqueDealSlug } from "@/lib/deal-slug";
 
 export async function POST() {
   const supabase = createAdminClient();
@@ -152,10 +153,13 @@ export async function POST() {
     return firstUserId || "00000000-0000-0000-0000-000000000000";
   };
 
-  const dealsToInsert = demoDeals.map((d) => ({
-    ...d,
-    created_by: pickRandomUserId(),
-  }));
+  const dealsToInsert = await Promise.all(
+    demoDeals.map(async (d) => ({
+      ...d,
+      slug: await ensureUniqueDealSlug(supabase, d.title),
+      created_by: pickRandomUserId(),
+    }))
+  );
 
   const { data: inserted, error: insertError } = await supabase
     .from("deals")

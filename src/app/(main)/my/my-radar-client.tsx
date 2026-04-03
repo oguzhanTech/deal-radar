@@ -14,6 +14,7 @@ import { useFeedCache, invalidateFeedCache } from "@/hooks/use-feed-cache";
 import { useToast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import type { Deal, DealSave } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -149,7 +150,7 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
             return (
               <div key={save.deal_id} className="mb-2">
                 <div className="flex gap-3 items-center rounded-2xl p-3 bg-card shadow-card">
-                  <Link href={`/deal/${d.id}`} className="shrink-0">
+                  <Link href={dealPath(d)} className="shrink-0">
                     <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted">
                       {d.image_url && (
                         <Image src={d.image_url} alt={d.title} fill className="object-cover" sizes="80px" />
@@ -157,7 +158,7 @@ export function MyRadarClient({ initialSaves, needsLogin, userId }: MyRadarClien
                     </div>
                   </Link>
 
-                  <Link href={`/deal/${d.id}`} className="flex-1 min-w-0">
+                  <Link href={dealPath(d)} className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold truncate">{d.title}</h3>
                     <DealCountdown endAt={d.end_at} compact className="text-xs mt-0.5" />
                     <div className="flex items-center gap-2 mt-1">

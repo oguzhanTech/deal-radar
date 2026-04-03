@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createAnonClient } from "@/lib/supabase/server";
+import { dealPath } from "@/lib/deal-url";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";
 
@@ -20,12 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = await createAnonClient();
     const { data: deals } = await supabase
       .from("deals")
-      .select("id, updated_at")
+      .select("slug, updated_at")
       .eq("status", "approved")
       .gt("end_at", new Date().toISOString());
 
     const dealUrls: MetadataRoute.Sitemap = (deals ?? []).map((d) => ({
-      url: `${baseUrl}/deal/${d.id}`,
+      url: `${baseUrl}${dealPath({ slug: d.slug })}`,
       lastModified: d.updated_at ? new Date(d.updated_at) : new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.7,

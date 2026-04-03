@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureUniqueDealSlug } from "@/lib/deal-slug";
+import { revalidateDealDetail } from "@/lib/deal-revalidate";
+import { dealPath } from "@/lib/deal-url";
 
 export async function uploadDealImage(formData: FormData) {
   const supabase = await createClient();
@@ -103,12 +106,18 @@ export async function createDeal(payload: Record<string, unknown>) {
     return { error: "Oturum bulunamadı. Tekrar giriş yapın." };
   }
 
-  const insertPayload = { ...payload, created_by: user.id };
+  const { slug: _clientSlug, ...rest } = payload;
+  const title = typeof rest.title === "string" ? rest.title.trim() : "";
+  if (!title) {
+    return { error: "Başlık gerekli." };
+  }
+  const slug = await ensureUniqueDealSlug(supabase, title);
+  const insertPayload = { ...rest, slug, created_by: user.id };
 
   const { data, error } = await supabase
     .from("deals")
     .insert(insertPayload)
-    .select("id")
+    .select("id, slug")
     .single();
 
   if (error) {
@@ -215,7 +224,9 @@ export async function postComment(dealId: string, content: string, parentComment
 
         if (!parentComment || parentComment.user_id === user.id || parentComment.deal_id !== dealId) return;
 
-        const url = `/deal/${dealId}?tab=comments&comment=${comment.id}`;
+        const { data: dealForUrl } = await admin.from("deals").select("slug").eq("id", dealId).maybeSingle();
+        const basePath = dealForUrl?.slug ? dealPath(dealForUrl) : `/deal/${dealId}`;
+        const url = `${basePath}?tab=comments&comment=${comment.id}`;
         const title = "Yorumuna yanıt geldi";
         const message = `${profile?.display_name ?? "Bir kullanıcı"} yorumuna yanıt verdi.`;
 
@@ -258,7 +269,7 @@ export async function postComment(dealId: string, content: string, parentComment
     })();
   }
 
-  revalidatePath(`/deal/${dealId}`);
+  void revalidateDealDetail(supabase, dealId);
 
   return {
     data: {
@@ -409,7 +420,14 @@ export async function seedDemoDeals() {
     { title: "NordVPN -%70 + 3 Ay Hediye", provider: "NordVPN", category: "Güvenlik", end_at: new Date(now.getTime() + 14*24*60*60*1000).toISOString(), original_price: 259.99, deal_price: 77.99, currency: "TL", discount_percent: 70, image_url: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=340&fit=crop", external_url: "https://nordvpn.com", status: "approved", heat_score: 95, view_count: 420 },
   ];
 
-  const dealsToInsert = demoDeals.map(d => ({ ...d, created_by: firstUserId, start_at: now.toISOString() }));
+  const dealsToInsert = await Promise.all(
+    demoDeals.map(async (d) => ({
+      ...d,
+      slug: await ensureUniqueDealSlug(supabase, d.title),
+      created_by: firstUserId,
+      start_at: now.toISOString(),
+    }))
+  );
   const { data, error } = await supabase.from("deals").insert(dealsToInsert).select("id, title");
 
   if (error) return { error: error.message };

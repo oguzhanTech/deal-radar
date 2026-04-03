@@ -14,6 +14,7 @@ import { HEAT_TRENDING_THRESHOLD } from "@/lib/constants";
 import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 interface DealCardProps {
   deal: Deal;
@@ -43,7 +44,7 @@ export function DealCard({
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
   const isTrending = deal.is_trending ?? (deal.heat_score >= HEAT_TRENDING_THRESHOLD);
 
-  const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
+  const prefetchDetail = () => router.prefetch(dealPath(deal));
 
   /** İki fiyat var ve farklıysa çizili+yeşil; eşit veya yalnızca deal fiyatıysa tek yeşil. */
   const showDualPrices = hasStrikethroughOriginal(deal.original_price, deal.deal_price);
@@ -55,7 +56,7 @@ export function DealCard({
   const creatorId = deal.created_by;
 
   const goToDeal = () => {
-    router.push(`/deal/${deal.id}`);
+    router.push(dealPath(deal));
   };
 
   if (compact && compactLayout === "rail") {

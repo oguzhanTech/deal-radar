@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { t } from "@/lib/i18n";
 import Link from "next/link";
+import { dealPath } from "@/lib/deal-url";
 
 interface Report {
   id: string;
@@ -17,7 +18,7 @@ interface Report {
   user_id: string;
   reason: string;
   created_at: string;
-  deal?: { title: string; id: string; image_url: string | null } | null;
+  deal?: { title: string; id: string; slug: string; image_url: string | null } | null;
   reporter?: { display_name: string | null } | null;
 }
 
@@ -100,7 +101,7 @@ export function AdminReportsContent({ initialReports }: AdminReportsContentProps
 
             <div className="flex gap-1.5">
               {report.deal && (
-                <Link href={`/deal/${report.deal.id}`}>
+                <Link href={dealPath(report.deal)}>
                   <Button size="sm" variant="outline" className="h-7 text-xs">
                     <Eye className="h-3 w-3" />
                     {t("admin.reports.viewDeal")}

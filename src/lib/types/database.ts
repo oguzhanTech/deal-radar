@@ -24,6 +24,8 @@ export interface ActivityPayload {
   display_name?: string | null;
   /** Anasayfa aktivite widget’ında; fetch sırasında profiles’tan doldurulur */
   profile_image_url?: string | null;
+  /** Kanonik detay yolu için; fetch sırasında deals’ten doldurulur */
+  deal_slug?: string | null;
   deal_title?: string;
   deal_price?: number | null;
   original_price?: number | null;
@@ -57,6 +59,8 @@ export interface Profile {
 
 export interface Deal {
   id: string;
+  /** SEO kanonik URL: /firsat/{slug} */
+  slug: string;
   title: string;
   description: string | null;
   provider: string;

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BADGE_INFO, LEVEL_THRESHOLDS } from "@/lib/constants";
 import type { BadgeId, Deal, Profile } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 const OPEN_EVENT = "open-public-profile-modal";
 
@@ -213,7 +214,7 @@ export function PublicUserProfileModalHost() {
                     {recentDeals.map((deal) => (
                       <Link
                         key={deal.id}
-                        href={`/deal/${deal.id}`}
+                        href={dealPath(deal)}
                         className="block rounded-xl border border-border/50 bg-card p-3 hover:bg-muted/40 transition"
                         onClick={() => setOpen(false)}
                       >

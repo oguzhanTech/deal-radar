@@ -11,6 +11,7 @@ import { useCountdown } from "@/hooks/use-countdown";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 interface EditorPickWidgetProps {
   deal: Deal;
@@ -31,7 +32,7 @@ export function EditorPickWidget({
 }: EditorPickWidgetProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
-  const prefetchDetail = () => router.prefetch(`/deal/${deal.id}`);
+  const prefetchDetail = () => router.prefetch(dealPath(deal));
   const isRail = density === "rail";
 
   const actions = (
@@ -84,7 +85,7 @@ export function EditorPickWidget({
         onTouchStart={prefetchDetail}
         className="w-full hover:opacity-95 active:scale-[0.99] transition-transform min-w-0"
       >
-        <Link href={`/deal/${deal.id}`} prefetch className="block min-w-0">
+        <Link href={dealPath(deal)} prefetch className="block min-w-0">
           <div
             className={cn(
               "rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-all border border-border/40 border-l-4 border-l-amber-500",

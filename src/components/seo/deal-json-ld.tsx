@@ -1,4 +1,5 @@
 import type { Deal } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";
 
@@ -15,7 +16,7 @@ export function DealJsonLd({ deal }: { deal: Deal }) {
   const now = new Date();
   const end = new Date(deal.end_at);
   const expired = end < now;
-  const pageUrl = `${baseUrl}/deal/${deal.id}`;
+  const pageUrl = `${baseUrl}${dealPath(deal)}`;
 
   const jsonLd = omitUndefined({
     "@context": "https://schema.org",

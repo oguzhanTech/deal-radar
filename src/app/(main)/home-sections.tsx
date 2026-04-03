@@ -55,11 +55,19 @@ async function fetchRecentActivities(limit = 5): Promise<Activity[]> {
     ])
   );
 
+  const dealIds = [...new Set(activities.map((a) => a.deal_id).filter(Boolean))];
+  const { data: dealRows } =
+    dealIds.length > 0
+      ? await supabase.from("deals").select("id, slug").in("id", dealIds)
+      : { data: [] as { id: string; slug: string }[] };
+  const slugByDealId = new Map((dealRows ?? []).map((d) => [d.id, d.slug]));
+
   return activities.map((a) => ({
     ...a,
     payload: {
       ...a.payload,
       profile_image_url: urlByUser.get(a.user_id) ?? a.payload.profile_image_url ?? null,
+      deal_slug: slugByDealId.get(a.deal_id) ?? a.payload.deal_slug ?? null,
     },
   }));
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { dealPath } from "@/lib/deal-url";
 
 const REMINDER_WINDOWS = [
   { key: "3d", ms: 3 * 24 * 60 * 60 * 1000, label: "3 gün" },
@@ -50,14 +51,14 @@ export async function GET(request: Request) {
       deal_id,
       reminder_settings,
       sent_reminders,
-      deal:deals(id, title, end_at, status)
+      deal:deals(id, slug, title, end_at, status)
     `)
     .not("deal.end_at", "is", null);
 
   if (!saves) return NextResponse.json({ sent: 0 });
 
   for (const save of saves) {
-    const deal = save.deal as unknown as { id: string; title: string; end_at: string; status: string } | null;
+    const deal = save.deal as unknown as { id: string; slug: string; title: string; end_at: string; status: string } | null;
     if (!deal || deal.status !== "approved") continue;
 
     const endTime = new Date(deal.end_at).getTime();
@@ -71,8 +72,8 @@ export async function GET(request: Request) {
       const alreadySent = sentReminders[window.key];
 
       if (isEnabled && !alreadySent && timeUntilEnd <= window.ms && timeUntilEnd > (window.ms - BUFFER_MS)) {
-        const dealPath = `/deal/${deal.id}`;
-        const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${dealPath}`;
+        const path = deal.slug ? dealPath({ slug: deal.slug }) : `/deal/${deal.id}`;
+        const dealUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${path}`;
         const title = `"${deal.title}" ${window.label} sonra bitiyor!`;
         const message = "Bu fırsatı kaçırma — süresi dolmadan yakala.";
 
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
           type: "reminder",
           title,
           message,
-          payload: { deal_id: deal.id, url: dealPath },
+          payload: { deal_id: deal.id, url: path },
         });
 
         if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {

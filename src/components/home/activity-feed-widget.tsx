@@ -9,9 +9,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { openPublicProfileModal } from "@/components/profile/public-user-profile-modal";
 import { t } from "@/lib/i18n";
 import type { Activity } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 interface ActivityFeedWidgetProps {
   activities: Activity[];
+}
+
+function dealHref(a: Activity, query?: string) {
+  const slug = a.payload?.deal_slug?.trim();
+  const base = slug ? dealPath({ slug }) : `/deal/${a.deal_id}`;
+  return query ? `${base}${query}` : base;
 }
 
 function buildActivityText(a: Activity) {
@@ -22,7 +29,7 @@ function buildActivityText(a: Activity) {
     return {
       actorName: name,
       restText: `${t("activity.shared")} ${title}`,
-      href: `/deal/${a.deal_id}`,
+      href: dealHref(a),
       cta: t("activity.ctaDeal"),
     };
   }
@@ -31,7 +38,7 @@ function buildActivityText(a: Activity) {
     return {
       actorName: name,
       restText: `${t("activity.voted")} ${title}`,
-      href: `/deal/${a.deal_id}`,
+      href: dealHref(a),
       cta: t("activity.ctaDeal"),
     };
   }
@@ -42,7 +49,7 @@ function buildActivityText(a: Activity) {
     return {
       actorName: name,
       restText: `${t("activity.commented")}${quoted}`,
-      href: `/deal/${a.deal_id}?tab=comments`,
+      href: dealHref(a, "?tab=comments"),
       cta: t("activity.ctaComment"),
     };
   }
@@ -51,7 +58,7 @@ function buildActivityText(a: Activity) {
   return {
     actorName: name,
     restText: `${t("activity.saved")} ${title}`,
-    href: `/deal/${a.deal_id}`,
+    href: dealHref(a),
     cta: t("activity.ctaDeal"),
   };
 }

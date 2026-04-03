@@ -28,6 +28,7 @@ import { openPublicProfileModal } from "@/components/profile/public-user-profile
 import { useAuth } from "@/components/auth/auth-provider";
 import { useAuthGuard } from "@/components/auth/auth-guard";
 import { useToast } from "@/components/ui/toast";
+import { dealPath } from "@/lib/deal-url";
 import { voteDeal, postComment, reportDeal, getUserVote } from "@/app/actions";
 import { hasStrikethroughOriginal } from "@/lib/deal-price";
 import { formatPrice } from "@/lib/utils";
@@ -205,7 +206,7 @@ export function DealDetailContent({
 
   const handleShare = async () => {
     try {
-      const url = `${window.location.origin}/deal/${deal.id}`;
+      const url = `${window.location.origin}${dealPath(deal)}`;
       if (navigator.share) {
         await navigator.share({ title: deal.title, url });
       } else {

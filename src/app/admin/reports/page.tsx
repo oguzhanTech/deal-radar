@@ -7,7 +7,7 @@ type ReportRow = {
   user_id: string;
   reason: string;
   created_at: string;
-  deal?: { title: string; id: string; image_url: string | null } | null;
+  deal?: { title: string; id: string; slug: string; image_url: string | null } | null;
   reporter?: { display_name: string | null } | null;
 };
 
@@ -15,7 +15,7 @@ export default async function AdminReportsPage() {
   const supabase = createAdminClient();
   const { data: rows } = await supabase
     .from("deal_reports")
-    .select("*, deal:deals(title, id, image_url)")
+    .select("*, deal:deals(title, id, slug, image_url)")
     .order("created_at", { ascending: false })
     .limit(100);
 

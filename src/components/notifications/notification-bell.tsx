@@ -9,6 +9,7 @@ import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/co
 import { Button } from "@/components/ui/button";
 import { usePushSubscribe } from "@/hooks/use-push-subscribe";
 import type { Notification } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -64,8 +65,10 @@ export function NotificationBell() {
   };
 
   const resolveNotificationUrl = (notification: Notification) => {
-    const payload = (notification.payload as { url?: string; deal_id?: string } | null) ?? null;
+    const payload =
+      (notification.payload as { url?: string; deal_id?: string; slug?: string } | null) ?? null;
     if (payload?.url) return payload.url;
+    if (payload?.slug) return dealPath({ slug: payload.slug });
     if (payload?.deal_id) return `/deal/${payload.deal_id}`;
     return null;
   };

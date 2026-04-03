@@ -156,7 +156,7 @@ export function getPageSkeleton(pathname: string): ReactNode {
   if (path === "/my") return <MySkeleton />;
   if (path === "/create") return <CreateSkeleton />;
   if (path === "/leaderboard") return <LeaderboardSkeleton />;
-  if (path.startsWith("/deal/")) return <DealDetailSkeleton />;
+  if (path.startsWith("/deal/") || path.startsWith("/firsat/")) return <DealDetailSkeleton />;
   return (
     <div className="py-8 px-4 animate-in fade-in duration-150">
       <div className="flex gap-3">

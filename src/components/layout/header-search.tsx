@@ -8,6 +8,7 @@ import { Loader2, Search } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import type { Deal } from "@/lib/types/database";
+import { dealPath } from "@/lib/deal-url";
 
 const MIN_CHARS = 2;
 const DEBOUNCE_MS = 300;
@@ -113,7 +114,7 @@ export function HeaderSearch() {
                     className="w-full flex gap-2.5 px-3 py-2.5 text-left hover:bg-muted/80 transition-colors cursor-pointer"
                     onClick={() => {
                       setOpen(false);
-                      router.push(`/deal/${deal.id}`);
+                      router.push(dealPath(deal));
                     }}
                   >
                     <div className="relative h-12 w-12 shrink-0 rounded-lg bg-muted overflow-hidden">
