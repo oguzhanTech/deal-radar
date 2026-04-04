@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { AuthProvider } from "@/components/auth/auth-provider";
+import { AuthProvider, useAuth } from "@/components/auth/auth-provider";
 import { SavedDealIdsProvider } from "@/components/saved-deals/saved-deal-ids-context";
 import { ToastProvider } from "@/components/ui/toast";
 import { TopHeader } from "@/components/layout/top-header";
@@ -11,7 +12,16 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { AppLoadingScreen } from "@/components/layout/app-loading-screen";
 import { useRoutePreloader } from "@/hooks/use-route-preloader";
 import { useIsLgUp } from "@/hooks/use-is-lg";
-import { LevelUpModal } from "@/components/rewards/level-up-modal";
+const LevelUpModalLazy = dynamic(
+  () => import("@/components/rewards/level-up-modal").then((m) => m.LevelUpModal),
+  { ssr: false }
+);
+
+function LevelUpModalGate() {
+  const { levelUp } = useAuth();
+  if (levelUp === null) return null;
+  return <LevelUpModalLazy />;
+}
 import { getPageSkeleton } from "@/components/layout/page-skeleton";
 import { cn } from "@/lib/utils";
 import { APP_SHELL_CLASS } from "@/lib/layout-constants";
@@ -148,7 +158,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
           </motion.div>
         )}
       </AnimatePresence>
-      <LevelUpModal />
+      <LevelUpModalGate />
     </div>
   );
 }

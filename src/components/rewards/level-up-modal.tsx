@@ -90,7 +90,7 @@ export function LevelUpModal() {
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-300/30"
             >
-              <span className="text-2xl font-black text-white">{levelUp}</span>
+              <span className="text-2xl font-bold text-white">{levelUp}</span>
             </motion.div>
 
             <h2 className="text-2xl font-extrabold mb-1">{t("levelUp.title")}</h2>

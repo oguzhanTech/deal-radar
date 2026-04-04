@@ -31,6 +31,8 @@
   --color-chart-5: #ddd6fe;
 
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  /* next/font ile 800 yüklemeden aynı görünüm için extrabold → bold */
+  --font-weight-extrabold: 700;
 
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.12);

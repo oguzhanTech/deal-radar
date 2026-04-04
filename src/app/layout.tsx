@@ -17,12 +17,23 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  // 800 kaldırıldı: `font-extrabold` globals.css içinde 700’e eşleniyor (woff2 indirimi)
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
+
+const supabasePreconnectOrigin = (() => {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!raw || !/^https?:\/\//i.test(raw)) return null;
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return null;
+  }
+})();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -85,6 +96,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" suppressHydrationWarning>
+      <head>
+        {supabasePreconnectOrigin && (
+          <link rel="preconnect" href={supabasePreconnectOrigin} crossOrigin="anonymous" />
+        )}
+      </head>
       <body
         className={`min-h-dvh antialiased bg-background ${fontSans.className}`}
         suppressHydrationWarning

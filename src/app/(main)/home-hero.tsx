@@ -1,6 +1,19 @@
+import dynamic from "next/dynamic";
 import { buildHeroSlides, fetchHeroAnnouncements, getHeroDeals } from "./home-sections";
-import { HomeHeroCarousel } from "@/components/home/home-hero-carousel";
 import type { HeroSlide } from "@/components/home/home-hero-carousel";
+
+const HomeHeroCarousel = dynamic(
+  () =>
+    import("@/components/home/home-hero-carousel").then((m) => m.HomeHeroCarousel),
+  {
+    loading: () => (
+      <div
+        className="relative aspect-[4/3] w-full max-w-3xl mx-auto rounded-2xl bg-muted animate-pulse min-h-[12rem]"
+        aria-hidden
+      />
+    ),
+  }
+);
 
 interface HomeHeroProps {
   heroSlides?: HeroSlide[];
