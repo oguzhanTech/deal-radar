@@ -108,6 +108,8 @@ export function EditorPickWidget({
                   className="object-cover"
                   sizes={isRail ? "(min-width: 1024px) 240px, 112px" : "112px"}
                   quality={82}
+                  loading="lazy"
+                  fetchPriority={isRail ? "auto" : "low"}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground/40 text-xs">

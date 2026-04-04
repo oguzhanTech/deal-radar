@@ -21,6 +21,8 @@ interface DealSectionProps {
   seeAllHref?: string;
   /** true = alt alta küçük widget, false = eski yatay kaydırma (kullanılmıyor) */
   vertical?: boolean;
+  /** Kart görselleri: anasayfa için varsayılan düşük öncelik; bölüm bazlı geçersiz kılınabilir */
+  cardImageFetchPriority?: "high" | "low" | "auto";
 }
 
 export function DealSection({
@@ -30,6 +32,7 @@ export function DealSection({
   loading,
   seeAllHref,
   vertical = true,
+  cardImageFetchPriority = "low",
 }: DealSectionProps) {
   const router = useRouter();
   const isLg = useIsLgUp();
@@ -64,7 +67,12 @@ export function DealSection({
               <DealCardSkeleton key={i} compact={vertical} />
             ))
           : displayDeals.map((deal) => (
-              <DealCard key={deal.id} deal={deal} compact={vertical} />
+              <DealCard
+                key={deal.id}
+                deal={deal}
+                compact={vertical}
+                imageFetchPriority={cardImageFetchPriority}
+              />
             ))}
         {!loading && displayDeals.length === 0 && (
           <p className="text-sm text-muted-foreground py-6">{t("search.empty")}</p>

@@ -29,6 +29,11 @@ interface DealCardProps {
   hideCountdownStatusLabel?: boolean;
   /** Ana sayfa sağ sütun: dikey, kare görsel; taşmayı önler */
   compactLayout?: "default" | "rail";
+  /**
+   * Anasayfa: hero ile ağ rekabetini azaltmak için varsayılan "low".
+   * İstisna (nadiren): "high" ile LCP adayı kart.
+   */
+  imageFetchPriority?: "high" | "low" | "auto";
 }
 
 export function DealCard({
@@ -39,6 +44,7 @@ export function DealCard({
   surface = "default",
   hideCountdownStatusLabel = false,
   compactLayout = "default",
+  imageFetchPriority = "low",
 }: DealCardProps) {
   const router = useRouter();
   const { isUrgent, isVeryUrgent } = useCountdown(deal.end_at);
@@ -58,6 +64,13 @@ export function DealCard({
   const goToDeal = () => {
     router.push(dealPath(deal));
   };
+
+  const imageProps =
+    imageFetchPriority === "high"
+      ? { priority: true, fetchPriority: "high" as const }
+      : imageFetchPriority === "low"
+        ? { loading: "lazy" as const, fetchPriority: "low" as const }
+        : { loading: "lazy" as const };
 
   if (compact && compactLayout === "rail") {
     return (
@@ -92,6 +105,7 @@ export function DealCard({
                 className="object-cover"
                 sizes="88px"
                 quality={90}
+                {...imageProps}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground/40 text-[10px] text-center px-1">
@@ -231,6 +245,7 @@ export function DealCard({
                   className="object-cover"
                   sizes="64px"
                   quality={90}
+                  {...imageProps}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground/40 text-xs">
@@ -374,6 +389,7 @@ export function DealCard({
                 fill
                 className="object-cover"
                 sizes={horizontal ? "280px" : "(max-width: 768px) 100vw, 480px"}
+                {...imageProps}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground/40 text-sm font-medium">
