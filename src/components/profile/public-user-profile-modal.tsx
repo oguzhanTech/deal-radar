@@ -142,6 +142,7 @@ export function PublicUserProfileModalHost() {
                       src={summary.profile.profile_image_url ?? undefined}
                       alt={displayName}
                       className="object-cover"
+                      sizes="48px"
                     />
                     <AvatarFallback className="rounded-full bg-white/25 text-lg font-bold text-white">
                       {initial}

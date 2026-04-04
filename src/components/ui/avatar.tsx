@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image, { type ImageProps } from "next/image";
 import { cn } from "@/lib/utils";
 
 function Avatar({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -10,9 +11,28 @@ function Avatar({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   );
 }
 
-function AvatarImage({ className, src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+export type AvatarImageProps = Omit<ImageProps, "src" | "alt" | "fill"> & {
+  src?: string | null;
+  alt?: string;
+  /**
+   * Görünen avatar genişliği (Tailwind h-* ile uyumlu); Next görsel genişliği seçer.
+   * @default "40px" (h-10 w-10)
+   */
+  sizes?: string;
+};
+
+function AvatarImage({ className, src, alt, sizes = "40px", ...props }: AvatarImageProps) {
   if (!src) return null;
-  return <img className={cn("aspect-square h-full w-full", className)} src={src} alt={alt} {...props} />;
+  return (
+    <Image
+      src={src}
+      alt={alt ?? ""}
+      fill
+      sizes={sizes}
+      className={cn("object-cover", className)}
+      {...props}
+    />
+  );
 }
 
 function AvatarFallback({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

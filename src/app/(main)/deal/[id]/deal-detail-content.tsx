@@ -456,6 +456,7 @@ export function DealDetailContent({
                         src={c.profile?.profile_image_url ?? undefined}
                         alt={c.profile?.display_name ?? "Avatar"}
                         className="rounded-lg object-cover"
+                        sizes="28px"
                       />
                       <AvatarFallback className="rounded-lg bg-gradient-to-br from-indigo-100 to-violet-100 text-[10px] font-bold text-indigo-600">
                         {c.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
@@ -504,6 +505,7 @@ export function DealDetailContent({
                             src={r.profile?.profile_image_url ?? undefined}
                             alt={r.profile?.display_name ?? "Avatar"}
                             className="rounded-md object-cover"
+                            sizes="24px"
                           />
                           <AvatarFallback className="rounded-md bg-gradient-to-br from-indigo-100 to-violet-100 text-[10px] font-bold text-indigo-600">
                             {r.profile?.display_name?.charAt(0)?.toUpperCase() || "U"}

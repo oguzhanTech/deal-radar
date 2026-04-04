@@ -106,7 +106,11 @@ export function TopHeader() {
             >
               <Avatar className="h-9 w-9 border-2 border-white/25 ring-2 ring-white/10">
                 {profile?.profile_image_url && (
-                  <AvatarImage src={profile.profile_image_url} alt={profile.display_name ?? "Avatar"} />
+                  <AvatarImage
+                    src={profile.profile_image_url}
+                    alt={profile.display_name ?? "Avatar"}
+                    sizes="36px"
+                  />
                 )}
                 <AvatarFallback className="bg-white/15 text-white text-xs font-bold">{avatarLetter}</AvatarFallback>
               </Avatar>

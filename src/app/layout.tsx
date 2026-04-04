@@ -20,6 +20,7 @@ const fontSans = Plus_Jakarta_Sans({
   // 800 kaldırıldı: `font-extrabold` globals.css içinde 700’e eşleniyor (woff2 indirimi)
   weight: ["400", "500", "600", "700"],
   display: "swap",
+  preload: true,
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.topla.online";

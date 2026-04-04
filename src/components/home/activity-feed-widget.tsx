@@ -155,6 +155,7 @@ export function ActivityFeedWidget({ activities }: ActivityFeedWidgetProps) {
                   src={profileUrl ?? undefined}
                   alt=""
                   className="rounded-full object-cover"
+                  sizes="44px"
                 />
                 <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-bold">
                   {actorInitial(meta.actorName)}
