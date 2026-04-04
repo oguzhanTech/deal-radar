@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze": "cross-env ANALYZE=true next build",
+    "lighthouse:mobile": "lighthouse http://127.0.0.1:3000 --only-categories=performance --form-factor=mobile --screenEmulation.mobile --throttling-method=simulate --chrome-flags=\"--headless=new\" --output=html --output-path=./lighthouse-mobile-report.html --quiet"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -32,12 +34,16 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@next/bundle-analyzer": "^16.2.2",
     "@types/node": "^22.14.1",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/web-push": "^3.6.4",
+    "critters": "^0.0.23",
+    "cross-env": "^10.1.0",
     "eslint": "^9.25.1",
     "eslint-config-next": "^15.3.1",
+    "lighthouse": "^12.8.2",
     "typescript": "^5.8.3"
   }
 }

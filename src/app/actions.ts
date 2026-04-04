@@ -22,7 +22,10 @@ export async function uploadDealImage(formData: FormData) {
 
   const { error } = await supabase.storage
     .from("deal-images")
-    .upload(path, bytes, { contentType: file.type || "image/jpeg" });
+    .upload(path, bytes, {
+      contentType: file.type || "image/jpeg",
+      cacheControl: "31536000",
+    });
 
   if (error) {
     console.error("[action] uploadDealImage error:", error);
@@ -90,7 +93,10 @@ export async function uploadProfileImage(formData: FormData) {
 
   const { error: uploadError } = await supabase.storage
     .from("profile-images")
-    .upload(path, bytes, { contentType: file.type });
+    .upload(path, bytes, {
+      contentType: file.type,
+      cacheControl: "31536000",
+    });
 
   if (uploadError) return { error: uploadError.message };
 

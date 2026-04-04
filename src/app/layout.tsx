@@ -1,9 +1,17 @@
 import type { Metadata, Viewport } from "next";
+import dynamic from "next/dynamic";
 import Script from "next/script";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/layout/sw-registrar";
-import { PublicUserProfileModalHost } from "@/components/profile/public-user-profile-modal";
 import "./globals.css";
+
+const PublicUserProfileModalHost = dynamic(
+  () =>
+    import("@/components/profile/public-user-profile-modal").then(
+      (m) => m.PublicUserProfileModalHost
+    ),
+  { loading: () => null }
+);
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -85,9 +93,9 @@ export default function RootLayout({
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="afterInteractive"
+              strategy="lazyOnload"
             />
-            <Script id="gtag-config" strategy="afterInteractive">
+            <Script id="gtag-config" strategy="lazyOnload">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}

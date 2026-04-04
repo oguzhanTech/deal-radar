@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { HomeEmptyState } from "./home-content";
 import {
   getHomePageDataCached,
@@ -19,8 +20,15 @@ import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
 import { HomeDesktopSidebar } from "@/components/home/home-desktop-sidebar";
 import { HomeDesktopRail } from "@/components/home/home-desktop-rail";
-import { HomeInfiniteBottomFeed } from "@/components/home/home-infinite-bottom-feed";
 import { cn } from "@/lib/utils";
+
+const HomeInfiniteBottomFeed = dynamic(
+  () =>
+    import("@/components/home/home-infinite-bottom-feed").then(
+      (m) => m.HomeInfiniteBottomFeed
+    ),
+  { loading: () => null }
+);
 
 export const revalidate = 60;
 
