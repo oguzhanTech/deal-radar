@@ -4,31 +4,18 @@ import MainLayoutClient from "./main-layout-client";
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   let initialUser: Awaited<ReturnType<typeof getSession>>["user"] = null;
   let initialProfile: Awaited<ReturnType<typeof getSession>>["profile"] = null;
-  let initialSavedDealIds: string[] = [];
 
   try {
     const supabase = await createClient();
     const session = await getSession(supabase);
     initialUser = session.user;
     initialProfile = session.profile;
-
-    if (initialUser) {
-      const { data: saves } = await supabase
-        .from("deal_saves")
-        .select("deal_id")
-        .eq("user_id", initialUser.id);
-      initialSavedDealIds = (saves ?? []).map((r) => r.deal_id);
-    }
   } catch {
     // Session okunamazsa client tarafı fallback kullanır
   }
 
   return (
-    <MainLayoutClient
-      initialUser={initialUser}
-      initialProfile={initialProfile}
-      initialSavedDealIds={initialSavedDealIds}
-    >
+    <MainLayoutClient initialUser={initialUser} initialProfile={initialProfile}>
       {children}
     </MainLayoutClient>
   );

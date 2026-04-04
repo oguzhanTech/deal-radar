@@ -241,7 +241,9 @@ export function DealDetailContent({
             alt={deal.title}
             fill
             className="object-cover lg:object-contain lg:bg-muted"
+            sizes="(max-width: 1024px) 100vw, min(42rem, 50vw)"
             priority
+            fetchPriority="high"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none lg:from-black/25" />

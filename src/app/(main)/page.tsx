@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import { createAnonClient } from "@/lib/supabase/server";
 import { HomeEmptyState } from "./home-content";
 import {
-  getHomePageData,
-  hasActiveHeroAnnouncements,
+  getHomePageDataCached,
+  hasActiveHeroAnnouncementsCached,
+  hasApprovedFutureDealCached,
   pickDesktopRailDeals,
   HomeTrendingSection,
   HomeEndingSoonSection,
@@ -45,19 +45,12 @@ const HOME_SECTIONS = [
 ] as const;
 
 export default async function HomePage() {
-  const supabase = await createAnonClient();
-  const [dealsCheck, hasAnnouncements] = await Promise.all([
-    supabase
-      .from("deals")
-      .select("id")
-      .eq("status", "approved")
-      .gt("end_at", new Date().toISOString())
-      .limit(1)
-      .maybeSingle(),
-    hasActiveHeroAnnouncements(),
+  const [hasDeal, hasAnnouncements] = await Promise.all([
+    hasApprovedFutureDealCached(),
+    hasActiveHeroAnnouncementsCached(),
   ]);
 
-  if (!dealsCheck.data && !hasAnnouncements) {
+  if (!hasDeal && !hasAnnouncements) {
     return (
       <div className="space-y-4 py-3">
         <HomeEmptyState />
@@ -65,7 +58,7 @@ export default async function HomePage() {
     );
   }
 
-  const homeData = await getHomePageData();
+  const homeData = await getHomePageDataCached();
   const mixedRailDeals = pickDesktopRailDeals(homeData);
 
   const orderedSections = shuffle([...HOME_SECTIONS]);
@@ -102,9 +95,7 @@ export default async function HomePage() {
           showDesktopRail ? "lg:col-span-7" : "lg:col-span-10"
         )}
       >
-      <Suspense fallback={null}>
-        <HomeHero heroSlides={homeData.heroSlides} />
-      </Suspense>
+      <HomeHero heroSlides={homeData.heroSlides} />
       {firstTwo.map(({ id, Section }) => (
         <Suspense key={id} fallback={<DealSectionSkeleton />}>
           <Section

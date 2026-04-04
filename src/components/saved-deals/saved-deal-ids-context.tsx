@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/auth-provider";
 
 type SavedDealIdsState = Set<string> | null;
@@ -25,23 +26,31 @@ export function useSavedDealIds() {
 
 interface SavedDealIdsProviderProps {
   children: React.ReactNode;
-  /** Sunucudan gelen kayıtlı deal ID'leri (radar butonu ve Radarım senkronu için). */
-  initialSavedDealIds?: string[];
 }
 
-export function SavedDealIdsProvider({ children, initialSavedDealIds = [] }: SavedDealIdsProviderProps) {
+/** Kayıtlı fırsat ID’leri sunucuda bloklanmaz; oturum açıksa client’ta tek sorgu yüklenir. */
+export function SavedDealIdsProvider({ children }: SavedDealIdsProviderProps) {
   const { user } = useAuth();
-  const [savedDealIds, setSavedDealIds] = useState<SavedDealIdsState>(() =>
-    user ? new Set(initialSavedDealIds) : null
-  );
+  const [savedDealIds, setSavedDealIds] = useState<SavedDealIdsState>(() => (user ? new Set() : null));
 
   useEffect(() => {
     if (!user) {
       setSavedDealIds(null);
       return;
     }
-    setSavedDealIds(new Set(initialSavedDealIds));
-  }, [user?.id, initialSavedDealIds]);
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from("deal_saves").select("deal_id").eq("user_id", user.id);
+      if (!cancelled) {
+        setSavedDealIds(new Set((data ?? []).map((r) => r.deal_id)));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca kullanıcı kimliği değişince yeniden yükle
+  }, [user?.id]);
 
   const isSaved = useCallback(
     (dealId: string) => (savedDealIds ? savedDealIds.has(dealId) : false),

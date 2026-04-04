@@ -77,7 +77,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`min-h-dvh antialiased ${fontSans.className}`} suppressHydrationWarning>
+      <body
+        className={`min-h-dvh antialiased bg-background ${fontSans.className}`}
+        suppressHydrationWarning
+      >
         {GA_MEASUREMENT_ID && (
           <>
             <Script

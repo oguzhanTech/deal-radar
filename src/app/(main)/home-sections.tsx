@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createAnonClient } from "@/lib/supabase/server";
 import { DealSection } from "@/components/deals/deal-section";
 import { EditorPickWidget } from "@/components/home/editor-pick-widget";
@@ -12,8 +13,16 @@ type EditorPickData = { deal: Deal; editorName: string | null } | null;
 
 async function attachCreators(deals: Deal[]): Promise<HomeDeal[]> {
   if (!deals.length) return [];
+  const [withCreators] = await attachCreatorsToDealGroups([deals]);
+  return withCreators;
+}
+
+/** Tek `profiles` sorgusu ile birden fazla deal listesine creator adı ekler (anasayfa toplu yükleme). */
+async function attachCreatorsToDealGroups(groups: Deal[][]): Promise<HomeDeal[][]> {
+  const flat = groups.flat();
+  if (flat.length === 0) return groups.map(() => []);
+  const userIds = Array.from(new Set(flat.map((d) => d.created_by)));
   const supabase = await createAnonClient();
-  const userIds = Array.from(new Set(deals.map((d) => d.created_by)));
   const { data: profiles } = await supabase
     .from("profiles")
     .select("user_id, display_name")
@@ -25,10 +34,12 @@ async function attachCreators(deals: Deal[]): Promise<HomeDeal[]> {
       return acc;
     }, {}) ?? {};
 
-  return deals.map((d) => ({
-    ...d,
-    profile: { display_name: map[d.created_by] ?? null },
-  }));
+  return groups.map((deals) =>
+    deals.map((d) => ({
+      ...d,
+      profile: { display_name: map[d.created_by] ?? null },
+    }))
+  );
 }
 
 async function fetchRecentActivities(limit = 5): Promise<Activity[]> {
@@ -72,7 +83,7 @@ async function fetchRecentActivities(limit = 5): Promise<Activity[]> {
   }));
 }
 
-async function fetchTrending() {
+async function fetchTrendingRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
@@ -82,11 +93,16 @@ async function fetchTrending() {
     .gte("heat_score", 20)
     .order("heat_score", { ascending: false })
     .limit(10);
-  const deals = await attachCreators(data ?? []);
-  return deals.map((deal) => ({ ...deal, is_trending: true }));
+  return (data ?? []) as Deal[];
 }
 
-async function fetchEndingSoon() {
+async function fetchTrending() {
+  const deals = await fetchTrendingRaw();
+  const withCreators = await attachCreators(deals);
+  return withCreators.map((deal) => ({ ...deal, is_trending: true }));
+}
+
+async function fetchEndingSoonRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
@@ -95,10 +111,14 @@ async function fetchEndingSoon() {
     .gt("end_at", new Date().toISOString())
     .order("end_at", { ascending: true })
     .limit(10);
-  return attachCreators(data ?? []);
+  return (data ?? []) as Deal[];
 }
 
-async function fetchPopular() {
+async function fetchEndingSoon() {
+  return attachCreators(await fetchEndingSoonRaw());
+}
+
+async function fetchPopularRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
@@ -107,7 +127,11 @@ async function fetchPopular() {
     .gt("end_at", new Date().toISOString())
     .order("heat_score", { ascending: false })
     .limit(10);
-  return attachCreators(data ?? []);
+  return (data ?? []) as Deal[];
+}
+
+async function fetchPopular() {
+  return attachCreators(await fetchPopularRaw());
 }
 
 interface HeroDealPools {
@@ -234,7 +258,7 @@ export async function hasActiveHeroAnnouncements(): Promise<boolean> {
   return !!data;
 }
 
-async function fetchNewest() {
+async function fetchNewestRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
@@ -242,10 +266,14 @@ async function fetchNewest() {
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(10);
-  return attachCreators(data ?? []);
+  return (data ?? []) as Deal[];
 }
 
-async function fetchBiggestDrops(): Promise<HomeDeal[]> {
+async function fetchNewest() {
+  return attachCreators(await fetchNewestRaw());
+}
+
+async function fetchBiggestDropsRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
@@ -255,10 +283,14 @@ async function fetchBiggestDrops(): Promise<HomeDeal[]> {
     .limit(20);
   const list = (data ?? []) as Deal[];
   const sorted = [...list].sort((a, b) => (b.discount_percent ?? -1) - (a.discount_percent ?? -1));
-  return attachCreators(sorted.slice(0, 5));
+  return sorted.slice(0, 5);
 }
 
-async function fetchCouponDeals(): Promise<HomeDeal[]> {
+async function fetchBiggestDrops(): Promise<HomeDeal[]> {
+  return attachCreators(await fetchBiggestDropsRaw());
+}
+
+async function fetchCouponDealsRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const now = new Date().toISOString();
   const { data } = await supabase
@@ -271,15 +303,18 @@ async function fetchCouponDeals(): Promise<HomeDeal[]> {
     .limit(12);
 
   const list = (data ?? []) as Deal[];
-  // Basit shuffle
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [list[i], list[j]] = [list[j], list[i]];
   }
-  return attachCreators(list.slice(0, 3));
+  return list.slice(0, 3);
 }
 
-async function fetchInternationalDeals(): Promise<HomeDeal[]> {
+async function fetchCouponDeals(): Promise<HomeDeal[]> {
+  return attachCreators(await fetchCouponDealsRaw());
+}
+
+async function fetchInternationalDealsRaw(): Promise<Deal[]> {
   const supabase = await createAnonClient();
   const { data } = await supabase
     .from("deals")
@@ -289,12 +324,15 @@ async function fetchInternationalDeals(): Promise<HomeDeal[]> {
     .gt("end_at", new Date().toISOString())
     .limit(20);
   const list = (data ?? []) as Deal[];
-  // Basit shuffle
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [list[i], list[j]] = [list[j], list[i]];
   }
-  return attachCreators(list.slice(0, 5));
+  return list.slice(0, 5);
+}
+
+async function fetchInternationalDeals(): Promise<HomeDeal[]> {
+  return attachCreators(await fetchInternationalDealsRaw());
 }
 
 export async function HomeTrendingSection({ initialDeals }: HomeDealsSectionProps = {}) {
@@ -438,28 +476,48 @@ export async function HomeEditorPickSection({ initialResult }: HomeEditorPickSec
 
 export async function getHomePageData() {
   const [
-    endingSoon,
-    popular,
-    newest,
-    trending,
-    biggestDrops,
-    couponDeals,
-    internationalDeals,
+    endingSoonR,
+    popularR,
+    newestR,
+    trendingR,
+    biggestR,
+    couponR,
+    intlR,
     activities,
     editorPick,
     heroAnnouncements,
   ] = await Promise.all([
-    fetchEndingSoon(),
-    fetchPopular(),
-    fetchNewest(),
-    fetchTrending(),
-    fetchBiggestDrops(),
-    fetchCouponDeals(),
-    fetchInternationalDeals(),
+    fetchEndingSoonRaw(),
+    fetchPopularRaw(),
+    fetchNewestRaw(),
+    fetchTrendingRaw(),
+    fetchBiggestDropsRaw(),
+    fetchCouponDealsRaw(),
+    fetchInternationalDealsRaw(),
     fetchRecentActivities(5),
     fetchEditorPick(),
     fetchHeroAnnouncements(),
   ]);
+
+  const [
+    endingSoon,
+    popular,
+    newest,
+    trendingBase,
+    biggestDrops,
+    couponDeals,
+    internationalDeals,
+  ] = await attachCreatorsToDealGroups([
+    endingSoonR,
+    popularR,
+    newestR,
+    trendingR,
+    biggestR,
+    couponR,
+    intlR,
+  ]);
+
+  const trending = trendingBase.map((deal) => ({ ...deal, is_trending: true }));
 
   const heroDeals = await getHeroDeals({ endingSoon, popular, newest });
   const heroSlides = buildHeroSlides(heroAnnouncements, heroDeals);
@@ -479,6 +537,37 @@ export async function getHomePageData() {
     editorPick,
   };
 }
+
+export async function hasApprovedFutureDeal(): Promise<boolean> {
+  const supabase = await createAnonClient();
+  const { data } = await supabase
+    .from("deals")
+    .select("id")
+    .eq("status", "approved")
+    .gt("end_at", new Date().toISOString())
+    .limit(1)
+    .maybeSingle();
+  return !!data;
+}
+
+/** ISR: anasayfa veri yığını — Supabase yükünü ve TTFB’yi düşürür (`revalidate` ile uyumlu). */
+export const getHomePageDataCached = unstable_cache(
+  async () => getHomePageData(),
+  ["home-page-data"],
+  { revalidate: 60, tags: ["home"] }
+);
+
+export const hasActiveHeroAnnouncementsCached = unstable_cache(
+  async () => hasActiveHeroAnnouncements(),
+  ["hero-announcements-active"],
+  { revalidate: 60, tags: ["home"] }
+);
+
+export const hasApprovedFutureDealCached = unstable_cache(
+  async () => hasApprovedFutureDeal(),
+  ["home-has-approved-deal"],
+  { revalidate: 60, tags: ["home"] }
+);
 
 /** Masaüstü sağ rail: havuzlardan karışık, editör seçimiyle çakışmayan en fazla 8 fırsat (ek DB yok). */
 export function pickDesktopRailDeals(data: Awaited<ReturnType<typeof getHomePageData>>): Deal[] {
