@@ -108,6 +108,7 @@ export default function RootLayout({
       >
         {GA_MEASUREMENT_ID && (
           <>
+            {/* idle/load sonrası: ilk boyama ve LCP ile yarışmayı azaltır (consent sonrası yükleme ayrıca değerlendirilebilir) */}
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
               strategy="lazyOnload"

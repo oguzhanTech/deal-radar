@@ -3,7 +3,6 @@
 import { useMemo, useState, useCallback, TouchEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Flame, Clock, Sparkles, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -29,6 +28,10 @@ export type HeroSlide =
 interface HomeHeroCarouselProps {
   slides: HeroSlide[];
 }
+
+/** Mobil ~100vw eksi yatay padding (px-4); masaüstü içerik genişliği */
+const HERO_IMAGE_SIZES =
+  "(max-width: 1024px) calc(100vw - 2rem), min(896px, 58vw)";
 
 function getSectionLabel(section: HeroDeal["section"]) {
   switch (section) {
@@ -183,28 +186,26 @@ export function HomeHeroCarousel({ slides: rawSlides }: HomeHeroCarouselProps) {
       onTouchEnd={handleTouchEnd}
     >
       <div className="relative overflow-hidden rounded-3xl bg-black text-white shadow-xl h-[190px] md:h-[215px]">
-        <AnimatePresence initial={false} mode="wait">
-          <motion.div
-            key={motionKey}
-            initial={{ x: 40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -40, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 26, mass: 0.7 }}
-            className={cn("absolute inset-0", cardClickable && "cursor-pointer")}
-            onClick={cardClickable ? onCardClick : undefined}
-            role={cardClickable ? "link" : undefined}
-            tabIndex={cardClickable ? 0 : undefined}
-            onKeyDown={
-              cardClickable
-                ? (e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onCardClick();
-                    }
+        <div
+          key={motionKey}
+          className={cn(
+            "absolute inset-0 animate-in fade-in duration-300",
+            cardClickable && "cursor-pointer"
+          )}
+          onClick={cardClickable ? onCardClick : undefined}
+          role={cardClickable ? "link" : undefined}
+          tabIndex={cardClickable ? 0 : undefined}
+          onKeyDown={
+            cardClickable
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onCardClick();
                   }
-                : undefined
-            }
-          >
+                }
+              : undefined
+          }
+        >
             <div className="absolute inset-0">
               {isDeal && deal?.image_url && (
                 <Image
@@ -213,7 +214,8 @@ export function HomeHeroCarousel({ slides: rawSlides }: HomeHeroCarouselProps) {
                   fill
                   className="object-cover scale-110"
                   style={{ objectPosition: "center" }}
-                  sizes="(max-width: 1024px) 100vw, min(896px, 58vw)"
+                  sizes={HERO_IMAGE_SIZES}
+                  quality={78}
                   priority
                   fetchPriority="high"
                 />
@@ -225,7 +227,8 @@ export function HomeHeroCarousel({ slides: rawSlides }: HomeHeroCarouselProps) {
                   fill
                   className="object-cover scale-110"
                   style={{ objectPosition: "center" }}
-                  sizes="(max-width: 1024px) 100vw, min(896px, 58vw)"
+                  sizes={HERO_IMAGE_SIZES}
+                  quality={78}
                   priority
                   fetchPriority="high"
                 />
@@ -345,8 +348,7 @@ export function HomeHeroCarousel({ slides: rawSlides }: HomeHeroCarouselProps) {
                 </div>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
     </section>
   );

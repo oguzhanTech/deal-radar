@@ -1,19 +1,12 @@
-import dynamic from "next/dynamic";
+import { HomeHeroCarousel } from "@/components/home/home-hero-carousel";
 import { buildHeroSlides, fetchHeroAnnouncements, getHeroDeals } from "./home-sections";
 import type { HeroSlide } from "@/components/home/home-hero-carousel";
 
-const HomeHeroCarousel = dynamic(
-  () =>
-    import("@/components/home/home-hero-carousel").then((m) => m.HomeHeroCarousel),
-  {
-    loading: () => (
-      <div
-        className="relative aspect-[4/3] w-full max-w-3xl mx-auto rounded-2xl bg-muted animate-pulse min-h-[12rem]"
-        aria-hidden
-      />
-    ),
-  }
-);
+/**
+ * LCP notu: Anasayfada en büyük üst öğe hero’daki `next/image` (priority).
+ * Lighthouse’ta “Largest Contentful Paint element” ile doğrulayın; önceki `dynamic()`
+ * hero chunk’ını geciktirdiği için kritik yolu uzatıyordu.
+ */
 
 interface HomeHeroProps {
   heroSlides?: HeroSlide[];
