@@ -30,11 +30,10 @@ import type { Profile } from "@/lib/types/database";
 
 const SKELETON_DELAY_MS = 100;
 const SKELETON_MIN_VISIBLE_MS = 160;
-const INITIAL_SPLASH_MIN_MS = 800;
+const INITIAL_SPLASH_MIN_MS = 180;
 const SPLASH_SHOWN_KEY = "topla_splash_shown";
 
 function LayoutShell({ children }: { children: React.ReactNode }) {
-  useRoutePreloader();
   const pathname = usePathname();
   const isLg = useIsLgUp();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
@@ -44,6 +43,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return true;
     return !sessionStorage.getItem(SPLASH_SHOWN_KEY);
   });
+  useRoutePreloader(!showInitialSplash);
 
   useEffect(() => {
     if (!showInitialSplash) return;

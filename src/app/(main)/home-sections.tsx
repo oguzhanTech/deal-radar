@@ -3,6 +3,7 @@ import { createAnonClient } from "@/lib/supabase/server";
 import { DealSection } from "@/components/deals/deal-section";
 import { EditorPickWidget } from "@/components/home/editor-pick-widget";
 import { ActivityFeedWidget } from "@/components/home/activity-feed-widget";
+import { HomeDesktopRail } from "@/components/home/home-desktop-rail";
 import { t } from "@/lib/i18n";
 import type { Deal, HeroAnnouncement } from "@/lib/types/database";
 import type { HeroDeal, HeroSlide } from "@/components/home/home-hero-carousel";
@@ -538,6 +539,33 @@ export async function getHomePageData() {
   };
 }
 
+export async function getHomePageCriticalData() {
+  const [endingSoonR, popularR, newestR, heroAnnouncements] = await Promise.all([
+    fetchEndingSoonRaw(),
+    fetchPopularRaw(),
+    fetchNewestRaw(),
+    fetchHeroAnnouncements(),
+  ]);
+
+  const [endingSoon, popular, newest] = await attachCreatorsToDealGroups([
+    endingSoonR,
+    popularR,
+    newestR,
+  ]);
+
+  const heroDeals = await getHeroDeals({ endingSoon, popular, newest });
+  const heroSlides = buildHeroSlides(heroAnnouncements, heroDeals);
+
+  return {
+    heroDeals,
+    heroAnnouncements,
+    heroSlides,
+    endingSoon,
+    popular,
+    newest,
+  };
+}
+
 export async function hasApprovedFutureDeal(): Promise<boolean> {
   const supabase = await createAnonClient();
   const { data } = await supabase
@@ -554,6 +582,12 @@ export async function hasApprovedFutureDeal(): Promise<boolean> {
 export const getHomePageDataCached = unstable_cache(
   async () => getHomePageData(),
   ["home-page-data"],
+  { revalidate: 60, tags: ["home"] }
+);
+
+export const getHomePageCriticalDataCached = unstable_cache(
+  async () => getHomePageCriticalData(),
+  ["home-page-critical-data"],
   { revalidate: 60, tags: ["home"] }
 );
 
@@ -593,4 +627,11 @@ export function pickDesktopRailDeals(data: Awaited<ReturnType<typeof getHomePage
     if (out.length >= 8) break;
   }
   return out;
+}
+
+export async function HomeDesktopRailSection() {
+  const data = await getHomePageDataCached();
+  const mixedDeals = pickDesktopRailDeals(data);
+  if (!data.editorPick && mixedDeals.length === 0) return null;
+  return <HomeDesktopRail editorPick={data.editorPick} mixedDeals={mixedDeals} />;
 }

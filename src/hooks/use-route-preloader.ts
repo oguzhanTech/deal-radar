@@ -4,14 +4,15 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { prefetchOnce } from "@/lib/prefetch-once";
 
-const TAB_ROUTES = ["/", "/profile", "/create", "/search", "/my"];
-const OTHER_ROUTES = ["/leaderboard", "/login"];
+const TAB_ROUTES = ["/", "/search", "/profile"];
+const OTHER_ROUTES = ["/my", "/create", "/leaderboard", "/login"];
 
-export function useRoutePreloader() {
+export function useRoutePreloader(enabled = true) {
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    if (!enabled) return;
     const skip = (route: string) =>
       pathname === route || (route !== "/" && pathname.startsWith(route));
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -25,12 +26,12 @@ export function useRoutePreloader() {
         OTHER_ROUTES.forEach((route) => {
           if (!skip(route)) prefetchOnce(router, route);
         });
-      }, 250);
+      }, 2500);
     };
 
     const idle =
       typeof window !== "undefined" && "requestIdleCallback" in window
-        ? window.requestIdleCallback(runPreload, { timeout: 700 })
+        ? window.requestIdleCallback(runPreload, { timeout: 2500 })
         : null;
 
     if (idle == null) {
@@ -43,5 +44,5 @@ export function useRoutePreloader() {
       window.cancelIdleCallback(idle);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [router, pathname]);
+  }, [enabled, router, pathname]);
 }
