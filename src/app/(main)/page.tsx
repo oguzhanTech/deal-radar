@@ -75,7 +75,7 @@ export default async function HomePage() {
       <div
         className={cn(
           "space-y-4 py-3 lg:py-5 min-w-0",
-          "lg:col-span-10"
+          "lg:col-span-7"
         )}
       >
       <HomeHero heroSlides={homeData.heroSlides} />
