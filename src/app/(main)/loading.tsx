@@ -4,13 +4,17 @@ export default function MainLoading() {
       <div className="relative rounded-3xl bg-muted h-[190px] md:h-[215px] overflow-hidden">
         <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/80 to-muted" />
       </div>
-      <div className="space-y-3">
-        <div className="h-5 w-44 rounded-md bg-muted animate-pulse" />
-        <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
-          ))}
-        </div>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, sectionIdx) => (
+          <div key={sectionIdx} className="space-y-2">
+            <div className="h-5 w-44 rounded-md bg-muted animate-pulse" />
+            <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={`${sectionIdx}-${i}`} className="h-24 rounded-xl bg-muted animate-pulse" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

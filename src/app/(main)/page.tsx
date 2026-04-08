@@ -56,8 +56,8 @@ export default async function HomePage() {
   }
 
   const homeData = await getHomePageCriticalDataCached();
-  const firstTwo = HOME_SECTIONS.slice(0, 2);
-  const rest = HOME_SECTIONS.slice(2);
+  const firstTwo = HOME_SECTIONS.slice(0, 1);
+  const rest = HOME_SECTIONS.slice(1);
   const excludeIds = Array.from(
     new Set([
       ...homeData.heroDeals.map((d) => d.id),
@@ -88,7 +88,7 @@ export default async function HomePage() {
           />
         </Suspense>
       ))}
-      <Suspense fallback={null}>
+      <Suspense fallback={<DealSectionSkeleton />}>
         <HomeActivitySection />
       </Suspense>
       {rest.map(({ id, Section }) => (
@@ -96,7 +96,7 @@ export default async function HomePage() {
           <Section />
         </Suspense>
       ))}
-      <Suspense fallback={null}>
+      <Suspense fallback={<DealSectionSkeleton />}>
         <div className="lg:hidden">
           <HomeEditorPickSection />
         </div>

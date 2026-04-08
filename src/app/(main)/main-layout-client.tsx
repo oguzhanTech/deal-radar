@@ -32,6 +32,25 @@ const SKELETON_DELAY_MS = 100;
 const SKELETON_MIN_VISIBLE_MS = 160;
 const INITIAL_SPLASH_MIN_MS = 180;
 const SPLASH_SHOWN_KEY = "topla_splash_shown";
+const REFRESH_SHELL_MIN_MS = 550;
+
+function MobileHomeRefreshSkeleton() {
+  return (
+    <div className="space-y-4 py-3 px-4 animate-in fade-in duration-150">
+      <div className="relative rounded-3xl bg-muted h-[190px] overflow-hidden">
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/80 to-muted" />
+      </div>
+      <div className="space-y-3">
+        <div className="h-5 w-44 rounded-md bg-muted animate-pulse" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,6 +62,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return true;
     return !sessionStorage.getItem(SPLASH_SHOWN_KEY);
   });
+  const [showRefreshShell, setShowRefreshShell] = useState(false);
   useRoutePreloader(!showInitialSplash);
 
   useEffect(() => {
@@ -53,6 +73,21 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     }, INITIAL_SPLASH_MIN_MS);
     return () => clearTimeout(t);
   }, [showInitialSplash]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isLg || pathname !== "/") return;
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)")?.matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (!isStandalone) return;
+    const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    const isReload = navEntry?.type === "reload";
+    if (!isReload) return;
+    setShowRefreshShell(true);
+    const t = setTimeout(() => setShowRefreshShell(false), REFRESH_SHELL_MIN_MS);
+    return () => clearTimeout(t);
+  }, [isLg, pathname]);
 
   useEffect(() => {
     if (!isLg) return;
@@ -125,6 +160,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   );
 
   const useSkeleton = !isLg && !!pendingPath && showSkeleton;
+  const useRefreshShell = !isLg && showRefreshShell && pathname === "/";
 
   return (
     <div
@@ -152,7 +188,13 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
           >
             <TopHeader />
             <main className="flex-1 pb-20 pt-16 min-w-0 lg:pb-8">
-              {useSkeleton ? getPageSkeleton(pendingPath!) : children}
+              {useRefreshShell ? (
+                <MobileHomeRefreshSkeleton />
+              ) : useSkeleton ? (
+                getPageSkeleton(pendingPath!)
+              ) : (
+                children
+              )}
             </main>
             <BottomNav />
           </motion.div>
