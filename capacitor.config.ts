@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.dealradar.app',
+  appId: 'online.topla.app',
   appName: 'Topla',
   webDir: 'public'
 };

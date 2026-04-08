@@ -1,4 +1,4 @@
-package com.dealradar.app;
+package online.topla.app;
 
 import com.getcapacitor.BridgeActivity;
 
