@@ -548,6 +548,55 @@ export async function signInWithPassword(email: string, password: string) {
   return { success: true as const };
 }
 
+export async function requestPasswordReset(email: string, redirectOrigin: string) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail || !normalizedEmail.includes("@")) {
+    return { error: "Geçerli bir e-posta girin." };
+  }
+
+  const siteUrl = resolvePublicSiteUrl(redirectOrigin);
+  if (!siteUrl) {
+    return {
+      error:
+        "Uygulama adresi çözülemedi. Ortamda NEXT_PUBLIC_APP_URL (ör. https://www.topla.online) tanımlı olduğundan emin olun.",
+    };
+  }
+
+  const supabase = await createClient();
+  const redirectTo = `${siteUrl}/auth/confirm?next=/auth/reset-password`;
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo });
+
+  if (error) {
+    // Enumeration riskini artırmamak için kullanıcıya genel yanıt döndür.
+    console.error("[action] requestPasswordReset error:", error);
+  }
+
+  return { success: true as const };
+}
+
+export async function updatePassword(newPassword: string) {
+  const validation = validatePassword(newPassword, true);
+  if ("error" in validation) return { error: validation.error };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: t("auth.resetSessionExpired") };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    console.error("[action] updatePassword error:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true as const };
+}
+
 export async function signInWithGoogleAction(redirectOrigin: string) {
   const siteUrl = resolvePublicSiteUrl(redirectOrigin);
   if (!siteUrl) {

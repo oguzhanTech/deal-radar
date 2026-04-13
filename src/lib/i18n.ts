@@ -53,6 +53,22 @@ const tr: Record<string, string> = {
   "auth.emailAlreadyRegistered":
     "Bu e-posta adresi zaten kayıtlı. Giriş yapmayı veya şifre sıfırlamayı deneyin.",
   "auth.confirmRedirecting": "E-posta doğrulanıyor, yönlendiriliyorsunuz…",
+  "auth.forgotPassword": "Şifremi unuttum",
+  "auth.forgotTitle": "Şifreni mi unuttun?",
+  "auth.forgotDesc": "E-posta adresini gir, şifre yenileme bağlantısı gönderelim.",
+  "auth.forgotSubmit": "Şifre sıfırlama bağlantısı gönder",
+  "auth.forgotSentTitle": "Bağlantı gönderildi",
+  "auth.forgotSentBody": "Şifre yenileme bağlantısını kontrol et:",
+  "auth.backToSignIn": "Girişe dön",
+  "auth.resetTitle": "Yeni şifre belirle",
+  "auth.resetDesc": "Hesabın için yeni bir şifre oluştur.",
+  "auth.resetSubmit": "Şifreyi güncelle",
+  "auth.resetNewPasswordPlaceholder": "Yeni şifre",
+  "auth.resetConfirmPasswordPlaceholder": "Yeni şifre (tekrar)",
+  "auth.resetPasswordsMismatch": "Şifreler eşleşmiyor.",
+  "auth.resetSessionExpired": "Şifre yenileme oturumu bulunamadı veya süresi doldu.",
+  "auth.resetSuccessTitle": "Şifren güncellendi",
+  "auth.resetSuccessBody": "Yeni şifrenle giriş yapabilirsin.",
 
   // Home
   "home.trending": "Trend",

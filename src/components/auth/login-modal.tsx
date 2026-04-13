@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInWithPassword, signInWithGoogleAction, signUpWithPassword } from "@/app/actions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -250,6 +251,14 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
                       </>
                     )}
                   </Button>
+                  <div className="text-center">
+                    <Link
+                      href="/forgot-password"
+                      className="inline-flex text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                      {t("auth.forgotPassword")}
+                    </Link>
+                  </div>
                   <p className="text-xs text-muted-foreground text-center">{t("auth.passwordHint")}</p>
                 </form>
               </TabsContent>
