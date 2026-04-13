@@ -67,7 +67,8 @@ supabase/seed.sql
 ### 4. Configure Supabase Auth
 
 In your Supabase dashboard:
-- Enable **Email** provider (magic link)
+- **Authentication → Providers → Email**: **Email + password** açık olsun. Uygulama magic link kullanmaz; isterseniz aynı ekranda magic link / OTP’yi kapatabilirsiniz.
+- **Email confirmation**: Geliştirmede tek adımda giriş için genelde kapalı tutulur. Üretimde açıksa kullanıcı kayıt sonrası e-postadaki bağlantıya tıklayınca `…/auth/callback` ile oturum açılır.
 - Enable **Google** provider (add OAuth credentials)
 - Set redirect URL to `http://localhost:3000/auth/callback` (development). Production için `https://topla.online/auth/callback` ekleyin (bkz. docs/DEPLOYMENT.md).
 

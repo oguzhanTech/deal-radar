@@ -374,22 +374,101 @@ export async function getUserVote(dealId: string) {
   return { vote: data?.vote as 1 | -1 | null ?? null };
 }
 
-export async function sendMagicLink(email: string, redirectOrigin: string) {
-  const supabase = await createClient();
+const DISPLAY_NAME_MAX = 40;
+const PASSWORD_MIN = 8;
 
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function validateAuthInputs(
+  email: string,
+  password: string,
+  displayName?: string
+): { ok: true } | { error: string } {
+  const e = normalizeEmail(email);
+  if (!e || !e.includes("@")) return { error: "Geçerli bir e-posta girin." };
+  if (password.length < PASSWORD_MIN) {
+    return { error: `Şifre en az ${PASSWORD_MIN} karakter olmalı.` };
+  }
+  if (displayName !== undefined) {
+    const name = displayName.trim();
+    if (!name) return { error: "Görünen ad boş olamaz." };
+    if (name.length > DISPLAY_NAME_MAX) {
+      return { error: `Görünen ad en fazla ${DISPLAY_NAME_MAX} karakter olabilir.` };
+    }
+  }
+  return { ok: true };
+}
+
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+  displayName: string,
+  redirectOrigin: string
+) {
+  const v = validateAuthInputs(email, password, displayName);
+  if ("error" in v) return { error: v.error };
+
+  const supabase = await createClient();
+  const trimmedName = displayName.trim();
+
+  const { data, error } = await supabase.auth.signUp({
+    email: normalizeEmail(email),
+    password,
     options: {
+      data: { full_name: trimmedName },
       emailRedirectTo: `${redirectOrigin}/auth/callback`,
     },
   });
 
   if (error) {
-    console.error("[action] sendMagicLink error:", error);
+    console.error("[action] signUpWithPassword error:", error);
     return { error: error.message };
   }
 
-  return { success: true };
+  const user = data.user;
+  if (!user) return { error: "Kayıt tamamlanamadı." };
+
+  if (data.session) {
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!existing) {
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert({ user_id: user.id, display_name: trimmedName });
+      if (insertError) {
+        console.error("[action] signUpWithPassword profile insert:", insertError);
+      }
+    }
+    revalidatePath("/", "layout");
+    return { success: true as const };
+  }
+
+  return { success: true as const, needsEmailConfirmation: true as const };
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  const v = validateAuthInputs(email, password);
+  if ("error" in v) return { error: v.error };
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password,
+  });
+
+  if (error) {
+    console.error("[action] signInWithPassword error:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true as const };
 }
 
 export async function signInWithGoogleAction(redirectOrigin: string) {

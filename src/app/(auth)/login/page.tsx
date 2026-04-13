@@ -1,40 +1,109 @@
 "use client";
 
 import { useState } from "react";
-import { sendMagicLink, signInWithGoogleAction } from "@/app/actions";
+import { useRouter } from "next/navigation";
+import { signInWithPassword, signInWithGoogleAction, signUpWithPassword } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Loader2, Radar } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Mail, Loader2, Radar, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
 
+const PASSWORD_MIN = 8;
+const DISPLAY_NAME_MAX = 40;
+
 export default function LoginPage() {
+  const router = useRouter();
+  const [tab, setTab] = useState("signin");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await sendMagicLink(email, window.location.origin);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setSent(true);
-      }
-    } catch {
-      setError("Bağlantı hatası. Tekrar deneyin.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const resetError = () => setError(null);
 
   const handleGoogle = async () => {
     const result = await signInWithGoogleAction(window.location.origin);
     if (result.url) {
       window.location.href = result.url;
+    }
+  };
+
+  const validateSignIn = () => {
+    if (!email.trim()) {
+      setError(t("auth.emailRequired"));
+      return false;
+    }
+    if (password.length < PASSWORD_MIN) {
+      setError(t("auth.passwordHint"));
+      return false;
+    }
+    return true;
+  };
+
+  const validateSignUp = () => {
+    if (!validateSignIn()) return false;
+    const name = displayName.trim();
+    if (!name) {
+      setError(t("auth.displayNameRequired"));
+      return false;
+    }
+    if (name.length > DISPLAY_NAME_MAX) {
+      setError(t("auth.displayNameTooLong"));
+      return false;
+    }
+    return true;
+  };
+
+  const afterAuthSuccess = () => {
+    router.refresh();
+    router.push("/");
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    resetError();
+    if (!validateSignIn()) return;
+    setLoading(true);
+    try {
+      const result = await signInWithPassword(email, password);
+      if ("error" in result && result.error) {
+        setError(result.error);
+      } else if ("success" in result && result.success) {
+        afterAuthSuccess();
+      }
+    } catch {
+      setError(t("auth.connectionError"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    resetError();
+    if (!validateSignUp()) return;
+    setLoading(true);
+    try {
+      const result = await signUpWithPassword(
+        email,
+        password,
+        displayName,
+        window.location.origin
+      );
+      if ("error" in result && result.error) {
+        setError(result.error);
+      } else if ("needsEmailConfirmation" in result && result.needsEmailConfirmation) {
+        setNeedsConfirm(true);
+      } else if ("success" in result && result.success) {
+        afterAuthSuccess();
+      }
+    } catch {
+      setError(t("auth.connectionError"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,18 +118,18 @@ export default function LoginPage() {
           <p className="text-muted-foreground mt-1">{t("app.tagline")}</p>
         </div>
 
-        {sent ? (
+        {needsConfirm ? (
           <div className="text-center py-6 space-y-3">
             <Mail className="h-12 w-12 mx-auto text-primary" />
             <p className="font-medium">{t("auth.checkEmail")}</p>
             <p className="text-sm text-muted-foreground">
-              {t("auth.magicLinkSent")} <strong>{email}</strong>
+              {t("auth.confirmEmailBody")} <strong>{email}</strong>
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             <Button variant="outline" className="w-full h-12 text-base" onClick={handleGoogle}>
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" aria-hidden>
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -78,16 +147,95 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <form onSubmit={handleMagicLink} className="space-y-3">
-              <Input type="email" placeholder={t("auth.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 text-base" />
-              {error && (
-                <p className="text-sm text-destructive text-center">{error}</p>
-              )}
-              <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> {t("auth.magicLink")}</>}
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">{t("auth.autoSignUp")}</p>
-            </form>
+            <Tabs defaultValue="signin" value={tab} onValueChange={(v) => { setTab(v); resetError(); }} className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="signin">{t("auth.tabSignIn")}</TabsTrigger>
+                <TabsTrigger value="signup">{t("auth.tabSignUp")}</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin">
+                <form onSubmit={handleSignIn} className="space-y-3 pt-1">
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder={t("auth.passwordPlaceholder")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={PASSWORD_MIN}
+                    className="h-12 text-base"
+                  />
+                  {error && <p className="text-sm text-destructive text-center">{error}</p>}
+                  <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" />
+                        {t("auth.signInSubmit")}
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">{t("auth.passwordHint")}</p>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-3 pt-1">
+                  <Input
+                    type="text"
+                    autoComplete="name"
+                    placeholder={t("auth.displayNamePlaceholder")}
+                    aria-label={t("auth.displayNameLabel")}
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    required
+                    maxLength={DISPLAY_NAME_MAX}
+                    className="h-12 text-base"
+                  />
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder={t("auth.passwordPlaceholder")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={PASSWORD_MIN}
+                    className="h-12 text-base"
+                  />
+                  {error && <p className="text-sm text-destructive text-center">{error}</p>}
+                  <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" />
+                        {t("auth.signUpSubmit")}
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">{t("auth.passwordHint")}</p>
+                </form>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </div>

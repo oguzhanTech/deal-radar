@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Magic link callback: topla.online/auth/callback linkleri doğrudan uygulamayı açsın -->
+            <!-- OAuth / e-posta doğrulama: topla.online/auth/callback linkleri uygulamayı açsın -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
