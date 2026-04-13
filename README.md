@@ -69,9 +69,10 @@ supabase/seed.sql
 In your Supabase dashboard:
 - **Authentication → Providers → Email**: **Email + password** açık olsun. Uygulama magic link kullanmaz; isterseniz aynı ekranda magic link / OTP’yi kapatabilirsiniz.
 - **Email confirmation**: Geliştirmede tek adımda giriş için genelde kapalı tutulur. Üretimde açıksa kullanıcı kayıt sonrası e-postadaki bağlantıya tıklayınca `…/auth/callback` ile oturum açılır.
-- Doğrulama e-postaları gelmiyorsa önce **Authentication → Logs**, e-posta şablonları ve gerekirse **Custom SMTP** ayarlarını kontrol edin. Varsayılan gönderici özellikle prod'da sınırlı olabilir.
+- **Redirect URL’ler (doğrulama maili için kritik):** `Authentication → URL Configuration` altında **Redirect URLs** listesinde, kodun gönderdiği adresin **aynen** bulunması gerekir. Kayıtta `emailRedirectTo` şu adresten üretilir: önce `NEXT_PUBLIC_APP_URL` (önerilir, bkz. docs/DEPLOYMENT.md), yoksa tarayıcı `origin`. Örnek: `https://www.topla.online/auth/callback` ve gerekirse `https://topla.online/auth/callback` (www / apex ikisini de ekleyin).
+- Doğrulama e-postaları gelmiyorsa önce **Authentication → Logs**, e-posta şablonları ve gerekirse **Custom SMTP** ayarlarını kontrol edin. Varsayılan gönderici özellikle prod'da sınırlı olabilir. Log’da `user_repeated_signup` görüyorsanız aynı e-posta ile tekrar kayıt denenmiştir; yeni doğrulama postası her zaman gitmeyebilir.
 - Enable **Google** provider (add OAuth credentials)
-- Set redirect URL to `http://localhost:3000/auth/callback` (development). Production için `https://topla.online/auth/callback` ekleyin (bkz. docs/DEPLOYMENT.md).
+- Set redirect URL to `http://localhost:3000/auth/callback` (development). Production için yukarıdaki tam `…/auth/callback` URL’lerini ekleyin (bkz. docs/DEPLOYMENT.md).
 
 ### 5. Run the dev server
 

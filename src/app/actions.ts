@@ -380,6 +380,23 @@ const SIGNUP_EMAIL_COOLDOWN_MS = 90_000;
 
 const signUpCooldowns = new Map<string, number>();
 
+/**
+ * E-posta doğrulama ve OAuth için redirect tabanı.
+ * Production'da `window.location.origin` ile `NEXT_PUBLIC_APP_URL` (www / apex) uyuşmazsa
+ * Supabase linkleri veya gönderim tarafı sorun çıkarabilir; env önceliklidir (bkz. docs/DEPLOYMENT.md).
+ */
+function resolvePublicSiteUrl(requestOrigin: string): string | null {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (fromEnv && /^https?:\/\//i.test(fromEnv)) {
+    return fromEnv;
+  }
+  const fromRequest = (requestOrigin || "").trim().replace(/\/$/, "");
+  if (fromRequest && /^https?:\/\//i.test(fromRequest)) {
+    return fromRequest;
+  }
+  return null;
+}
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -432,6 +449,19 @@ export async function signUpWithPassword(
   const v = validateAuthInputs(emailNormalized, password, displayName, true);
   if ("error" in v) return { error: v.error };
 
+  const siteUrl = resolvePublicSiteUrl(redirectOrigin);
+  if (!siteUrl) {
+    console.error("[action] signUpWithPassword: could not resolve site URL", {
+      redirectOrigin,
+      hasAppUrl: Boolean(process.env.NEXT_PUBLIC_APP_URL),
+    });
+    return {
+      error:
+        "Uygulama adresi çözülemedi. Ortamda NEXT_PUBLIC_APP_URL (ör. https://www.topla.online) tanımlı olduğundan emin olun.",
+    };
+  }
+  const emailRedirectTo = `${siteUrl}/auth/callback`;
+
   const supabase = await createClient();
   const trimmedName = displayName.trim();
 
@@ -440,7 +470,7 @@ export async function signUpWithPassword(
     password,
     options: {
       data: { full_name: trimmedName },
-      emailRedirectTo: `${redirectOrigin}/auth/callback`,
+      emailRedirectTo,
     },
   });
 
@@ -451,6 +481,15 @@ export async function signUpWithPassword(
 
   const user = data.user;
   if (!user) return { error: "Kayıt tamamlanamadı." };
+
+  if (process.env.NODE_ENV === "development") {
+    console.info("[action] signUpWithPassword", {
+      emailRedirectTo,
+      hasSession: Boolean(data.session),
+      emailConfirmedAt: user.email_confirmed_at,
+      identities: user.identities?.map((i) => i.provider) ?? [],
+    });
+  }
 
   signUpCooldowns.set(emailNormalized, now + SIGNUP_EMAIL_COOLDOWN_MS);
 
@@ -496,12 +535,21 @@ export async function signInWithPassword(email: string, password: string) {
 }
 
 export async function signInWithGoogleAction(redirectOrigin: string) {
+  const siteUrl = resolvePublicSiteUrl(redirectOrigin);
+  if (!siteUrl) {
+    console.error("[action] signInWithGoogle: could not resolve site URL", { redirectOrigin });
+    return {
+      error:
+        "Uygulama adresi çözülemedi. NEXT_PUBLIC_APP_URL tanımlı mı kontrol edin.",
+    };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${redirectOrigin}/auth/callback`,
+      redirectTo: `${siteUrl}/auth/callback`,
     },
   });
 
