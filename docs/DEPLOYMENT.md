@@ -30,8 +30,9 @@ Supabase Dashboard → **Authentication** → **URL Configuration**:
 - **Site URL**: `https://www.topla.online`
 - **Redirect URLs** listesine ekleyin:
   - `https://www.topla.online`
-  - `https://www.topla.online/auth/callback`
   - `https://www.topla.online/login`
+  - **E-posta + şifre kayıt doğrulaması:** `https://www.topla.online/auth/confirm` (kod `emailRedirectTo` olarak bunu kullanır; apex kullanıyorsanız `https://topla.online/auth/confirm` da ekleyin)
+  - **OAuth ve mobil uygulama (App Links):** `https://www.topla.online/auth/callback` (ve gerekirse `https://topla.online/auth/callback`)
 
 Google OAuth kullanıyorsanız, Google Cloud Console’da **Authorized redirect URIs** içinde şu olmalı:
 - `https://xxx.supabase.co/auth/v1/callback`  

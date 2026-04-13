@@ -167,7 +167,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-[340px] mx-4 max-h-[90dvh] overflow-y-auto">
+      <DialogContent className="max-w-[340px] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("auth.welcome")}</DialogTitle>
           <DialogDescription>{t("auth.signInDesc")}</DialogDescription>

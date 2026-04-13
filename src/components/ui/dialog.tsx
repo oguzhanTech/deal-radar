@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,21 +58,29 @@ function DialogOverlay({ className, ...props }: React.HTMLAttributes<HTMLDivElem
 
 function DialogContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const { open, onOpenChange } = useDialog();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!open) return null;
 
-  return (
+  /** Viewport’a göre ortala: üst layout’taki transform (ör. framer-motion) fixed CB’yi bozmasın diye portal. */
+  const panel = (
     <>
       <DialogOverlay />
       <div
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-background p-6 shadow-lg",
+          "fixed left-1/2 top-1/2 z-[60] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-background p-6 shadow-lg",
           className
         )}
         {...props}
       >
         {children}
         <button
+          type="button"
+          aria-label="Kapat"
           className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 cursor-pointer"
           onClick={() => onOpenChange(false)}
         >
@@ -80,6 +89,12 @@ function DialogContent({ className, children, ...props }: React.HTMLAttributes<H
       </div>
     </>
   );
+
+  if (mounted && typeof document !== "undefined") {
+    return createPortal(panel, document.body);
+  }
+
+  return panel;
 }
 
 function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

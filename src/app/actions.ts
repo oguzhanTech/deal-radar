@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { t } from "@/lib/i18n";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUniqueDealSlug } from "@/lib/deal-slug";
 import { revalidateDealDetail } from "@/lib/deal-revalidate";
@@ -460,7 +461,7 @@ export async function signUpWithPassword(
         "Uygulama adresi çözülemedi. Ortamda NEXT_PUBLIC_APP_URL (ör. https://www.topla.online) tanımlı olduğundan emin olun.",
     };
   }
-  const emailRedirectTo = `${siteUrl}/auth/callback`;
+  const emailRedirectTo = `${siteUrl}/auth/confirm`;
 
   const supabase = await createClient();
   const trimmedName = displayName.trim();
@@ -476,18 +477,31 @@ export async function signUpWithPassword(
 
   if (error) {
     console.error("[action] signUpWithPassword error:", error);
+    const em = error.message.toLowerCase();
+    if (
+      em.includes("already registered") ||
+      em.includes("user already registered") ||
+      em.includes("already been registered")
+    ) {
+      return { error: t("auth.emailAlreadyRegistered") };
+    }
     return { error: error.message };
   }
 
   const user = data.user;
   if (!user) return { error: "Kayıt tamamlanamadı." };
 
+  const identities = user.identities ?? [];
+  if (!data.session && identities.length === 0) {
+    return { error: t("auth.emailAlreadyRegistered") };
+  }
+
   if (process.env.NODE_ENV === "development") {
     console.info("[action] signUpWithPassword", {
       emailRedirectTo,
       hasSession: Boolean(data.session),
       emailConfirmedAt: user.email_confirmed_at,
-      identities: user.identities?.map((i) => i.provider) ?? [],
+      identities: identities.map((i) => i.provider),
     });
   }
 

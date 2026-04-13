@@ -50,6 +50,9 @@ const tr: Record<string, string> = {
   "auth.displayNameRequired": "Görünen ad gerekli.",
   "auth.displayNameTooLong": "Görünen ad en fazla 40 karakter olabilir.",
   "auth.connectionError": "Bağlantı hatası. Tekrar deneyin.",
+  "auth.emailAlreadyRegistered":
+    "Bu e-posta adresi zaten kayıtlı. Giriş yapmayı veya şifre sıfırlamayı deneyin.",
+  "auth.confirmRedirecting": "E-posta doğrulanıyor, yönlendiriliyorsunuz…",
 
   // Home
   "home.trending": "Trend",
