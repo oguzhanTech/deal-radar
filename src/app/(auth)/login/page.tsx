@@ -163,6 +163,13 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-bold">{t("app.name")}</h1>
           <p className="text-muted-foreground mt-1">{t("app.tagline")}</p>
+          <Link
+            href="/"
+            prefetch
+            className="inline-block mt-2 text-xs text-muted-foreground underline-offset-4 hover:underline hover:text-foreground"
+          >
+            {t("auth.backToHome")}
+          </Link>
         </div>
 
         {needsConfirm ? (

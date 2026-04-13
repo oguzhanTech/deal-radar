@@ -69,6 +69,7 @@ const tr: Record<string, string> = {
   "auth.resetSessionExpired": "Şifre yenileme oturumu bulunamadı veya süresi doldu.",
   "auth.resetSuccessTitle": "Şifren güncellendi",
   "auth.resetSuccessBody": "Yeni şifrenle giriş yapabilirsin.",
+  "auth.backToHome": "Ana sayfaya git",
 
   // Home
   "home.trending": "Trend",
