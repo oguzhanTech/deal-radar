@@ -11,6 +11,40 @@ import { t } from "@/lib/i18n";
 
 const PASSWORD_MIN = 8;
 const DISPLAY_NAME_MAX = 40;
+const SIGNUP_CLIENT_COOLDOWN_MS = 90_000;
+const SIGNUP_COOLDOWN_KEY = "auth_signup_cooldown";
+
+function getSignUpCooldown(email: string): number | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SIGNUP_COOLDOWN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { email: string; expiresAt: number };
+    if (parsed.email !== email.trim().toLowerCase()) return null;
+    if (parsed.expiresAt <= Date.now()) {
+      sessionStorage.removeItem(SIGNUP_COOLDOWN_KEY);
+      return null;
+    }
+    return parsed.expiresAt;
+  } catch {
+    return null;
+  }
+}
+
+function setSignUpCooldown(email: string) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      SIGNUP_COOLDOWN_KEY,
+      JSON.stringify({
+        email: email.trim().toLowerCase(),
+        expiresAt: Date.now() + SIGNUP_CLIENT_COOLDOWN_MS,
+      })
+    );
+  } catch {
+    // ignore storage failures
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,6 +88,10 @@ export default function LoginPage() {
       setError(t("auth.displayNameTooLong"));
       return false;
     }
+    if (!/\d/.test(password)) {
+      setError(t("auth.passwordNeedsDigit"));
+      return false;
+    }
     return true;
   };
 
@@ -85,6 +123,12 @@ export default function LoginPage() {
     e.preventDefault();
     resetError();
     if (!validateSignUp()) return;
+    const cooldownUntil = getSignUpCooldown(email);
+    if (cooldownUntil) {
+      const waitSeconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      setError(`Bu e-posta ile az önce kayıt denendi. ${waitSeconds} saniye sonra tekrar deneyin.`);
+      return;
+    }
     setLoading(true);
     try {
       const result = await signUpWithPassword(
@@ -96,8 +140,10 @@ export default function LoginPage() {
       if ("error" in result && result.error) {
         setError(result.error);
       } else if ("needsEmailConfirmation" in result && result.needsEmailConfirmation) {
+        setSignUpCooldown(email);
         setNeedsConfirm(true);
       } else if ("success" in result && result.success) {
+        setSignUpCooldown(email);
         afterAuthSuccess();
       }
     } catch {

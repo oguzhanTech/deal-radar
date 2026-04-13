@@ -376,21 +376,34 @@ export async function getUserVote(dealId: string) {
 
 const DISPLAY_NAME_MAX = 40;
 const PASSWORD_MIN = 8;
+const SIGNUP_EMAIL_COOLDOWN_MS = 90_000;
+
+const signUpCooldowns = new Map<string, number>();
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function validateAuthInputs(
-  email: string,
-  password: string,
-  displayName?: string
-): { ok: true } | { error: string } {
-  const e = normalizeEmail(email);
-  if (!e || !e.includes("@")) return { error: "Geçerli bir e-posta girin." };
+function validatePassword(password: string, requireDigit: boolean) {
   if (password.length < PASSWORD_MIN) {
     return { error: `Şifre en az ${PASSWORD_MIN} karakter olmalı.` };
   }
+  if (requireDigit && !/\d/.test(password)) {
+    return { error: "Şifre en az bir rakam içermeli." };
+  }
+  return { ok: true as const };
+}
+
+function validateAuthInputs(
+  email: string,
+  password: string,
+  displayName?: string,
+  requireDigit = false
+): { ok: true } | { error: string } {
+  const e = normalizeEmail(email);
+  if (!e || !e.includes("@")) return { error: "Geçerli bir e-posta girin." };
+  const passwordValidation = validatePassword(password, requireDigit);
+  if ("error" in passwordValidation) return passwordValidation;
   if (displayName !== undefined) {
     const name = displayName.trim();
     if (!name) return { error: "Görünen ad boş olamaz." };
@@ -407,14 +420,23 @@ export async function signUpWithPassword(
   displayName: string,
   redirectOrigin: string
 ) {
-  const v = validateAuthInputs(email, password, displayName);
+  const emailNormalized = normalizeEmail(email);
+  const cooldownUntil = signUpCooldowns.get(emailNormalized);
+  const now = Date.now();
+
+  if (cooldownUntil && cooldownUntil > now) {
+    const waitSeconds = Math.ceil((cooldownUntil - now) / 1000);
+    return { error: `Bu e-posta ile az önce kayıt denendi. ${waitSeconds} saniye sonra tekrar deneyin.` };
+  }
+
+  const v = validateAuthInputs(emailNormalized, password, displayName, true);
   if ("error" in v) return { error: v.error };
 
   const supabase = await createClient();
   const trimmedName = displayName.trim();
 
   const { data, error } = await supabase.auth.signUp({
-    email: normalizeEmail(email),
+    email: emailNormalized,
     password,
     options: {
       data: { full_name: trimmedName },
@@ -429,6 +451,8 @@ export async function signUpWithPassword(
 
   const user = data.user;
   if (!user) return { error: "Kayıt tamamlanamadı." };
+
+  signUpCooldowns.set(emailNormalized, now + SIGNUP_EMAIL_COOLDOWN_MS);
 
   if (data.session) {
     const { data: existing } = await supabase
