@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "online.topla.app",
-    "sha256_cert_fingerprints": ["A9:3D:C4:DA:6C:0D:D7:A4:92:16:4A:DF:B4:96:D1:6C:1A:7F:2D:98:0D:25:E4:2A:70:BA:CA:A4:48:00:32:89"]
+    "sha256_cert_fingerprints": ["AD:11:BC:52:C7:0E:D9:DF:48:FF:7A:22:C4:AC:9F:76:94:DC:70:6B:02:39:27:2D:C8:0E:DE:8D:B7:BE:D3:C5"]
   }
 }]
