@@ -700,12 +700,14 @@ export async function adminUpdateDealStatus(dealId: string, status: "approved" |
   const { error } = await result.supabase.from("deals").update({ status }).eq("id", dealId);
   if (error) return { error: error.message };
 
+  let notificationErrorMessage: string | null = null;
   if (status === "approved" && !wasApproved && existingDeal.created_by) {
     const notificationTitle = "Fırsatın onaylandı";
     const notificationMessage = `"${existingDeal.title}" artık yayında.`;
     const notificationUrl = dealPath({ slug: existingDeal.slug });
+    const admin = createAdminClient();
 
-    const { error: notificationError } = await result.supabase.from("notifications").insert({
+    const { error: notificationError } = await admin.from("notifications").insert({
       user_id: existingDeal.created_by,
       type: "deal_approved",
       title: notificationTitle,
@@ -720,10 +722,11 @@ export async function adminUpdateDealStatus(dealId: string, status: "approved" |
     if (notificationError) {
       // Bildirim hatası, status güncellemesini geri almamalı.
       console.error("[action] adminUpdateDealStatus notification error:", notificationError);
+      notificationErrorMessage = notificationError.message;
     }
   }
 
-  return { success: true };
+  return { success: true, notificationError: notificationErrorMessage };
 }
 
 export async function adminDeleteDeal(dealId: string) {

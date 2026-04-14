@@ -26,12 +26,19 @@ export function AdminPendingDeals({ initialDeals }: AdminPendingDealsProps) {
   const updateStatus = async (id: string, status: "approved" | "rejected") => {
     if (status === "rejected" && !window.confirm(t("admin.confirm.reject"))) return;
     setLoadingId(id);
-    const { error } = await adminUpdateDealStatus(id, status);
+    const { error, notificationError } = await adminUpdateDealStatus(id, status);
     if (error) {
       toast({ title: t("admin.toast.error"), description: error, variant: "destructive" });
     } else {
       setDeals((prev) => prev.filter((d) => d.id !== id));
       toast({ title: status === "approved" ? t("admin.toast.approved") : t("admin.toast.rejected") });
+      if (status === "approved" && notificationError) {
+        toast({
+          title: "Onay kaydedildi, bildirim gönderilemedi",
+          description: notificationError,
+          variant: "destructive",
+        });
+      }
     }
     setLoadingId(null);
   };
