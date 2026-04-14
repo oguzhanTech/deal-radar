@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Bell, BellRing } from "lucide-react";
+import { Bell, BellRing, CheckCircle2, MessageCircle, Clock3, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useRouter } from "next/navigation";
@@ -88,6 +88,41 @@ export function NotificationBell() {
       .eq("user_id", user?.id ?? "");
   };
 
+  const getNotificationMeta = (notificationType: string) => {
+    switch (notificationType) {
+      case "deal_approved":
+        return {
+          label: "Onay",
+          icon: CheckCircle2,
+          iconClassName: "text-emerald-600",
+        };
+      case "comment_reply":
+        return {
+          label: "Yorum",
+          icon: MessageCircle,
+          iconClassName: "text-primary",
+        };
+      case "reminder":
+        return {
+          label: "Hatırlatma",
+          icon: Clock3,
+          iconClassName: "text-amber-600",
+        };
+      case "badge":
+        return {
+          label: "Rozet",
+          icon: Trophy,
+          iconClassName: "text-purple-600",
+        };
+      default:
+        return {
+          label: "Bildirim",
+          icon: Bell,
+          iconClassName: "text-muted-foreground",
+        };
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 transition-colors cursor-pointer">
@@ -172,6 +207,8 @@ export function NotificationBell() {
             <div className="space-y-2">
               {notifications.map((n) => {
                 const targetUrl = resolveNotificationUrl(n);
+                const meta = getNotificationMeta(n.type);
+                const TypeIcon = meta.icon;
                 return (
                 <div
                   key={n.id}
@@ -182,6 +219,12 @@ export function NotificationBell() {
                       : "bg-card border-border/60 hover:bg-muted/50"
                   } ${targetUrl ? "cursor-pointer" : ""}`}
                 >
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <TypeIcon className={`h-3 w-3 ${meta.iconClassName}`} />
+                      {meta.label}
+                    </span>
+                  </div>
                   <p className="text-sm font-semibold text-foreground break-words leading-snug">
                     {n.title}
                   </p>

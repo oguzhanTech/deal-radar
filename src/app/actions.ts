@@ -688,8 +688,41 @@ async function ensureAdmin(): Promise<{ error: string } | { supabase: Awaited<Re
 export async function adminUpdateDealStatus(dealId: string, status: "approved" | "rejected") {
   const result = await ensureAdmin();
   if ("error" in result) return { error: result.error };
+  const { data: existingDeal, error: existingDealError } = await result.supabase
+    .from("deals")
+    .select("id, title, slug, status, created_by")
+    .eq("id", dealId)
+    .maybeSingle();
+  if (existingDealError) return { error: existingDealError.message };
+  if (!existingDeal) return { error: "Fırsat bulunamadı." };
+
+  const wasApproved = existingDeal.status === "approved";
   const { error } = await result.supabase.from("deals").update({ status }).eq("id", dealId);
   if (error) return { error: error.message };
+
+  if (status === "approved" && !wasApproved && existingDeal.created_by) {
+    const notificationTitle = "Fırsatın onaylandı";
+    const notificationMessage = `"${existingDeal.title}" artık yayında.`;
+    const notificationUrl = dealPath({ slug: existingDeal.slug });
+
+    const { error: notificationError } = await result.supabase.from("notifications").insert({
+      user_id: existingDeal.created_by,
+      type: "deal_approved",
+      title: notificationTitle,
+      message: notificationMessage,
+      payload: {
+        deal_id: existingDeal.id,
+        slug: existingDeal.slug,
+        url: notificationUrl,
+      },
+    });
+
+    if (notificationError) {
+      // Bildirim hatası, status güncellemesini geri almamalı.
+      console.error("[action] adminUpdateDealStatus notification error:", notificationError);
+    }
+  }
+
   return { success: true };
 }
 
