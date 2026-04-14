@@ -11,7 +11,11 @@ function ConfirmEmailInner() {
 
   useEffect(() => {
     const code = searchParams.get("code");
-    if (!code) {
+    const tokenHash = searchParams.get("token_hash");
+    const otpType = searchParams.get("type");
+    const hasOtpParams = Boolean(tokenHash && otpType);
+
+    if (!code && !hasOtpParams) {
       window.location.replace("/login?error=auth");
       return;
     }

@@ -1,20 +1,29 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /**
  * PKCE `code` ile oturum açar, profil yoksa oluşturur; ana uygulamaya yönlendirir.
  * OAuth ve e-posta doğrulama tamamlama için ortak.
  */
+function isEmailOtpType(value: string | null): value is EmailOtpType {
+  if (!value) return false;
+  return ["signup", "recovery", "invite", "magiclink", "email", "email_change"].includes(value);
+}
+
 export async function handleAuthCodeExchange(request: Request): Promise<NextResponse> {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const otpType = url.searchParams.get("type");
   const nextRaw = url.searchParams.get("next") ?? "/";
   const next = nextRaw.startsWith("/") ? nextRaw : `/${nextRaw}`;
   const origin = url.origin;
   const redirectUrl = `${origin}${next}`;
+  const hasOtpLink = Boolean(tokenHash && isEmailOtpType(otpType));
 
-  if (!code) {
+  if (!code && !hasOtpLink) {
     return NextResponse.redirect(`${origin}/login?error=auth`);
   }
 
@@ -50,10 +59,32 @@ export async function handleAuthCodeExchange(request: Request): Promise<NextResp
     }
   );
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.exchangeCodeForSession(code);
+  let user = null;
+  let error: { message?: string } | null = null;
+
+  if (code) {
+    const {
+      data: { user: codeUser },
+      error: codeError,
+    } = await supabase.auth.exchangeCodeForSession(code);
+    user = codeUser;
+    error = codeError;
+  } else if (tokenHash && isEmailOtpType(otpType)) {
+    const {
+      data: { user: otpUser },
+      error: otpError,
+    } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: otpType,
+    });
+    user = otpUser;
+    error = otpError;
+  }
+
+  if (error) {
+    console.error("[auth] handleAuthCodeExchange error:", error);
+    return NextResponse.redirect(`${origin}/login?error=auth`);
+  }
 
   if (!error && user) {
     const { data: existing } = await supabase
