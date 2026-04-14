@@ -412,6 +412,28 @@ function validatePassword(password: string, requireDigit: boolean) {
   return { ok: true as const };
 }
 
+function mapSignInErrorMessage(rawMessage: string) {
+  const normalized = rawMessage.toLowerCase();
+
+  if (normalized.includes("invalid login credentials")) {
+    return t("auth.invalidCredentials");
+  }
+
+  if (normalized.includes("email not confirmed")) {
+    return t("auth.emailNotConfirmed");
+  }
+
+  if (
+    normalized.includes("network request failed") ||
+    normalized.includes("failed to fetch") ||
+    normalized.includes("fetch failed")
+  ) {
+    return t("auth.connectionError");
+  }
+
+  return rawMessage;
+}
+
 function validateAuthInputs(
   email: string,
   password: string,
@@ -541,7 +563,7 @@ export async function signInWithPassword(email: string, password: string) {
 
   if (error) {
     console.error("[action] signInWithPassword error:", error);
-    return { error: error.message };
+    return { error: mapSignInErrorMessage(error.message) };
   }
 
   revalidatePath("/", "layout");

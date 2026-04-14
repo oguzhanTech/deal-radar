@@ -32,11 +32,21 @@ Supabase Dashboard → **Authentication** → **URL Configuration**:
   - `https://www.topla.online`
   - `https://www.topla.online/login`
   - **E-posta + şifre kayıt doğrulaması:** `https://www.topla.online/auth/confirm` (kod `emailRedirectTo` olarak bunu kullanır; apex kullanıyorsanız `https://topla.online/auth/confirm` da ekleyin)
+  - **Şifre yenileme bağlantıları:** `https://www.topla.online/auth/confirm?next=/auth/reset-password` (gerekirse apex host varyantını da ekleyin)
   - **OAuth ve mobil uygulama (App Links):** `https://www.topla.online/auth/callback` (ve gerekirse `https://topla.online/auth/callback`)
 
 Google OAuth kullanıyorsanız, Google Cloud Console’da **Authorized redirect URIs** içinde şu olmalı:
 - `https://xxx.supabase.co/auth/v1/callback`  
 (Supabase’in kendi callback’i; uygulama callback’i `/auth/callback`)
+
+### Android App Links (APK/TWA)
+
+- `AndroidManifest.xml` içinde hem `/auth/confirm` hem `/auth/callback` path’leri için `intent-filter` tanımlı olmalı (host: `topla.online` ve `www.topla.online`).
+- `https://topla.online/.well-known/assetlinks.json` ve `https://www.topla.online/.well-known/assetlinks.json` URL’leri canlıda **200** dönmeli.
+- `assetlinks.json` içindeki SHA256 fingerprint, dağıttığınız sürümün signing fingerprint’i ile birebir aynı olmalı (Play App Signing kullanıyorsanız Play Console fingerprint’ini baz alın).
+- Cihazda doğrulama:
+  - `adb shell pm get-app-links online.topla.app`
+  - Maildeki “üyeliğini doğrula” ve “şifremi yenile” linklerine dokunup uygulamanın doğrudan açıldığını test edin.
 
 ## 3. Hosting ve domain (Vercel örnek)
 

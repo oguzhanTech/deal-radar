@@ -27,6 +27,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="topla.online" android:pathPrefix="/auth/confirm" />
+                <data android:scheme="https" android:host="www.topla.online" android:pathPrefix="/auth/confirm" />
                 <data android:scheme="https" android:host="topla.online" android:pathPrefix="/auth/callback" />
                 <data android:scheme="https" android:host="www.topla.online" android:pathPrefix="/auth/callback" />
             </intent-filter>
