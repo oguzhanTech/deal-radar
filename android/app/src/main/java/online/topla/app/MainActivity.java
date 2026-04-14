@@ -1,4 +1,4 @@
-package online.topla.app;
+package online.topla.mobile;
 
 import com.getcapacitor.BridgeActivity;
 

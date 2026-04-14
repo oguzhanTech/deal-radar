@@ -45,7 +45,7 @@ Google OAuth kullanıyorsanız, Google Cloud Console’da **Authorized redirect 
 - `https://topla.online/.well-known/assetlinks.json` ve `https://www.topla.online/.well-known/assetlinks.json` URL’leri canlıda **200** dönmeli.
 - `assetlinks.json` içindeki SHA256 fingerprint, dağıttığınız sürümün signing fingerprint’i ile birebir aynı olmalı (Play App Signing kullanıyorsanız Play Console fingerprint’ini baz alın).
 - Cihazda doğrulama:
-  - `adb shell pm get-app-links online.topla.app`
+  - `adb shell pm get-app-links online.topla.mobile`
   - Maildeki “üyeliğini doğrula” ve “şifremi yenile” linklerine dokunup uygulamanın doğrudan açıldığını test edin.
 
 ## 3. Hosting ve domain (Vercel örnek)
