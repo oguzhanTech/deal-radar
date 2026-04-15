@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Home, PlusCircle, Radar, Search, Sparkles, Trophy, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -21,13 +22,63 @@ const DESKTOP_NAV = [
   { href: "/profile", labelKey: "nav.profile", icon: User },
 ] as const;
 
+type CiniCategory = "electronics" | "home" | "fashion" | "market" | "surprise";
+
+const MOBILE_CINI_OPTIONS: { id: CiniCategory; label: string; searchCategory?: string }[] = [
+  { id: "electronics", label: "Elektronik", searchCategory: "Teknoloji" },
+  { id: "home", label: "Ev & Yaşam", searchCategory: "Ev & Yaşam" },
+  { id: "fashion", label: "Giyim", searchCategory: "Giyim & Moda" },
+  { id: "market", label: "Market", searchCategory: "Market" },
+  { id: "surprise", label: "Sürpriz bul" },
+];
+
 export function TopHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
   const { showAsLoggedIn, initial, profile } = useAuthDisplay();
+  const [showCiniMini, setShowCiniMini] = useState(false);
+  const [ciniStep, setCiniStep] = useState<1 | 2>(1);
+  const [ciniCategory, setCiniCategory] = useState<CiniCategory | null>(null);
+  const [ciniBudget, setCiniBudget] = useState(1500);
+  const ciniRef = useRef<HTMLDivElement | null>(null);
 
   const avatarLetter = profile?.display_name?.charAt(0)?.toUpperCase() || initial;
+
+  useEffect(() => {
+    if (!showCiniMini) return;
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (!ciniRef.current?.contains(target)) {
+        setShowCiniMini(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, [showCiniMini]);
+
+  const submitCini = () => {
+    if (!ciniCategory) return;
+    const selected = MOBILE_CINI_OPTIONS.find((item) => item.id === ciniCategory);
+    const params = new URLSearchParams();
+
+    if (ciniCategory === "surprise") {
+      params.set("sort", "popular");
+    } else if (selected?.searchCategory) {
+      params.set("category", selected.searchCategory);
+      params.set("sort", "popular");
+    }
+
+    // API şu an bu parametreyi kullanmıyor; ileride bütçe filtresine hazır kalsın.
+    params.set("budget", String(ciniBudget));
+    setShowCiniMini(false);
+    setCiniStep(1);
+    router.push(`/search?${params.toString()}`);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-lg backdrop-blur-md bg-opacity-95">
@@ -84,25 +135,97 @@ export function TopHeader() {
 
         <HeaderSearch />
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Link
-            href="/#firsat-cini"
-            prefetch
-            data-no-skeleton
-            onClick={(e) => {
-              if (pathname !== "/") return;
-              e.preventDefault();
-              const target = document.getElementById("firsat-cini");
-              target?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-            onMouseEnter={() => prefetchOnce(router, "/")}
-            onTouchStart={() => prefetchOnce(router, "/")}
-            className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 transition-colors cursor-pointer lg:hidden"
-            title="Fırsat Cini"
-            aria-label="Fırsat Cini"
-          >
-            <Sparkles className="h-5 w-5" />
-          </Link>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative">
+          <div ref={ciniRef} className="relative lg:hidden">
+            <button
+              type="button"
+              data-no-skeleton
+              onClick={() => {
+                setShowCiniMini((prev) => {
+                  const next = !prev;
+                  if (next) {
+                    setCiniStep(1);
+                  }
+                  return next;
+                });
+              }}
+              className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 transition-colors cursor-pointer"
+              title="Fırsat Cini"
+              aria-label="Fırsat Cini"
+            >
+              <Sparkles className="h-5 w-5" />
+            </button>
+
+            {showCiniMini ? (
+              <div className="absolute right-0 mt-2 w-[280px] rounded-2xl border border-white/25 bg-white text-foreground shadow-xl p-3 z-50">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-indigo-900">
+                    {ciniStep === 1 ? "Bugün ne arıyorsun?" : "Bütçen ne kadar?"}
+                  </p>
+                  <span className="rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-medium text-indigo-700">
+                    {ciniStep}/2
+                  </span>
+                </div>
+
+                {ciniStep === 1 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {MOBILE_CINI_OPTIONS.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="rounded-xl border border-indigo-200 bg-white px-2.5 py-2 text-xs font-medium text-indigo-800 hover:border-indigo-300 hover:bg-indigo-50 transition cursor-pointer"
+                        onClick={() => {
+                          setCiniCategory(item.id);
+                          setCiniStep(2);
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-xl bg-indigo-50 px-3 py-2 text-center text-sm font-semibold text-indigo-800">
+                      {ciniBudget.toLocaleString("tr-TR")} ₺
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={10000}
+                      step={100}
+                      value={ciniBudget}
+                      onChange={(e) => setCiniBudget(Number(e.target.value))}
+                      className="w-full accent-indigo-600"
+                    />
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>0 ₺</span>
+                      <span>10.000 ₺</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCiniStep(1)}
+                        className="flex-1 rounded-xl border border-border px-3 py-2 text-xs font-medium cursor-pointer"
+                      >
+                        Geri
+                      </button>
+                      <button
+                        type="button"
+                        onClick={submitCini}
+                        disabled={!ciniCategory}
+                        className={cn(
+                          "flex-1 rounded-xl px-3 py-2 text-xs font-semibold text-white transition",
+                          ciniCategory ? "bg-indigo-600 hover:bg-indigo-700 cursor-pointer" : "bg-indigo-300 cursor-not-allowed"
+                        )}
+                      >
+                        Fırsatları göster
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
           <Link
             href="/leaderboard"
             prefetch
