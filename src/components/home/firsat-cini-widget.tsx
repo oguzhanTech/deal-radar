@@ -105,7 +105,21 @@ export function FirsatCiniWidget({ deals, compact = false, className }: FirsatCi
 
   const applyRecommendation = () => {
     if (!selection) return;
-    const ranked = [...candidateDeals]
+    const categoryCandidates =
+      selection === "surprise"
+        ? candidateDeals
+        : candidateDeals.filter((deal) => {
+            const category = CATEGORY_OPTIONS.find((option) => option.id === selection);
+            return category?.matcher(deal) ?? false;
+          });
+
+    // Bütçe filtresi MVP’de kesin koşul: bütçeyi aşan fırsatlar listelenmez.
+    const withinBudget = categoryCandidates.filter((deal) => {
+      const price = deal.deal_price ?? deal.original_price;
+      return price != null && price <= budget;
+    });
+
+    const ranked = [...withinBudget]
       .sort((a, b) => scoreDeal(b, selection, budget) - scoreDeal(a, selection, budget))
       .slice(0, 6);
     setResults(ranked);
