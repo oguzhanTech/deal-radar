@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Home, PlusCircle, Radar, Search, Sparkles, Trophy, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -99,6 +99,8 @@ export function TopHeader() {
   const [ciniBudget, setCiniBudget] = useState(1500);
   const [ciniResults, setCiniResults] = useState<MobileCiniDeal[]>([]);
   const [ciniLoading, setCiniLoading] = useState(false);
+  const [ciniPool, setCiniPool] = useState<MobileCiniDeal[]>([]);
+  const [ciniPoolLoading, setCiniPoolLoading] = useState(false);
   const ciniRef = useRef<HTMLDivElement | null>(null);
 
   const avatarLetter = profile?.display_name?.charAt(0)?.toUpperCase() || initial;
@@ -119,15 +121,52 @@ export function TopHeader() {
     };
   }, [showCiniMini]);
 
-  const submitCini = async () => {
-    if (!ciniCategory) return;
-    setCiniLoading(true);
+  const ciniMaxBudget = useMemo(() => {
+    const maxPrice = ciniPool.reduce((max, deal) => {
+      const price = deal.deal_price ?? deal.original_price ?? 0;
+      return Math.max(max, Math.ceil(price));
+    }, 0);
+    return Math.max(2000, maxPrice);
+  }, [ciniPool]);
+
+  useEffect(() => {
+    if (ciniBudget > ciniMaxBudget) {
+      setCiniBudget(ciniMaxBudget);
+    }
+  }, [ciniBudget, ciniMaxBudget]);
+
+  const fetchCiniPool = async (): Promise<MobileCiniDeal[]> => {
+    if (ciniPool.length > 0) return ciniPool;
+    setCiniPoolLoading(true);
     try {
       const res = await fetch("/api/deals?sort=popular", { cache: "no-store" });
       const data = (await res.json()) as MobileCiniDeal[];
       const pool = Array.isArray(data) ? data : [];
+      setCiniPool(pool);
+      return pool;
+    } catch {
+      setCiniPool([]);
+      return [];
+    } finally {
+      setCiniPoolLoading(false);
+    }
+  };
 
-      const ranked = [...pool]
+  const submitCini = async () => {
+    if (!ciniCategory) return;
+    setCiniLoading(true);
+    try {
+      const pool = ciniPool.length > 0 ? ciniPool : await fetchCiniPool();
+      const categoryCandidates =
+        ciniCategory === "surprise" ? pool : pool.filter((deal) => categoryMatches(deal, ciniCategory));
+
+      // MVP beklentisine göre bütçe "hard filter": bütçeyi aşanları hiç göstermeyelim.
+      const withinBudget = categoryCandidates.filter((deal) => {
+        const price = deal.deal_price ?? deal.original_price;
+        return price != null && price <= ciniBudget;
+      });
+
+      const ranked = [...withinBudget]
         .sort((a, b) => scoreDeal(b, ciniCategory, ciniBudget) - scoreDeal(a, ciniCategory, ciniBudget))
         .slice(0, 6);
       setCiniResults(ranked);
@@ -205,7 +244,10 @@ export function TopHeader() {
                   const next = !prev;
                   if (next) {
                     setCiniStep(1);
+                    setCiniCategory(null);
                     setCiniResults([]);
+                    setCiniBudget(Math.min(1500, ciniMaxBudget));
+                    void fetchCiniPool();
                   }
                   return next;
                 });
@@ -256,7 +298,7 @@ export function TopHeader() {
                     <input
                       type="range"
                       min={0}
-                      max={10000}
+                      max={ciniMaxBudget}
                       step={100}
                       value={ciniBudget}
                       onChange={(e) => setCiniBudget(Number(e.target.value))}
@@ -264,7 +306,7 @@ export function TopHeader() {
                     />
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                       <span>0 ₺</span>
-                      <span>10.000 ₺</span>
+                      <span>{ciniMaxBudget.toLocaleString("tr-TR")} ₺</span>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -277,15 +319,15 @@ export function TopHeader() {
                       <button
                         type="button"
                         onClick={submitCini}
-                        disabled={!ciniCategory || ciniLoading}
+                        disabled={!ciniCategory || ciniLoading || ciniPoolLoading}
                         className={cn(
                           "flex-1 rounded-xl px-3 py-2 text-xs font-semibold text-white transition",
-                          ciniCategory && !ciniLoading
+                          ciniCategory && !ciniLoading && !ciniPoolLoading
                             ? "bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
                             : "bg-indigo-300 cursor-not-allowed"
                         )}
                       >
-                        {ciniLoading ? "Hazırlanıyor..." : "Fırsatları göster"}
+                        {ciniLoading || ciniPoolLoading ? "Hazırlanıyor..." : "Fırsatları göster"}
                       </button>
                     </div>
                   </div>
@@ -332,7 +374,9 @@ export function TopHeader() {
                       type="button"
                       onClick={() => {
                         setCiniStep(1);
+                        setCiniCategory(null);
                         setCiniResults([]);
+                        setCiniBudget(Math.min(1500, ciniMaxBudget));
                       }}
                       className="w-full rounded-xl border border-border px-3 py-2 text-xs font-medium cursor-pointer"
                     >
