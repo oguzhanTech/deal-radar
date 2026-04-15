@@ -66,11 +66,12 @@ export default async function HomePage() {
       ...homeData.newest.map((d) => d.id),
     ].filter(Boolean) as string[])
   );
+  const firsatCiniDeals = [...homeData.newest, ...homeData.popular, ...homeData.endingSoon];
 
   return (
     <div className="lg:grid lg:grid-cols-12 lg:gap-6 xl:gap-8 lg:items-start">
       <aside className="hidden lg:block lg:col-span-2 min-w-0 lg:pt-5 lg:border-r lg:border-border/40 lg:pr-5 xl:pr-6">
-        <HomeDesktopSidebar />
+        <HomeDesktopSidebar firsatCiniDeals={firsatCiniDeals} />
       </aside>
       <div
         className={cn(
@@ -78,30 +79,30 @@ export default async function HomePage() {
           "lg:col-span-7"
         )}
       >
-      <HomeHero heroSlides={homeData.heroSlides} />
-      {firstTwo.map(({ id, Section }) => (
-        <Suspense key={id} fallback={<DealSectionSkeleton />}>
-          <Section
-            initialDeals={
-              id === "newest" ? homeData.newest : homeData.endingSoon
-            }
-          />
+        <HomeHero heroSlides={homeData.heroSlides} />
+        {firstTwo.map(({ id, Section }) => (
+          <Suspense key={id} fallback={<DealSectionSkeleton />}>
+            <Section
+              initialDeals={
+                id === "newest" ? homeData.newest : homeData.endingSoon
+              }
+            />
+          </Suspense>
+        ))}
+        <Suspense fallback={<DealSectionSkeleton />}>
+          <HomeActivitySection />
         </Suspense>
-      ))}
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <HomeActivitySection />
-      </Suspense>
-      {rest.map(({ id, Section }) => (
-        <Suspense key={id} fallback={<DealSectionSkeleton />}>
-          <Section />
+        {rest.map(({ id, Section }) => (
+          <Suspense key={id} fallback={<DealSectionSkeleton />}>
+            <Section />
+          </Suspense>
+        ))}
+        <Suspense fallback={<DealSectionSkeleton />}>
+          <div className="lg:hidden">
+            <HomeEditorPickSection />
+          </div>
         </Suspense>
-      ))}
-      <Suspense fallback={<DealSectionSkeleton />}>
-        <div className="lg:hidden">
-          <HomeEditorPickSection />
-        </div>
-      </Suspense>
-      <HomeInfiniteBottomFeed excludeIds={excludeIds} />
+        <HomeInfiniteBottomFeed excludeIds={excludeIds} />
       </div>
       <aside className="hidden lg:block lg:col-span-3 min-w-0 max-w-full overflow-x-hidden lg:pt-5 lg:border-l lg:border-border/40 lg:pl-5 xl:pl-6">
         <Suspense fallback={null}>
