@@ -1,8 +1,14 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
+[
+{
+  "relation": [
+    "delegate_permission/common.handle_all_urls"
+  ],
   "target": {
     "namespace": "android_app",
     "package_name": "online.topla.mobile",
-    "sha256_cert_fingerprints": ["23:D6:E7:50:02:EB:8E:20:CA:F1:E8:B2:85:79:17:7F:C8:41:E3:05:27:08:3A:0C:47:AF:B9:1E:42:F2:75:AD"]
+    "sha256_cert_fingerprints": [
+      "23:D6:E7:50:02:EB:8E:20:CA:F1:E8:B2:85:79:17:7F:C8:41:E3:05:27:08:3A:0C:47:AF:B9:1E:42:F2:75:AD"
+    ]
   }
-}]
+}
+]
