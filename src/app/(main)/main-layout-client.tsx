@@ -90,13 +90,6 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   }, [isLg, pathname]);
 
   useEffect(() => {
-    if (!isLg) return;
-    setPendingPath(null);
-    setShowSkeleton(false);
-    setSkeletonShownAt(null);
-  }, [isLg]);
-
-  useEffect(() => {
     setPendingPath(null);
     if (!showSkeleton || !skeletonShownAt) {
       setShowSkeleton(false);
@@ -137,7 +130,6 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 
   const handleLinkCapture = useCallback(
     (e: React.MouseEvent) => {
-      if (isLg) return;
       if (e.defaultPrevented) return;
       if ("button" in e && e.button !== 0) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -156,10 +148,10 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       setShowSkeleton(false);
       setSkeletonShownAt(null);
     },
-    [pathname, isLg]
+    [pathname]
   );
 
-  const useSkeleton = !isLg && !!pendingPath && showSkeleton;
+  const useSkeleton = !!pendingPath && showSkeleton;
   const useRefreshShell = !isLg && showRefreshShell && pathname === "/";
 
   return (
@@ -191,7 +183,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
               {useRefreshShell ? (
                 <MobileHomeRefreshSkeleton />
               ) : useSkeleton ? (
-                getPageSkeleton(pendingPath!)
+                getPageSkeleton(pendingPath!, { isDesktop: isLg })
               ) : (
                 children
               )}
