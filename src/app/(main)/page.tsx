@@ -19,6 +19,7 @@ import {
 import { HomeHero } from "./home-hero";
 import { DealSectionSkeleton } from "@/components/deals/deal-card-skeleton";
 import { HomeDesktopSidebar } from "@/components/home/home-desktop-sidebar";
+import { FirsatCiniWidget } from "@/components/home/firsat-cini-widget";
 import { cn } from "@/lib/utils";
 
 const HomeInfiniteBottomFeed = dynamic(
@@ -92,6 +93,9 @@ export default async function HomePage() {
         <Suspense fallback={<DealSectionSkeleton />}>
           <HomeActivitySection />
         </Suspense>
+        <div id="firsat-cini" className="lg:hidden">
+          <FirsatCiniWidget deals={firsatCiniDeals} />
+        </div>
         {rest.map(({ id, Section }) => (
           <Suspense key={id} fallback={<DealSectionSkeleton />}>
             <Section />

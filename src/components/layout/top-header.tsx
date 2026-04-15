@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, PlusCircle, Radar, Search, Trophy, User } from "lucide-react";
+import { Home, PlusCircle, Radar, Search, Sparkles, Trophy, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAuth, useAuthDisplay } from "@/components/auth/auth-provider";
@@ -34,7 +34,7 @@ export function TopHeader() {
       <div
         className={cn(
           APP_SHELL_CLASS,
-          "flex items-center justify-between h-16 px-4 sm:px-5 lg:px-6 gap-2 lg:gap-4"
+          "flex items-center justify-between h-16 px-4 sm:px-5 lg:px-6 gap-1.5 sm:gap-2 lg:gap-4"
         )}
       >
         <div className="flex items-center gap-3 lg:gap-8 min-w-0 flex-1">
@@ -85,6 +85,24 @@ export function TopHeader() {
         <HeaderSearch />
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <Link
+            href="/#firsat-cini"
+            prefetch
+            data-no-skeleton
+            onClick={(e) => {
+              if (pathname !== "/") return;
+              e.preventDefault();
+              const target = document.getElementById("firsat-cini");
+              target?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            onMouseEnter={() => prefetchOnce(router, "/")}
+            onTouchStart={() => prefetchOnce(router, "/")}
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 transition-colors cursor-pointer lg:hidden"
+            title="Fırsat Cini"
+            aria-label="Fırsat Cini"
+          >
+            <Sparkles className="h-5 w-5" />
+          </Link>
           <Link
             href="/leaderboard"
             prefetch
